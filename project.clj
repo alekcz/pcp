@@ -6,6 +6,7 @@
   :dependencies [ [org.clojure/clojure "1.10.1"]
                   [org.clojure/tools.cli "1.0.194"]
                   [http-kit "2.3.0"]
+                  [compojure "1.6.1"]
                   [borkdude/sci "0.0.13-alpha.12"]
                   [cheshire "5.9.0"]
                 ]

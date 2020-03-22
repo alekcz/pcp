@@ -6,14 +6,14 @@
    [clojure.java.io :as io]
    [clojure.string :as str]
    [clojure.tools.cli :refer [parse-opts]]
-   [org.httpkit.server :as server]
-   [compojure.core :refer :all]
+   ;local server
+   [org.httpkit.server :refer [run-server]]
+x   [compojure.core :refer :all]
    [compojure.route :as route]
-   ;the below are included to force deps to download
-   [cheshire.core :as json]
-   )
+   [cheshire.core :as json])
   (:gen-class))
 
+(set! *warn-on-reflection* 1)
 
 (defn extract-namespace [namespace]
   (into {} (ns-publics namespace)))
@@ -57,7 +57,7 @@
             (recur 
               (str/replace code (-> externals first first) included) 
               (rest externals))))))))
-
+ 
 (defn run [path &{:keys [root params]}]
   (let [source (read-source path)
         file (io/file path)
@@ -102,16 +102,19 @@
 
 (defn make-routes [root]
   (routes
-    (ANY "*" [] (fn [request] 
+    (ANY "*" [] 
+    (fn [request] 
                   (let [resp (handler root request)] 
                     (println (str (-> request :request-method name str/upper-case) " " (:uri request) " " (:status resp)))
                     resp)))))
 
-(defn start-server [root-dir]
+
+(defn start-local-server [root-dir]
   (let [root (-> root-dir (or "./src") io/file .getCanonicalPath)
-        port (Integer/parseInt (or (System/getenv "PORT") "3000"))]
-    (server/run-server (make-routes root-dir) {:port port})
+        port (Integer/parseInt (or (System/getenv "PORT") "8000"))]
+    (run-server (make-routes root-dir) {:port port})
     (println (str "Serving " root " at http://127.0.0.1:" port))))
+
 
 (defn -main [path & args]
   (let [opts (parse-opts args cli-options)
@@ -121,5 +124,5 @@
       "logout" (cli/logout)
       "list"  (cli/list-sites)
       "deploy"  (cli/deploy-site param)
-      "serve"  (start-server param)
+      "server"  (start-local-server param)
       (run path))))

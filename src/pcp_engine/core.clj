@@ -8,7 +8,7 @@
    [clojure.tools.cli :refer [parse-opts]]
    ;local server
    [org.httpkit.server :refer [run-server]]
-x   [compojure.core :refer :all]
+   [compojure.core :refer :all]
    [compojure.route :as route]
    [cheshire.core :as json])
   (:gen-class))

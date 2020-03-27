@@ -1,16 +1,22 @@
 (ns pcp-engine.core
   (:require
-   [sci.core :as sci]
-   [pcp-engine.resp :as resp]
-   [pcp-engine.cli :as cli]
-   [clojure.java.io :as io]
-   [clojure.string :as str]
-   [clojure.tools.cli :refer [parse-opts]]
-   ;local server
-   [org.httpkit.server :refer [run-server]]
-   [compojure.core :refer :all]
-   [compojure.route :as route]
-   [cheshire.core :as json])
+    [sci.core :as sci]
+    [pcp-engine.resp :as resp]
+    [pcp-engine.cli :as cli]
+    [clojure.java.io :as io]
+    [clojure.string :as str]
+    [clojure.tools.cli :refer [parse-opts]]
+    ;local server
+    [org.httpkit.server :refer [run-server]]
+    [compojure.core :refer :all]
+    [compojure.route :as route]
+    ;included in environment
+    [cheshire.core :as json]
+    [clostache.parser :as parser]
+    [hiccup.core :as hiccup]
+    [next.jdbc :as jdbc]
+    [honeysql.core :as sql]
+    [honeysql.helpers :as helpers])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -20,7 +26,12 @@
 
 (def namespaces
   { 'cheshire.core (extract-namespace 'cheshire.core)
-    ;'hiccup.core {'html (with-meta @#'hiccup/html {:sci/macro true})} I'll be bach!
+    'clostache.parser (extract-namespace 'clostache.parser)
+    'next.jdbc (extract-namespace 'next.jdbc)
+    'honeysql.core (extract-namespace 'honeysql.core)
+    'honeysql.helpers (extract-namespace 'honeysql.helpers)
+    'hiccup.core {'html (with-meta @#'hiccup/html {:sci/macro true})
+                  'h #'hiccup/h}
     })
 
 (def cli-options [])
@@ -68,7 +79,8 @@
                                 'include identity
                                 'echo #(resp/response %)
                                 'println println
-                                'response (sci/new-var 'response format-response)}}
+                                'response (sci/new-var 'response format-response)}
+                    :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
               full-source (process-includes source parent)]
           (sci/eval-string full-source opts))
       (format-response 404 nil nil))))
@@ -110,11 +122,10 @@
 
 
 (defn start-local-server [root-dir]
-  (let [root (-> root-dir (or "./src") io/file .getCanonicalPath)
+  (let [root (-> (or root-dir "./src") io/file .getCanonicalPath)
         port (Integer/parseInt (or (System/getenv "PORT") "8000"))]
-    (run-server (make-routes root-dir) {:port port})
+    (run-server (make-routes root) {:port port})
     (println (str "Serving " root " at http://127.0.0.1:" port))))
-
 
 (defn -main [path & args]
   (let [opts (parse-opts args cli-options)
@@ -126,3 +137,5 @@
       "deploy"  (cli/deploy-site param)
       "server"  (start-local-server param)
       (run path))))
+
+      

@@ -8,9 +8,7 @@ Download from http://example.com/FIXME.
 
 ## Usage
 
-FIXME: explanation
-
-    $ java -jar pcp-engine-0.1.0-standalone.jar [args]
+pcp serve
 
 ## Options
 
@@ -21,7 +19,7 @@ FIXME: listing of options this app accepts.
 ...
 
 ### Bugs
-
+- At the moment postgres connection can't use SSL. Life isn't perfect. 
 ...
 
 ### Any Other Sections
@@ -30,7 +28,7 @@ FIXME: listing of options this app accepts.
 
 ## License
 
-Copyright © 2020 FIXME
+Copyright © 2020 Alexander Oloo
 
 This program and the accompanying materials are made available under the
 terms of the Eclipse Public License 2.0 which is available at

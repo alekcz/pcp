@@ -9,8 +9,14 @@
                   [org.martinklepsch/clj-http-lite "0.4.3"]
                   [compojure "1.6.1"]
                   [borkdude/sci "0.0.13-alpha.12"]
+                  [http-kit "2.3.0"]
+                  ;includes for hosted environemnt
                   [cheshire "5.9.0"]
-                  [http-kit "2.3.0"] 
+                  [de.ubercode.clostache/clostache "1.4.0"]
+                  [hiccup "1.0.5"]
+                  [seancorfield/next.jdbc "1.0.409"]
+                  [org.postgresql/postgresql "42.2.11"]
+                  [honeysql "0.9.10"]
                 ]
   :main pcp-engine.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
@@ -18,11 +24,14 @@
 
   :native-image {:name     "pcp"
                  :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
-                 :opts     ["--enable-url-protocols=http"
+                 :opts     ["--enable-url-protocols=http,https"
                             "--report-unsupported-elements-at-runtime"
                             "--no-fallback"
                             "--initialize-at-build-time"
                             "--allow-incomplete-classpath"
-                            "--no-server"]})
+                            "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
+                            "--enable-all-security-services"
+                            "--no-server"
+                            "-H:ReflectionConfigurationFiles=reflect-config.json"]})
 
 

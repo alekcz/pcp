@@ -1,0 +1,2 @@
+This is data in a file or is it?
+Is this is local or isn't?

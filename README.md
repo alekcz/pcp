@@ -1,4 +1,4 @@
-# pcp-engine
+# pcp
 
 FIXME: description
 

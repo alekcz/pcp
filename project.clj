@@ -1,4 +1,4 @@
-(defproject pcp-engine "0.1.0-SNAPSHOT"
+(defproject pcp "0.1.0-SNAPSHOT"
   :description "PCP: Clojure Processor - Like drugs but better"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -17,8 +17,9 @@
                   [seancorfield/next.jdbc "1.0.409"]
                   [org.postgresql/postgresql "42.2.11"]
                   [honeysql "0.9.10"]
+                  [org.martinklepsch/clj-http-lite "0.4.3"]
                 ]
-  :main pcp-engine.core
+  :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [nrepl/lein-nrepl "0.3.2"]]
 

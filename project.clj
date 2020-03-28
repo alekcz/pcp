@@ -1,4 +1,4 @@
-(defproject pcp "0.1.0-SNAPSHOT"
+(defproject pcp "0.0.1-SNAPSHOT"
   :description "PCP: Clojure Processor - Like drugs but better"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -10,6 +10,9 @@
                   [compojure "1.6.1"]
                   [borkdude/sci "0.0.13-alpha.12"]
                   [http-kit "2.3.0"]
+                  ;fpm
+                  [aleph "0.4.6"]
+                  [byte-streams "0.2.4"]
                   ;includes for hosted environemnt
                   [cheshire "5.9.0"]
                   [de.ubercode.clostache/clostache "1.4.0"]
@@ -30,7 +33,7 @@
                             "--no-fallback"
                             "--initialize-at-build-time"
                             "--allow-incomplete-classpath"
-                            "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
+                            "--initialize-at-run-time=org.postgresql.sspi.SSPIClient,io.netty.channel.unix.Limits,io.netty.channel.epoll.Native,io.netty.channel.unix.Errors,io.netty.util.internal.PlatformDependent0,io.netty.channel.epoll.EpollEventArray"
                             "--enable-all-security-services"
                             "--no-server"
                             "-H:ReflectionConfigurationFiles=reflect-config.json"]})

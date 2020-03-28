@@ -3,8 +3,8 @@
          '[clojure.pprint :refer [pprint]])
          
 (let [resp (client/get "https://jsonplaceholder.typicode.com/users/")
-      todo (json/decode  (:body resp) true)]
-    (println "Today's itinerary:")
-    (pprint todo)
+      users (json/decode  (:body resp) true)]
+    (println "User info:")
+    (pprint users)
     (println "Today's itinerary:")
     (println (slurp "./test.txt")))

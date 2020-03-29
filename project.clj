@@ -10,9 +10,8 @@
                   [compojure "1.6.1"]
                   [borkdude/sci "0.0.13-alpha.12"]
                   [http-kit "2.3.0"]
-                  ;fpm
-                  [aleph "0.4.6"]
-                  [byte-streams "0.2.4"]
+                  ;scgi
+                  [org.clojure/core.async "1.0.567"]
                   ;includes for hosted environemnt
                   [cheshire "5.9.0"]
                   [de.ubercode.clostache/clostache "1.4.0"]
@@ -25,7 +24,7 @@
   :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [nrepl/lein-nrepl "0.3.2"]]
-
+   
   :native-image {:name     "pcp"
                  :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
                  :opts     ["--enable-url-protocols=http,https"
@@ -33,7 +32,7 @@
                             "--no-fallback"
                             "--initialize-at-build-time"
                             "--allow-incomplete-classpath"
-                            "--initialize-at-run-time=org.postgresql.sspi.SSPIClient,io.netty.channel.unix.Limits,io.netty.channel.epoll.Native,io.netty.channel.unix.Errors,io.netty.util.internal.PlatformDependent0,io.netty.channel.epoll.EpollEventArray"
+                            "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
                             "--enable-all-security-services"
                             "--no-server"
                             "-H:ReflectionConfigurationFiles=reflect-config.json"]})

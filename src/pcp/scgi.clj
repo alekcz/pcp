@@ -1,10 +1,10 @@
 (ns pcp.scgi
   (:require [clojure.java.io :as io]
             [clojure.string :as str])
-  (:import  (java.net Socket ServerSocket)
+  (:import  (java.net Socket ServerSocket SocketException InetAddress)
             (java.io BufferedWriter))
   (:gen-class))
-  
+
 (defn to-byte-array [text]
   (.getBytes ^String text "UTF-8"))
 
@@ -35,12 +35,18 @@
     (.write writer msg (int 0) (count msg))
     (.flush writer)))
 
-(defn serve [port handler]
-  (with-open [server-sock (ServerSocket. port)]
-    (while server-sock              
-      (let [^Socket sock (.accept server-sock)]
-        ;(future
+(defn accept-connection [server-sock handler]
+  (let [^Socket sock (.accept server-sock)]
+        (future
           (let [msg-in (receive! sock) msg-out (-> msg-in cleaner handler)]
             (send! sock msg-out)
-            (.close ^Socket sock))))))
-            ;)
+            (.close ^Socket sock)))))
+
+(defn serve [port handler]
+  (with-open [server-sock (ServerSocket. port)]
+    (loop [connections 1]      
+      (try        
+        (accept-connection server-sock handler)
+        (catch SocketException _disconnect))
+      (recur (inc connections)))))
+    ;(while true)))

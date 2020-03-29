@@ -137,10 +137,10 @@
         doc (:document-uri req)
         path (str root doc)
         r (run path :root root)
+        mime (-> r :headers (get "Content-Type"))
         nl "\r\n"
-        response (str (:status r) nl "Content-Type: text/plain" nl nl (:body r))]
+        response (str (:status r) nl (str "Content-Type: " mime) nl nl (:body r))]
     response))
-    ;"Status: 200\r\nContent-Type: text/plain\r\n\r\nresponse\r\n"))
 
 
 (defn -main [path & args]

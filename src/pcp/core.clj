@@ -9,7 +9,7 @@
     [pcp.scgi :as scgi]
     ;local server
     [org.httpkit.server :refer [run-server]]
-    [compojure.core :refer :all]
+    [compojure.core :refer [routes ANY]]
     [compojure.route :as route]
     ;included in environment
     [cheshire.core :as json]
@@ -18,6 +18,7 @@
     [next.jdbc :as jdbc]
     [honeysql.core :as sql]
     [honeysql.helpers :as helpers]
+    [clojure.pprint :as pprint]
     [clj-http.lite.client :as client])
   (:gen-class))
 
@@ -84,7 +85,8 @@
                                 'println println
                                 'slurp #(slurp (str parent "/" %))
                                 'response (sci/new-var 'response format-response)}
-                    :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
+                    ;:classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}
+                    }
               full-source (process-includes source parent)]
           (sci/eval-string full-source opts))
       (format-response 404 nil nil))))

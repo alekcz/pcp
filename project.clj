@@ -10,6 +10,8 @@
                   [compojure "1.6.1"]
                   [borkdude/sci "0.0.13-alpha.12"]
                   [http-kit "2.3.0"]
+                  ;scgi
+                  [com.climate/claypoole "1.1.4"]
                   ;includes for hosted environemnt
                   [cheshire "5.9.0"]
                   [de.ubercode.clostache/clostache "1.4.0"]

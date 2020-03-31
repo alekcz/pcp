@@ -19,7 +19,7 @@ fi
 
 download_dir=/tmp
 
-latest_release="$(curl -sL https://raw.githubusercontent.com/alekcz/pcp/master/resources/pcp_RELEASED_VERSION)"
+latest_release="$(curl -sL https://raw.githubusercontent.com/alekcz/pcp/master/resources/PCP_RELEASED_VERSION)"
 
 case "$(uname -s)" in
     #Linux*)     platform=linux;;

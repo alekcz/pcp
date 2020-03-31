@@ -85,7 +85,6 @@ jobs:
           if ! [ -d graalvm-ce-java8-19.3.1 ]; then
             curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
             tar xzf graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
-            ls
           fi 
 
       - name: Build Linux native image
@@ -104,57 +103,6 @@ jobs:
         with:
           path: pcp
           name: pcp-${{ steps.pcp-version.outputs.version }}-linux-amd64.zip
-
-  linux-static:
-    needs: [jvm]
-    runs-on: ubuntu-16.04
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-          submodules: 'true'
-
-      - name: Cache deps
-        uses: actions/cache@v1
-        id: cache-deps
-        with:
-          path: ~/.m2/repository
-          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
-          restore-keys: |
-                ${{ runner.os }}-maven-
-
-      - name: Cache GraalVM
-        uses: actions/cache@v1
-        id: cache-graalvm
-        with:
-          path: ~/graalvm-ce-java8-19.3.1
-          key: ${{ runner.os }}-graalvm-19.3.1
-          restore-keys: |
-                ${{ runner.os }}-graalvm-19.3.1
-
-      - name: Download GraalVM
-        run: |
-          cd ~
-          if ! [ -d graalvm-ce-java8-19.3.1 ]; then
-            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
-            tar xzf graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
-          fi
-
-      - name: pcp version
-        id: pcp-version
-        run: |
-            PCP_VERSION=$(cat resources/PCP_VERSION)
-            echo "##[set-output name=version;]${PCP_VERSION}"
-  
-      - name: Build Linux native image
-        run: |
-              lein native-image
-
-      - uses: actions/upload-artifact@v1
-        with:
-          path: pcp
-          name: pcp-${{ steps.pcp-version.outputs.version }}-linux-static-amd64.zip
 
   mac:
     needs: [jvm]
@@ -189,9 +137,17 @@ jobs:
             PCP_VERSION=$(cat resources/PCP_VERSION)
             echo "##[set-output name=version;]${PCP_VERSION}"
   
-      - name: Build Linux native image
+      - name: Build Mac native image
+        env:
+          _JAVA_OPTIONS: -Xmx4g
         run: |
-              lein native-image
+          export GRAALVM_HOME=~/graalvm-ce-java8-19.3.1
+          export JAVA_HOME=~/graalvm-ce-java8-19.3.1/Contents/Home
+          export PATH=$JAVA_HOME/bin:$PATH
+          export PATH=$GRAALVM_HOME/bin:$PATH
+          java -version
+          gu install native-image
+          lein native-image
 
       - uses: actions/upload-artifact@v1
         with:

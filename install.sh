@@ -22,7 +22,7 @@ download_dir=/tmp
 latest_release="$(curl -sL https://raw.githubusercontent.com/alekcz/pcp/master/resources/PCP_RELEASED_VERSION)"
 
 case "$(uname -s)" in
-    #Linux*)     platform=linux;;
+    Linux*)     platform=linux;;
     Darwin*)    platform=macos;;
 esac
 

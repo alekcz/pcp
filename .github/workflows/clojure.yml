@@ -85,10 +85,11 @@ jobs:
           java -version
           gu install native-image
           lein native-image
+          ls 
 
       - uses: actions/upload-artifact@v1
         with:
-          path: pcp
+          path: target
           name: pcp-${{ steps.pcp-version.outputs.version }}-linux-amd64.zip
 
   mac:
@@ -138,5 +139,5 @@ jobs:
 
       - uses: actions/upload-artifact@v1
         with:
-          path: pcp
+          path: target
           name: pcp-${{ steps.pcp-version.outputs.version }}-macos-amd64.zip

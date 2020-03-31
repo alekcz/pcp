@@ -74,38 +74,20 @@ User info:
 
 
 ### Replacing php-fpm
-We need to modify the server block in `/etc/nginx/sites-enabled/digitalocean` to switch from `php` to `pcp`.
+We need to modify the server block in `/etc/nginx/sites-enabled/digitalocean` to switch from `php` to `pcp`.   
 Note: `pcp` uses SimpleCGI instead of FastCGI.
 
+Change the index to be `index.clj` instead of `index.php`
 ```conf
-server {
-	listen 80 default_server;
-	listen [::]:80 default_server ipv6only=on;
-
-	root /var/www/html;
-	
     #default nginx config on digital ocean lemp image
     #index index.php index.html index.htm;
 
     #new pcp config => change .php to .clj
     index index.clj index.html index.htm;
+```
 
-	# Make site accessible from http://localhost/
-	server_name localhost;
-
-	location / {
-		# First attempt to serve request as file, then
-		# as directory, then fall back to displaying a 404.
-		try_files $uri $uri/ =404;
-		# Uncomment to enable naxsi on this location
-		# include /etc/nginx/naxsi.rules
-	}
-
-	error_page 404 /404.html;
-	error_page 500 502 503 504 /50x.html;
-	location = /50x.html {
-		root /usr/share/nginx/html;
-	}
+Send our scripts to our SimpleFGI Server at port 9000 and change the filter to be `~ \.clj$` instead of `~ \.php$`.  
+```conf
 
     #default nginx config on digital ocean lemp image
 	#location ~ \.php$ {
@@ -120,13 +102,6 @@ server {
         scgi_intercept_errors on;
         scgi_pass   127.0.0.1:9000;
 	}
-
-	# deny access to .htaccess files, if Apache's document root
-	# concurs with nginx's one
-	#
-	#location ~ /\.ht {
-	#	deny all;
-	#}
 }
 ```
 

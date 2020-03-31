@@ -79,7 +79,6 @@ jobs:
           echo "##[set-output name=version;]${PCP_VERSION}"
 
       - name: Download GraalVM
-        uses: actions/cache@v1
         run: |
           cd ~
           if ! [ -d graalvm-ce-java8-19.3.1 ]; then

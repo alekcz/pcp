@@ -92,12 +92,14 @@ jobs:
             export PATH=$GRAALVM_HOME/bin:$PATH
             java -version
             gu install native-image
+            cd ~/pcp
+            lein native-image
             ls
           fi 
 
-      - name: Build Linux native image
-        run: |
-            lein native-image
+#      - name: Build Linux native image
+#        run: |
+#            lein native-image
 
       - uses: actions/upload-artifact@v1
         with:

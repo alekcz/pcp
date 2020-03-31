@@ -134,12 +134,12 @@ jobs:
 
       - name: pcp version
         id: pcp-version
-          run: |
+        run: |
             PCP_VERSION=$(cat resources/PCP_VERSION)
             echo "##[set-output name=version;]${PCP_VERSION}"
   
       - name: Build Linux native image
-          run: |
+        run: |
               bash build.sh
 
       - uses: actions/upload-artifact@v1
@@ -175,13 +175,13 @@ jobs:
           fi
 
       - name: pcp version
-          id: pcp-version
-          run: |
+        id: pcp-version
+        run: |
             PCP_VERSION=$(cat resources/PCP_VERSION)
             echo "##[set-output name=version;]${PCP_VERSION}"
   
       - name: Build Linux native image
-          run: |
+        run: |
               bash build.sh
 
       - uses: actions/upload-artifact@v1

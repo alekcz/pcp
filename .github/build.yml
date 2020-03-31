@@ -1,0 +1,190 @@
+name: build
+
+on: [push]
+
+jobs:
+
+  scratch:
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+
+      - name: Scratch
+        run: |
+          echo "Scratch"
+
+  jvm:
+    # ubuntu 18.04 comes with lein + java8 installed
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+ 
+      - name: Cache deps
+        uses: actions/cache@v1
+        id: cache-deps
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          restore-keys: |
+                ${{ runner.os }}-maven-
+
+      - name: Fetch deps
+        if: steps.cache-deps.outputs.cache-hit != 'true'
+        run: |
+          lein deps
+
+      - name: Run tests
+        run: |
+          true
+
+  linux:
+    needs: [jvm]
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+
+      - name: Cache deps
+        uses: actions/cache@v1
+        id: cache-deps
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          restore-keys: |
+                ${{ runner.os }}-maven-
+
+      - name: Cache GraalVM
+        uses: actions/cache@v1
+        id: cache-graalvm
+        with:
+          path: ~/graalvm-ce-java8-19.3.1
+          key: ${{ runner.os }}-graalvm-19.3.1
+          restore-keys: |
+                ${{ runner.os }}-graalvm-19.3.1
+
+      - name: Download GraalVM
+        run: |
+          cd ~
+          if ! [ -d graalvm-ce-java8-19.3.1 ]; then
+            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
+            tar xzf graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
+          fi
+
+      - name: pcp version
+        id: pcp-version
+        run: |
+          PCP_VERSION=$(cat resources/PCP_VERSION)
+          echo "##[set-output name=version;]${PCP_VERSION}"
+
+      - name: Build Linux native image
+        run: |
+            bash build.sh
+
+      - uses: actions/upload-artifact@v1
+        with:
+          path: pcp
+          name: pcp-${{ steps.pcp-version.outputs.version }}-linux-amd64.zip
+
+  linux-static:
+    needs: [jvm]
+    runs-on: ubuntu-16.04
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+
+      - name: Cache deps
+        uses: actions/cache@v1
+        id: cache-deps
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('project.clj') }}
+          restore-keys: |
+                ${{ runner.os }}-maven-
+
+      - name: Cache GraalVM
+        uses: actions/cache@v1
+        id: cache-graalvm
+        with:
+          path: ~/graalvm-ce-java8-19.3.1
+          key: ${{ runner.os }}-graalvm-19.3.1
+          restore-keys: |
+                ${{ runner.os }}-graalvm-19.3.1
+
+      - name: Download GraalVM
+        run: |
+          cd ~
+          if ! [ -d graalvm-ce-java8-19.3.1 ]; then
+            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
+            tar xzf graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
+          fi
+
+      - name: pcp version
+          id: pcp-version
+          run: |
+            PCP_VERSION=$(cat resources/PCP_VERSION)
+            echo "##[set-output name=version;]${PCP_VERSION}"
+  
+      - name: Build Linux native image
+          run: |
+              bash build.sh
+
+      - uses: actions/upload-artifact@v1
+        with:
+          path: pcp
+          name: pcp-${{ steps.pcp-version.outputs.version }}-linux-static-amd64.zip
+
+  mac:
+    needs: [jvm]
+    runs-on: macOS-latest
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+          submodules: 'true'
+
+      - name: Cache GraalVM
+        uses: actions/cache@v1
+        id: cache-graalvm
+        with:
+          path: ~/graalvm-ce-java8-19.3.1
+          key: ${{ runner.os }}-graalvm-19.3.1
+          restore-keys: |
+                ${{ runner.os }}-graalvm-19.3.1
+
+      - name: Download GraalVM
+        run: |
+          cd ~
+          if ! [ -d graalvm-ce-java8-19.3.1 ]; then
+            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-darwin-amd64-19.3.1.tar.gz
+            tar xzf graalvm-ce-java8-darwin-amd64-19.3.1.tar.gz
+          fi
+
+      - name: pcp version
+          id: pcp-version
+          run: |
+            PCP_VERSION=$(cat resources/PCP_VERSION)
+            echo "##[set-output name=version;]${PCP_VERSION}"
+  
+      - name: Build Linux native image
+          run: |
+              bash build.sh
+
+      - uses: actions/upload-artifact@v1
+        with:
+          path: pcp
+          name: pcp-${{ steps.pcp-version.outputs.version }}-macos-amd64.zip

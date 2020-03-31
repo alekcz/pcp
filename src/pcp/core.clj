@@ -16,8 +16,8 @@
     [clostache.parser :as parser]
     [clj-http.lite.client :as client]
     [next.jdbc :as jdbc]
-    ;[honeysql.core :as sql]
-    ;[honeysql.helpers :as helpers]
+    [honeysql.core :as sql]
+    [honeysql.helpers :as helpers]
     )
   (:gen-class))
 
@@ -32,8 +32,8 @@
     'clostache.parser (extract-namespace 'clostache.parser)
     'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
     'next.jdbc (extract-namespace 'next.jdbc)
-    ;'honeysql.core (extract-namespace 'honeysql.core)
-    ;'honeysql.helpers (extract-namespace 'honeysql.helpers)                 
+    'honeysql.core (extract-namespace 'honeysql.core)
+    'honeysql.helpers (extract-namespace 'honeysql.helpers)                 
                   })
 
 (defn html [v]

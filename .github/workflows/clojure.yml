@@ -89,6 +89,8 @@ jobs:
           fi 
 
       - name: Build Linux native image
+        env:
+          _JAVA_OPTIONS: -Xmx10g
         run: |
           export GRAALVM_HOME=~/graalvm-ce-java8-19.3.1
           export JAVA_HOME=~/graalvm-ce-java8-19.3.1/Contents/Home

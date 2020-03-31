@@ -1,6 +1,8 @@
 (ns pcp.resp
   (:gen-class))
 
+(set! *warn-on-reflection* 1)
+
 (defn response
   "Returns a skeletal Ring response with the given body, status of 200, and no
   headers."

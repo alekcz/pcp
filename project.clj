@@ -22,6 +22,10 @@
                   [org.martinklepsch/clj-http-lite "0.4.3"]
                 ]
   :main pcp.core
+  :uberjar-name "pcp.jar"
+  :profiles {:uberjar {:aot :all}
+             :dev {:plugins [[lein-shell "0.5.0"]]}}
+
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [nrepl/lein-nrepl "0.3.2"]]
    
@@ -35,6 +39,23 @@
                             "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
                             "--enable-all-security-services"
                             "--no-server"
-                            "-H:ReflectionConfigurationFiles=reflect-config.json"]})
+                            "-H:ReflectionConfigurationFiles=reflect-config.json"]}
+  :aliases
+  {"native"
+   ["shell"
+    "native-image" 
+    "--enable-url-protocols=http,https"
+    "--report-unsupported-elements-at-runtime"
+    "--no-fallback"
+    "--initialize-at-build-time"
+    "--allow-incomplete-classpath"
+    "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
+    "--enable-all-security-services"
+    "--no-server"
+    "-H:ReflectionConfigurationFiles=reflect-config.json"
+    "-jar" "./target/${:uberjar-name:-${:name}-${:version}-standalone.jar}"
+    "-H:Name=./target/${:name}"]
+
+   "run-native" ["shell" "./target/${:name}"]})                            
 
 

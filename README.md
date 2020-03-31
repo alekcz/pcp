@@ -79,21 +79,23 @@ Note: `pcp` uses SimpleCGI instead of FastCGI.
 
 Change the index to be `index.clj` instead of `index.php`
 ```conf
+...
     #default nginx config on digital ocean lemp image
     #index index.php index.html index.htm;
 
     #new pcp config => change .php to .clj
     index index.clj index.html index.htm;
+...
 ```
 
 Send our scripts to our SimpleFGI Server at port 9000 and change the filter to be `~ \.clj$` instead of `~ \.php$`.  
 ```conf
-
+...
     #default nginx config on digital ocean lemp image
-	#location ~ \.php$ {
+    #location ~ \.php$ {
 
     #new pcp config => change .php to .clj
-	location ~ \.clj$ {
+    location ~ \.clj$ {
         #default nginx config on digital ocean lemp image
         #include snippets/fastcgi-php.conf;
         #fastcgi_pass unix:/run/php/php7.0-fpm.sock;
@@ -101,8 +103,8 @@ Send our scripts to our SimpleFGI Server at port 9000 and change the filter to b
         include scgi_params;
         scgi_intercept_errors on;
         scgi_pass   127.0.0.1:9000;
-	}
-}
+    }
+...
 ```
 
 Let's restart nginx with our new configuration. 

@@ -72,8 +72,14 @@ jobs:
           key: ${{ runner.os }}-graalvm-19.3.1
           restore-keys: |
                 ${{ runner.os }}-graalvm-19.3.1
+      - name: pcp version
+        id: pcp-version
+        run: |
+          PCP_VERSION=$(cat resources/PCP_VERSION)
+          echo "##[set-output name=version;]${PCP_VERSION}"
 
       - name: Download GraalVM
+        uses: actions/cache@v1
         run: |
           cd ~
           if ! [ -d graalvm-ce-java8-19.3.1 ]; then
@@ -86,18 +92,13 @@ jobs:
             export PATH=$GRAALVM_HOME/bin:$PATH
             java -version
             gu install native-image
+            lein native-image
             ls
           fi 
 
-      - name: pcp version
-        id: pcp-version
-        run: |
-          PCP_VERSION=$(cat resources/PCP_VERSION)
-          echo "##[set-output name=version;]${PCP_VERSION}"
-
-      - name: Build Linux native image
-        run: |
-            lein native-image
+#      - name: Build Linux native image
+#        run: |
+#            lein native-image
 
       - uses: actions/upload-artifact@v1
         with:

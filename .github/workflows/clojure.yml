@@ -133,7 +133,7 @@ jobs:
           fi
 
       - name: pcp version
-          id: pcp-version
+        id: pcp-version
           run: |
             PCP_VERSION=$(cat resources/PCP_VERSION)
             echo "##[set-output name=version;]${PCP_VERSION}"

@@ -13,15 +13,14 @@
                   ;[compojure "1.6.1"]
                   ;[http-kit "2.3.0"]
                   ;scgi
-                  ;s[com.climate/claypoole "1.1.4"]
+                  ;[com.climate/claypoole "1.1.4"]
                   ;includes for hosted environemnt
-                  ; [cheshire "5.9.0"]
-                  ; [de.ubercode.clostache/clostache "1.4.0"]
-                  ; [hiccup "1.0.5"]
-                  ; [seancorfield/next.jdbc "1.0.409"]
-                  ; [org.postgresql/postgresql "42.2.11"]
-                  ; [honeysql "0.9.10"]
-                  ; [org.martinklepsch/clj-http-lite "0.4.3"]
+                  [cheshire "5.9.0"]
+                  [de.ubercode.clostache/clostache "1.4.0"]
+                  [org.martinklepsch/clj-http-lite "0.4.3"]
+                  [seancorfield/next.jdbc "1.0.409"]
+                  [org.postgresql/postgresql "42.2.11"]
+                 ;[honeysql "0.9.10"]
                 ]
   :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]

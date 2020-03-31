@@ -8,18 +8,16 @@
     ;scgi
     [pcp.scgi :as scgi]
     ;local server
-    ; [org.httpkit.server :refer [run-server]]
-    ; [compojure.core :refer [routes ANY]]
-    ; [compojure.route :as route]
+    ;[org.httpkit.server :refer [run-server]]
+    ;[compojure.core :refer [routes ANY]]
+    ;[compojure.route :as route]
     ;included in environment
-    ; [cheshire.core :as json]
-    ; [clostache.parser :as parser]
-    ; [hiccup.core :as hiccup]
-    ; [next.jdbc :as jdbc]
-    ; [honeysql.core :as sql]
-    ; [honeysql.helpers :as helpers]
-    ; [clojure.pprint :as pprint]
-    ; [clj-http.lite.client :as client]
+    [cheshire.core :as json]
+    [clostache.parser :as parser]
+    [clj-http.lite.client :as client]
+    [next.jdbc :as jdbc]
+    ;[honeysql.core :as sql]
+    ;[honeysql.helpers :as helpers]
     )
   (:gen-class))
 
@@ -30,16 +28,29 @@
 
 (def namespaces
   { 
-    ;'cheshire.core (extract-namespace 'cheshire.core)
-    ;'clostache.parser (extract-namespace 'clostache.parser)
-    ;'next.jdbc (extract-namespace 'next.jdbc)
+    'cheshire.core (extract-namespace 'cheshire.core)
+    'clostache.parser (extract-namespace 'clostache.parser)
+    'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
+    'next.jdbc (extract-namespace 'next.jdbc)
     ;'honeysql.core (extract-namespace 'honeysql.core)
-    ;'honeysql.helpers (extract-namespace 'honeysql.helpers)
-    ;'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
-    ;'clojure.pprint (extract-namespace 'clojure.pprint)
-    ;'hiccup.core {'html (with-meta @#'hiccup/html {:sci/macro true})
-    ;              'h #'hiccup/h}
+    ;'honeysql.helpers (extract-namespace 'honeysql.helpers)                 
                   })
+
+(defn html [v]
+  (cond (vector? v)
+        (let [tag (first v)
+              attrs (second v)
+              attrs (when (map? attrs) attrs)
+              elts (if attrs (nnext v) (next v))
+              tag-name (name tag)]
+          (format "<%s%s>%s</%s>\n" tag-name (html attrs) (html elts) tag-name))
+        (map? v)
+        (str/join ""
+                  (map (fn [[k v]]
+                         (format " %s=\"%s\"" (name k) v)) v))
+        (seq? v)
+        (str/join " " (map html v))
+        :else (str v)))
 
 (def cli-options [])
 
@@ -87,11 +98,13 @@
                                 'echo #(resp/response %)
                                 'println println
                                 'slurp #(slurp (str parent "/" %))
+                                'html html
                                 'response (sci/new-var 'response format-response)}
-                    ;:classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}
+                    :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}
                     }
-              full-source (process-includes source parent)]
-          (sci/eval-string full-source opts))
+            full-source (process-includes source parent)
+            ans (sci/eval-string full-source opts)]
+        ans)
       (format-response 404 nil nil))))
 
 ; (defn file-exists? [path]

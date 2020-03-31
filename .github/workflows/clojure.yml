@@ -93,7 +93,7 @@ jobs:
           name: pcp-v${{ steps.pcp-version.outputs.version }}-linux-amd64.zip
 
   mac:
-    needs: [jvm]
+    #needs: [jvm]
     runs-on: macOS-latest
     steps:
       - name: Git checkout

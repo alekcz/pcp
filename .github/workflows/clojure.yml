@@ -89,7 +89,7 @@ jobs:
 
       - name: Build Linux native image
         run: |
-            bash build.sh
+            lein native-image
 
       - uses: actions/upload-artifact@v1
         with:
@@ -140,7 +140,7 @@ jobs:
   
       - name: Build Linux native image
         run: |
-              bash build.sh
+              lein native-image
 
       - uses: actions/upload-artifact@v1
         with:
@@ -182,7 +182,7 @@ jobs:
   
       - name: Build Linux native image
         run: |
-              bash build.sh
+              lein native-image
 
       - uses: actions/upload-artifact@v1
         with:

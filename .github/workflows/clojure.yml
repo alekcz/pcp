@@ -76,7 +76,7 @@ jobs:
 
       - name: Build Linux native image
         env:
-          _JAVA_OPTIONS: -Xmx6g
+          _JAVA_OPTIONS: -Xmx5g
         run: |
           export GRAALVM_HOME=~/graalvm-ce-java8-20.0.0
           export JAVA_HOME=~/graalvm-ce-java8-20.0.0/Contents/Home
@@ -127,7 +127,7 @@ jobs:
   
       - name: Build Mac native image
         env:
-          _JAVA_OPTIONS: -Xmx6g
+          _JAVA_OPTIONS: -Xmx5g
         run: |
           export GRAALVM_HOME=~/graalvm-ce-java8-20.0.0
           export JAVA_HOME=~/graalvm-ce-java8-20.0.0/Contents/Home

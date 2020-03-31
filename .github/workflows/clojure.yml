@@ -91,6 +91,7 @@ jobs:
             export PATH=$GRAALVM_HOME/bin:$PATH
             java -version
             gu install native-image
+            cd pcp
             lein native-image
             ls
           fi 

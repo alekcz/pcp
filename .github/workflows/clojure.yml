@@ -85,6 +85,7 @@ jobs:
             export PATH=$JAVA_HOME/bin:$PATH
             export PATH=$GRAALVM_HOME/bin:$PATH
             java -version
+            gu install native-image
             ls
           fi 
 

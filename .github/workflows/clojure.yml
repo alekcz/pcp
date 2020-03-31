@@ -86,8 +86,7 @@ jobs:
             export PATH=$GRAALVM_HOME/bin:$PATH
             java -version
             ls
-          fi
-      - name: Install build tools    
+          fi 
 
       - name: pcp version
         id: pcp-version

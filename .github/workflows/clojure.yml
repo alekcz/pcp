@@ -72,6 +72,7 @@ jobs:
           key: ${{ runner.os }}-graalvm-19.3.1
           restore-keys: |
                 ${{ runner.os }}-graalvm-19.3.1
+                
       - name: pcp version
         id: pcp-version
         run: |
@@ -91,14 +92,12 @@ jobs:
             export PATH=$GRAALVM_HOME/bin:$PATH
             java -version
             gu install native-image
-            cd pcp
-            lein native-image
             ls
           fi 
 
-#      - name: Build Linux native image
-#        run: |
-#            lein native-image
+      - name: Build Linux native image
+        run: |
+            lein native-image
 
       - uses: actions/upload-artifact@v1
         with:

@@ -1,20 +1,19 @@
 (ns pcp.scgi
-  (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [com.climate.claypoole :as cp])
-  (:import  (java.net Socket ServerSocket SocketException InetAddress)
-            (java.io BufferedWriter))
+  (:require [com.climate.claypoole :as cp]
+            [clojure.string :as str])
+  (:import [java.nio.channels ServerSocketChannel Selector SelectionKey]
+           [java.nio ByteBuffer CharBuffer]
+           [java.net InetSocketAddress StandardSocketOptions])
   (:gen-class))
 
+(def selector (Selector/open))
 (def pool (cp/threadpool 100))
 
-(defn to-byte-array [text]
-  (.getBytes ^String text "UTF-8"))
+(defn to-byte-array [^String text]
+  (-> text (.getBytes "UTF-8") ByteBuffer/wrap))
 
-(defn to-string [bytes]
-  (String. ^"[B" bytes "UTF-8"))
-
-(def ans (to-byte-array "Status: 200 OK\r\nContent-Type: text/plain\r\n\r\nresponse\r\n"))
+(defn to-string [buf]
+  (-> buf .array String.))
 
 (defn extract-headers [req]
   (let [data (-> req (str/replace "\0" "\n") (str/replace #",$" ""))
@@ -23,33 +22,48 @@
         values (take-nth 2 (rest vec-data))]
     (zipmap keys values)))
 
-(defn cleaner [socket-data]
-  (-> socket-data to-string extract-headers))
- 
- (defn receive! [socket]
-  (let [is (io/input-stream socket)
-        bufsize 8192
-        buf (byte-array bufsize)
-        _ (.read is buf)]
-    buf))
+(defn withAccept [key]
+  (let [socketChannel (-> key .channel .accept)]
+    (.configureBlocking socketChannel false)
+    (.register socketChannel selector SelectionKey/OP_READ)))
 
-(defn send! [^Socket socket ^String msg]
-  (let [^BufferedWriter writer (io/writer socket)] 
-    (.write writer msg (int 0) (count msg))
-    (.flush writer)))
+(defn withRead [key handler]
+  (try
+    (let [socket-channel (.channel key)
+        buf (ByteBuffer/allocate 8192)]
+      (.clear buf)
+      (.read socket-channel buf)
+      (.flip buf)          
+      (let [resp (-> buf to-string extract-headers handler to-byte-array)]
+        (.write socket-channel resp)
+        (.close socket-channel)
+        (.cancel key)))
+    (catch Exception e (.printStackTrace e))))
 
-(defn accept-connection [server-sock handler]
-  (let [^Socket sock (.accept ^Socket server-sock)]
-        (cp/future pool
-          (let [msg-in (receive! sock) msg-out (-> msg-in cleaner handler)]
-            (send! sock msg-out)
-            (.close ^Socket sock)))))
+(defn withUnknown [key]
+  (println "unkonwn type" (.readyOps key)))
+
+(defn build-server [port]
+  (let [serverChannel (ServerSocketChannel/open)
+        portAddr (InetSocketAddress. port)]
+      (.configureBlocking serverChannel false)
+      (.bind (.socket serverChannel) portAddr)
+      (.register serverChannel selector SelectionKey/OP_ACCEPT)
+      serverChannel))
 
 (defn serve [port handler]
-    (with-open [server-sock (ServerSocket. port (int 50) (InetAddress/getByName "127.0.0.1"))]
-      (loop [connections 1]      
-        (try        
-          (accept-connection server-sock handler)
-          (catch SocketException _disconnect))
-        (recur (inc connections)))
-      (cp/shutdown pool)))
+  (let [serverChannel (build-server port)]
+    (println "server started")
+    (while true
+      (if (not= 0 (.select selector 50))
+          (let [keys (.selectedKeys selector)]      
+            (doseq [key keys]
+              (let [ops (.readyOps key)]
+                (cond
+                  (= ops SelectionKey/OP_ACCEPT) (withAccept key)
+                  (= ops SelectionKey/OP_READ)   (withRead key handler)
+                  :else (withUnknown key))))
+            (.clear keys)))
+          nil))
+  (println "end"))
+

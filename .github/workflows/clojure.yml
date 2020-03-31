@@ -85,21 +85,18 @@ jobs:
           if ! [ -d graalvm-ce-java8-19.3.1 ]; then
             curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
             tar xzf graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
-            mv graalvm-ce-java8-19.3.1/ ~/graalvm
-            export GRAALVM_HOME=~/graalvm
-            export JAVA_HOME=~/graalvm/Contents/Home
-            export PATH=$JAVA_HOME/bin:$PATH
-            export PATH=$GRAALVM_HOME/bin:$PATH
-            java -version
-            gu install native-image
-            cd ~/pcp
-            lein native-image
             ls
           fi 
 
-#      - name: Build Linux native image
-#        run: |
-#            lein native-image
+      - name: Build Linux native image
+        run: |
+          export GRAALVM_HOME=~/graalvm-ce-java8-19.3.1
+          export JAVA_HOME=~/graalvm-ce-java8-19.3.1/Contents/Home
+          export PATH=$JAVA_HOME/bin:$PATH
+          export PATH=$GRAALVM_HOME/bin:$PATH
+          java -version
+          gu install native-image
+          lein native-image
 
       - uses: actions/upload-artifact@v1
         with:

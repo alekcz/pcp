@@ -4,19 +4,6 @@ on: [push]
 
 jobs:
 
-  scratch:
-    runs-on: ubuntu-18.04
-    steps:
-      - name: Git checkout
-        uses: actions/checkout@v1
-        with:
-          fetch-depth: 1
-          submodules: 'true'
-
-      - name: Scratch
-        run: |
-          echo "Scratch"
-
   jvm:
     # ubuntu 18.04 comes with lein + java8 installed
     runs-on: ubuntu-18.04
@@ -68,10 +55,10 @@ jobs:
         uses: actions/cache@v1
         id: cache-graalvm
         with:
-          path: ~/graalvm-ce-java8-19.3.1
-          key: ${{ runner.os }}-graalvm-19.3.1
+          path: ~/graalvm-ce-java8-20.0.0
+          key: ${{ runner.os }}-graalvm-20.0.0
           restore-keys: |
-                ${{ runner.os }}-graalvm-19.3.1
+                ${{ runner.os }}-graalvm-20.0.0
                 
       - name: pcp version
         id: pcp-version
@@ -82,17 +69,17 @@ jobs:
       - name: Download GraalVM
         run: |
           cd ~
-          if ! [ -d graalvm-ce-java8-19.3.1 ]; then
-            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
-            tar xzf graalvm-ce-java8-linux-amd64-19.3.1.tar.gz
+          if ! [ -d graalvm-ce-java8-20.0.0 ]; then
+            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.0.0/graalvm-ce-java8-darwin-amd64-20.0.0.tar.gz
+            tar xzf graalvm-ce-java8-linux-amd64-20.0.0.tar.gz
           fi 
 
       - name: Build Linux native image
         env:
           _JAVA_OPTIONS: -Xmx6g
         run: |
-          export GRAALVM_HOME=~/graalvm-ce-java8-19.3.1
-          export JAVA_HOME=~/graalvm-ce-java8-19.3.1/Contents/Home
+          export GRAALVM_HOME=~/graalvm-ce-java8-20.0.0
+          export JAVA_HOME=~/graalvm-ce-java8-20.0.0/Contents/Home
           export PATH=$JAVA_HOME/bin:$PATH
           export PATH=$GRAALVM_HOME/bin:$PATH
           java -version
@@ -118,17 +105,17 @@ jobs:
         uses: actions/cache@v1
         id: cache-graalvm
         with:
-          path: ~/graalvm-ce-java8-19.3.1
-          key: ${{ runner.os }}-graalvm-19.3.1
+          path: ~/graalvm-ce-java8-20.0.0
+          key: ${{ runner.os }}-graalvm-20.0.0
           restore-keys: |
-                ${{ runner.os }}-graalvm-19.3.1
+                ${{ runner.os }}-graalvm-20.0.0
 
       - name: Download GraalVM
         run: |
           cd ~
-          if ! [ -d graalvm-ce-java8-19.3.1 ]; then
-            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-19.3.1/graalvm-ce-java8-darwin-amd64-19.3.1.tar.gz
-            tar xzf graalvm-ce-java8-darwin-amd64-19.3.1.tar.gz
+          if ! [ -d graalvm-ce-java8-20.0.0 ]; then
+            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-20.0.0/graalvm-ce-java8-darwin-amd64-20.0.0.tar.gz
+            tar xzf graalvm-ce-java8-darwin-amd64-20.0.0.tar.gz
           fi
 
       - name: pcp version
@@ -141,8 +128,8 @@ jobs:
         env:
           _JAVA_OPTIONS: -Xmx4g
         run: |
-          export GRAALVM_HOME=~/graalvm-ce-java8-19.3.1
-          export JAVA_HOME=~/graalvm-ce-java8-19.3.1/Contents/Home
+          export GRAALVM_HOME=~/graalvm-ce-java8-20.0.0
+          export JAVA_HOME=~/graalvm-ce-java8-20.0.0/Contents/Home
           export PATH=$JAVA_HOME/bin:$PATH
           export PATH=$GRAALVM_HOME/bin:$PATH
           java -version

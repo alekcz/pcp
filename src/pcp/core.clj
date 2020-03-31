@@ -8,18 +8,19 @@
     ;scgi
     [pcp.scgi :as scgi]
     ;local server
-    [org.httpkit.server :refer [run-server]]
-    [compojure.core :refer [routes ANY]]
-    [compojure.route :as route]
+    ; [org.httpkit.server :refer [run-server]]
+    ; [compojure.core :refer [routes ANY]]
+    ; [compojure.route :as route]
     ;included in environment
-    [cheshire.core :as json]
-    [clostache.parser :as parser]
-    [hiccup.core :as hiccup]
-    [next.jdbc :as jdbc]
-    [honeysql.core :as sql]
-    [honeysql.helpers :as helpers]
-    [clojure.pprint :as pprint]
-    [clj-http.lite.client :as client])
+    ; [cheshire.core :as json]
+    ; [clostache.parser :as parser]
+    ; [hiccup.core :as hiccup]
+    ; [next.jdbc :as jdbc]
+    ; [honeysql.core :as sql]
+    ; [honeysql.helpers :as helpers]
+    ; [clojure.pprint :as pprint]
+    ; [clj-http.lite.client :as client]
+    )
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -28,15 +29,17 @@
   (into {} (ns-publics namespace)))
 
 (def namespaces
-  { 'cheshire.core (extract-namespace 'cheshire.core)
-    'clostache.parser (extract-namespace 'clostache.parser)
-    'next.jdbc (extract-namespace 'next.jdbc)
-    'honeysql.core (extract-namespace 'honeysql.core)
-    'honeysql.helpers (extract-namespace 'honeysql.helpers)
-    'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
-    'clojure.pprint (extract-namespace 'clojure.pprint)
-    'hiccup.core {'html (with-meta @#'hiccup/html {:sci/macro true})
-                  'h #'hiccup/h}})
+  { 
+    ;'cheshire.core (extract-namespace 'cheshire.core)
+    ;'clostache.parser (extract-namespace 'clostache.parser)
+    ;'next.jdbc (extract-namespace 'next.jdbc)
+    ;'honeysql.core (extract-namespace 'honeysql.core)
+    ;'honeysql.helpers (extract-namespace 'honeysql.helpers)
+    ;'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
+    ;'clojure.pprint (extract-namespace 'clojure.pprint)
+    ;'hiccup.core {'html (with-meta @#'hiccup/html {:sci/macro true})
+    ;              'h #'hiccup/h}
+                  })
 
 (def cli-options [])
 
@@ -91,48 +94,48 @@
           (sci/eval-string full-source opts))
       (format-response 404 nil nil))))
 
-(defn file-exists? [path]
-  (-> path io/file .exists))
+; (defn file-exists? [path]
+;   (-> path io/file .exists))
   
-(defn serve-file [root path]
-  (let [full-path (str root path)
-        not-found (str root "/404.clj")]
-    (cond
-      (file-exists? full-path) (io/file full-path)
-      (file-exists? not-found) (resp/status (run not-found :root root) 404)
-      :else (format-response 404 nil nil))))
+; (defn serve-file [root path]
+;   (let [full-path (str root path)
+;         not-found (str root "/404.clj")]
+;     (cond
+;       (file-exists? full-path) (io/file full-path)
+;       (file-exists? not-found) (resp/status (run not-found :root root) 404)
+;       :else (format-response 404 nil nil))))
 
-(defn handle-index [root path]
-  (cond
-      (file-exists? (str path "index.clj"))   (run (str path "index.clj") :root root)
-      (file-exists? (str path "core.clj"))    (run (str path "core.clj") :root root)
-      (file-exists? (str path "main.clj"))    (run (str path "main.clj") :root root)
-      (file-exists? (str path "index.html"))  (serve-file root (str path "index.html"))
-      (file-exists? (str path "index.htm"))   (serve-file root (str path "index.htm"))
-      :else (format-response 404 nil nil)))
+; (defn handle-index [root path]
+;   (cond
+;       (file-exists? (str path "index.clj"))   (run (str path "index.clj") :root root)
+;       (file-exists? (str path "core.clj"))    (run (str path "core.clj") :root root)
+;       (file-exists? (str path "main.clj"))    (run (str path "main.clj") :root root)
+;       (file-exists? (str path "index.html"))  (serve-file root (str path "index.html"))
+;       (file-exists? (str path "index.htm"))   (serve-file root (str path "index.htm"))
+;       :else (format-response 404 nil nil)))
 
-(defn local-handler [root request]
-  (let [path (str root (:uri request))]
-    (println request)
-    (cond 
-      (str/ends-with? path ".clj")  (run path :root root)
-      (str/ends-with? path "/")  (handle-index root path)
-      :else (serve-file root path))))
+; (defn local-handler [root request]
+;   (let [path (str root (:uri request))]
+;     (println request)
+;     (cond 
+;       (str/ends-with? path ".clj")  (run path :root root)
+;       (str/ends-with? path "/")  (handle-index root path)
+;       :else (serve-file root path))))
 
-(defn make-routes [root]
-  (routes
-    (ANY "*" [] 
-    (fn [request] 
-      (println request)
-        (let [resp (local-handler root request)] 
-          (println (str (-> request :request-method name str/upper-case) " " (:uri request) " " (:status resp)))
-          resp)))))
+; (defn make-routes [root]
+;   (routes
+;     (ANY "*" [] 
+;     (fn [request] 
+;       (println request)
+;         (let [resp (local-handler root request)] 
+;           (println (str (-> request :request-method name str/upper-case) " " (:uri request) " " (:status resp)))
+;           resp)))))
 
 
-(defn start-local-server [root-dir port]
-  (let [root (-> (or root-dir "./src") io/file .getCanonicalPath)]
-    (run-server (make-routes root) {:port port})
-    (println (str "Serving " root " at http://127.0.0.1:" port))))
+; (defn start-local-server [root-dir port]
+;   (let [root (-> (or root-dir "./src") io/file .getCanonicalPath)]
+;     (run-server (make-routes root) {:port port})
+;     (println (str "Serving " root " at http://127.0.0.1:" port))))
 
 (defn scgi-handler [req]
   (let [root (:document-root req)
@@ -150,7 +153,7 @@
         param (first (:arguments opts))
         port (Integer/parseInt (or (System/getenv "PORT") "9000"))]
     (case path
-      "serve" (start-local-server param port)
+      ;"serve" (start-local-server param port)
       "scgi"  (do
                 (println (str "SCGI server started on http://127.0.0.1:" port))
                 (scgi/serve port scgi-handler))

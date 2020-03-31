@@ -4,22 +4,24 @@
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
 
-  :dependencies [ [org.clojure/clojure "1.9.0"]
+  :dependencies [ ;core
+                  [org.clojure/clojure "1.9.0"]
                   [org.clojure/tools.cli "1.0.194"]
-                  [org.martinklepsch/clj-http-lite "0.4.3"]
-                  [compojure "1.6.1"]
                   [borkdude/sci "0.0.13-alpha.12"]
-                  [http-kit "2.3.0"]
+                  
+                  ;localserver
+                  ;[compojure "1.6.1"]
+                  ;[http-kit "2.3.0"]
                   ;scgi
-                  [com.climate/claypoole "1.1.4"]
+                  ;s[com.climate/claypoole "1.1.4"]
                   ;includes for hosted environemnt
-                  [cheshire "5.9.0"]
-                  [de.ubercode.clostache/clostache "1.4.0"]
-                  [hiccup "1.0.5"]
-                  [seancorfield/next.jdbc "1.0.409"]
-                  [org.postgresql/postgresql "42.2.11"]
-                  [honeysql "0.9.10"]
-                  [org.martinklepsch/clj-http-lite "0.4.3"]
+                  ; [cheshire "5.9.0"]
+                  ; [de.ubercode.clostache/clostache "1.4.0"]
+                  ; [hiccup "1.0.5"]
+                  ; [seancorfield/next.jdbc "1.0.409"]
+                  ; [org.postgresql/postgresql "42.2.11"]
+                  ; [honeysql "0.9.10"]
+                  ; [org.martinklepsch/clj-http-lite "0.4.3"]
                 ]
   :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]

@@ -1,14 +1,14 @@
 (ns pcp.scgi
   (:require [clojure.java.io :as io]
-            [clojure.string :as str]
-            [com.climate.claypoole :as cp])
+            ;s[com.climate.claypoole :as cp]
+            [clojure.string :as str])
   (:import  (java.net Socket ServerSocket SocketException InetAddress)
             (java.io BufferedWriter))
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
 
-(def pool (cp/threadpool 10))
+;(def pool (cp/threadpool 10))
 
 (defn to-byte-array [text]
   (.getBytes ^String text "UTF-8"))
@@ -43,8 +43,7 @@
 
 (defn accept-connection [server-sock handler]
   (let [^Socket sock (.accept ^ServerSocket server-sock)]
-        (println (type server-sock))
-        (cp/future pool
+        (future
           (let [msg-in (receive! sock) msg-out (-> msg-in cleaner handler)]
             (send! sock msg-out)
             (.close ^Socket sock)))))
@@ -56,4 +55,5 @@
           (accept-connection server-sock handler)
           (catch SocketException _disconnect))
         (recur (inc connections)))
-      (cp/shutdown pool)))
+      ;(cp/shutdown pool)
+      ))

@@ -1,7 +1,10 @@
 name: Clojure CI
 
-on: [push]
-
+on: 
+  push:
+    branches:
+      - master
+      
 jobs:
 
   jvm:

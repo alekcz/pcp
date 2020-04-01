@@ -8,11 +8,9 @@
                   [org.clojure/clojure "1.9.0"]
                   [org.clojure/tools.cli "1.0.194"]
                   [borkdude/sci "0.0.13-alpha.12"]
-                  
-                  ;localserver
-                  ;[compojure "1.6.1"]
-                  ;[http-kit "2.3.0"]
-                  ;scgi
+                  [ring-simpleweb-adapter "0.2.0"]
+                  [org.simpleframework/simple "4.1.21"]
+                  ;optimizing
                   ;[com.climate/claypoole "1.1.4"]
                   
                   ;includes for hosted environemnt
@@ -22,6 +20,7 @@
                   [seancorfield/next.jdbc "1.0.409"]
                   [org.postgresql/postgresql "42.2.11"]
                   [honeysql "0.9.10"]
+                  ;[com.draines/postal "2.0.3"]
                 ]
   :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
@@ -44,18 +43,18 @@
     "-jar" "./target/${:uberjar-name:-${:name}-${:version}-standalone.jar}"
     "-H:Name=./target/${:name}"]
 
-   "run-native" ["shell" "./target/${:name} scgi"]}
+   "run-native" ["shell" "./target/${:name} scgi"]})
 
-  :native-image {:name     "pcp"
-                 :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
-                 :opts     ["--enable-url-protocols=http,https"
-                            "--report-unsupported-elements-at-runtime"
-                            "--no-fallback"
-                            "--initialize-at-build-time"
-                            "--allow-incomplete-classpath"
-                            "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
-                            "--enable-all-security-services"
-                            "--no-server"
-                            "-H:ReflectionConfigurationFiles=reflect-config.json"]})
+  ; :native-image {:name     "pcp"
+  ;                :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
+  ;                :opts     ["--enable-url-protocols=http,https"
+  ;                           "--report-unsupported-elements-at-runtime"
+  ;                           "--no-fallback"
+  ;                           "--initialize-at-build-time"
+  ;                           "--allow-incomplete-classpath"
+  ;                           "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
+  ;                           "--enable-all-security-services"
+  ;                           "--no-server"
+  ;                           "-H:ReflectionConfigurationFiles=reflect-config.json"]})
 
 

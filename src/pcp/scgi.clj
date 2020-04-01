@@ -1,6 +1,7 @@
 (ns pcp.scgi
   (:require [clojure.java.io :as io]
             ;s[com.climate.claypoole :as cp]
+            [pcp.resp :as resp]
             [clojure.string :as str])
   (:import  (java.net Socket ServerSocket SocketException InetAddress)
             (java.io BufferedWriter))
@@ -10,14 +11,9 @@
 
 ;(def pool (cp/threadpool 10))
 
-(defn to-byte-array [text]
-  (.getBytes ^String text "UTF-8"))
 
-(defn to-string [bytes]
-  (String. ^"[B" bytes "UTF-8"))
-
-(def ans (to-byte-array "Status: 200 OK\r\nContent-Type: text/plain\r\n\r\nresponse\r\n"))
-(def ans2 (to-byte-array "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello\r\n"))
+(def ans (resp/to-byte-array "Status: 200 OK\r\nContent-Type: text/plain\r\n\r\nresponse\r\n"))
+(def ans2 (resp/to-byte-array "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello\r\n"))
 
 (defn extract-headers [req]
   (let [data (-> req (str/replace "\0" "\n") (str/replace #",$" ""))
@@ -27,7 +23,7 @@
     (zipmap keys values)))
 
 (defn cleaner [socket-data]
-  (-> socket-data to-string extract-headers))
+  (-> socket-data resp/to-string extract-headers))
  
  (defn receive! [socket]
   (let [is (io/input-stream socket)
@@ -49,6 +45,16 @@
             (.close ^Socket sock)))))
 
 (defn serve [port handler]
+    (with-open [server-sock (ServerSocket. port (int 150) (InetAddress/getByName "127.0.0.1"))]
+      (loop [connections 1]      
+        (try        
+          (accept-connection server-sock handler)
+          (catch SocketException _disconnect))
+        (recur (inc connections)))
+      ;(cp/shutdown pool)
+      ))
+
+(defn scgi [port handler]
     (with-open [server-sock (ServerSocket. port (int 150) (InetAddress/getByName "127.0.0.1"))]
       (loop [connections 1]      
         (try        

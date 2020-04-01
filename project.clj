@@ -10,6 +10,7 @@
                   [borkdude/sci "0.0.13-alpha.12"]
                   [ring-simpleweb-adapter "0.2.0"]
                   [org.simpleframework/simple "4.1.21"]
+                  [io.replikativ/konserve "0.5.1"]
                   ;optimizing
                   ;[com.climate/claypoole "1.1.4"]
                   

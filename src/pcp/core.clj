@@ -138,7 +138,7 @@
 (defn local-handler [request]
   (let [root admin-path
         path (str root (:uri request))]
-    (println "HTTP:" (str/upper-case (name (:request-method request))) (:uri request))
+    ;(println "HTTP:" (str/upper-case (name (:request-method request))) (:uri request))
     (cond 
       (str/ends-with? path ".clj")  (run path :root root)
       (str/ends-with? path "/")  (handle-index root path)
@@ -152,7 +152,7 @@
         mime (-> r :headers (get "Content-Type"))
         nl "\r\n"
         response (str (:status r) nl (str "Content-Type: " mime) nl nl (:body r))]
-    (println "SCGI:"  (:request-method request) doc)
+    ;(println "SCGI:"  (:request-method request) doc)
     response))
 
 (defn start-servers [port admin-port]

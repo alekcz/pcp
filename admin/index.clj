@@ -1,45 +1,16 @@
-(require '[cheshire.core :as json])
+(include "components.clj")
 
-
-(def names ["Alexander" "Alex" "Al"])
-
-(def header 
-    [:div {:class "header"} ""])
 (def main 
-    [:div {:class "main"}  
-        [:h1 {:class "title"} "Welcome to the PCP Admin Panel"]
-        [:a {:class "button is-primary"} "Login"]
-       ; [:div 
-            ; (str
-            ; (email/send-message 
-            ;     {   :host "mail.musketeers.io"
-            ;         :user "pcp@musketeers.io"
-            ;         :pass "@drug4rebad"}
-            ;     {   :from "alex@pcp-clj.com"
-            ;         :to ["alekcz@gmail.com"]
-            ;         :subject "Welcome to PCP!"
-            ;         :body "Testing. Testing 1 2."}) )
-                   ; ]
-                    ])
-(def footer 
-    [:div {:class "footer"} ""])
-
-(defn page [header main footer]
-    [:html
-      [:head
-        "<meta charset='utf-8'>"
-        "<meta name='viewport' content='width=device-width, initial-scale=1'>"
-        [:link {:rel "stylesheet" :type "text/css" :href "https://fonts.googleapis.com/css2?family=Ubuntu:wght@300&display=swap"}]
-        [:link {:rel "stylesheet" :type "text/css" :href "bulma.css"}]
-        [:link {:rel "stylesheet" :type "text/css" :href "core.css"}]
-
-        [:script {:src "https://use.fontawesome.com/releases/v5.3.1/js/all.js" :defer nil}]
-        ]
-      [:body 
-        header 
-        main 
-        footer]])
-
+    [:div {:class "landing content is-large"}  
+        [:h1 {:class "is-size-1 title"} "Welcome to PCP"]
+        [:h6 {:class "has-text-weight-normal"} 
+            [:strong "PCP Clojure Processor"]
+            [:i {:class "has-text-weight-light"} "Like drugs but better"]]
+        [:p {:class "is-size-5"} "Too long have we hustled to deploy clojure website. 
+            Too long have we spun up one instance per site. Too long have reminisced about PHP. 
+            Today we enjoy the benefits of both. Welcome to PCP."]
+        (primary-button "Learn more" "https://github.com/alekcz/pcp")
+     ])
 
 (response 200  
-    (str "<!DOCTYPE html>" (html (page header main footer))) "text/html")
+    (page main {:auth false :show-login true}) "text/html")

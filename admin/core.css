@@ -1,5 +1,6 @@
 * {
     font-family: 'Ubuntu', sans-serif;
+    box-sizing: border-box;
 }
 body {
     display: flex;
@@ -9,4 +10,17 @@ body {
 }
 .main {
     flex-grow: 999999;
+}
+.landing {
+    padding: 80px 10vw;
+}
+.title {
+    font-size: 4.5rem !important;
+}
+.navbar {
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,.16);
+    min-height: 72px;
+}
+.footer {
+    padding: 40px 10vw;
 }

@@ -1,0 +1,9 @@
+[Unit]
+Description= pcp scgi server
+
+[Service]
+ExecStart=/usr/bin/java -jar pcp-install-dir
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

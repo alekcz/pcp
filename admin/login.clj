@@ -16,7 +16,7 @@
         [:div {:class "field"}      
             [:label {:class "is-size-6"} "&nbsp;"]                        
             [:div {:class "control"}                 
-                (primary-button "Learn more" "https://github.com/alekcz/pcp")]]
+                (primary-button "Login" "/admin.clj")]]
      ])
 
 (response 200  

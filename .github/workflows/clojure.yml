@@ -88,7 +88,7 @@ jobs:
           java -version
           gu install native-image
           lein native-image
-          ls 
+          mv pcp.service target/pcp.service 
 
       - uses: actions/upload-artifact@v1
         with:

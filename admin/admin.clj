@@ -1,3 +1,5 @@
+(require '[clojurewerkz.scrypt.core :as sc])
+
 (include "components.clj")
 
 (def main 
@@ -5,6 +7,7 @@
         [:h1 {:class "title"} "Welcome to the PCP Admin Panel"]
         [:code (-> pcp :body)]
         [:br]
+        [:p (sc/encrypt "secret" 16384 8 1)]
         (primary-button "Login" "/login.clj")
      ])
 

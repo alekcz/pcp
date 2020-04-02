@@ -15,7 +15,9 @@
     [clj-http.lite.client :as client]
     [next.jdbc :as jdbc]
     [honeysql.core :as sql]
-    [honeysql.helpers :as helpers])
+    [honeysql.helpers :as helpers]
+    [postal.core :as email]
+    [clojurewerkz.scrypt.core :as sc])
   (:import  [java.net URLDecoder]
             [java.net Socket SocketException InetAddress]
             [java.io BufferedWriter]) 
@@ -31,6 +33,8 @@
 
 (def namespaces
   { 
+    'clojurewerkz.scrypt.core (extract-namespace 'clojurewerkz.scrypt.core)
+    'postal.core (extract-namespace 'postal.core)
     'clostache.parser (extract-namespace 'clostache.parser)
     'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
     'next.jdbc (extract-namespace 'next.jdbc)

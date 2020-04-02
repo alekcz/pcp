@@ -11,11 +11,7 @@
                   [ring-simpleweb-adapter "0.2.0"]
                   [org.simpleframework/simple "4.1.21"]
                   [io.replikativ/konserve "0.5.1"]
-                  [clojurewerkz/scrypt "1.2.0"]
-                  [com.draines/postal "2.0.3"]
-                  [com.sun.mail/javax.mail "1.6.2"]
-                  [javax.mail/javax.mail-api "1.6.2"]
-
+                  
                   ;optimizing
                   ;[com.climate/claypoole "1.1.4"]
                   
@@ -26,7 +22,8 @@
                   [seancorfield/next.jdbc "1.0.409"]
                   [org.postgresql/postgresql "42.2.11"]
                   [honeysql "0.9.10"]
-                  ;[com.draines/postal "2.0.3"]
+                  [com.draines/postal "2.0.3"]
+                  [clojurewerkz/scrypt "1.2.0"]
                 ]
   :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]

@@ -41,4 +41,10 @@ fi
 
 mv -f "$download_dir/pcp" "$PWD/pcp"
 
+sed -i "" "s/pcp-install-dir/$download_dir\/pcp.jar/g" "$download_dir/pcp.service"
+
+mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"
+
+mv -f "$download_dir/pcp.jar" "$PWD/pcp.jar"
+
 echo "Successfully installed pcp in $install_dir."

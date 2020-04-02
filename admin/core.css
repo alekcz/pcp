@@ -24,3 +24,12 @@ body {
 .footer {
     padding: 40px 10vw;
 }
+.login {
+    max-width: 320px;
+    margin: 40px auto;
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,.16);
+    padding: 30px;
+}
+.login p {
+    word-break: break-all;
+}

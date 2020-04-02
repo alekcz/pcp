@@ -28,7 +28,8 @@
   :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [nrepl/lein-nrepl "0.3.2"]]
-  :profiles {:uberjar {:aot :all}
+  :profiles {:uberjar {:aot :all
+                       :uberjar-name "pcp.jar"}
             :dev {:plugins [[lein-shell "0.5.0"]]}}
   :aliases
   {"native"
@@ -43,7 +44,8 @@
     "--enable-all-security-services"
     "--no-server"
     "-H:ReflectionConfigurationFiles=reflect-config.json"
-    "-jar" "./target/${:uberjar-name:-${:name}-${:version}-standalone.jar}"
+    ;"-jar" "./target/${:uberjar-name:-${:name}-${:version}-standalone.jar}"
+    "-jar" "./target/${:name}.jar"
     "-H:Name=./target/${:name}"]
 
    "run-native" ["shell" "./target/${:name} scgi"]})

@@ -3,7 +3,7 @@ name: Clojure CI
 on:
   push:
     branches: [ master ]
-    
+
 jobs:
 
   jvm:
@@ -86,13 +86,13 @@ jobs:
           export PATH=$GRAALVM_HOME/bin:$PATH
           java -version
           gu install native-image
-          lein native-image
-          mv pcp.service target/pcp.service 
+          bash build.sh
+          cp pcp.service target/pcp.service 
 
       - uses: actions/upload-artifact@v1
         with:
           path: target
-          name: pcp-v${{ steps.pcp-version.outputs.version }}-linux-amd64.zip
+          name: pcp-v${{ steps.pcp-version.outputs.version }}-linux-amd64
 
   mac:
     needs: [jvm]
@@ -139,8 +139,9 @@ jobs:
           brew install leiningen
           gu install native-image
           bash build.sh
+          cp pcp.service target/pcp.service 
 
       - uses: actions/upload-artifact@v1
         with:
           path: target
-          name: pcp-v${{ steps.pcp-version.outputs.version }}-macos-amd64.zip
+          name: pcp-v${{ steps.pcp-version.outputs.version }}-macos-amd64

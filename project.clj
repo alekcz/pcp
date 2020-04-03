@@ -12,8 +12,9 @@
                   [org.simpleframework/simple "4.1.21"]
                   [io.replikativ/konserve "0.5.1"]
                   [org.clojars.mihaelkonjevic/konserve-pg "0.1.2"]
+                  
                   ;optimizing
-                  ;[com.climate/claypoole "1.1.4"]
+                  [com.climate/claypoole "1.1.4"]
                   
                   ;includes for hosted environemnt
                   [cheshire "5.9.0"]
@@ -28,11 +29,20 @@
   :main pcp.core
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [nrepl/lein-nrepl "0.3.2"]]
-  :profiles {:uberjar {:aot :all
-                       :uberjar-name "pcp.jar"}
-            :dev {:plugins [[lein-shell "0.5.0"]]}}
+  :profiles { :uberjar {:aot :all
+                        :uberjar-name "pcp-server.jar"}
+              :scgi {:aot :all
+                        :main pcp.core
+                        :uberjar-name "pcp-server.jar"}
+              :utility   { :aot :all
+                        :main pcp.utility
+                        :uberjar-name "pcp.jar"}
+              :dev {:plugins [[lein-shell "0.5.0"]]}}
   :aliases
-  {"native"
+  {"pcp" ["run" "-m" "pcp.utility"]
+   "scgi" ["run" "-m" "pcp.core"]
+   "build-utility" ["with-profile" "utility" "uberjar"] 
+   "native"
    ["shell"
     "native-image" 
     "--enable-url-protocols=http,https"
@@ -44,22 +54,7 @@
     "--enable-all-security-services"
     "--no-server"
     "-H:ReflectionConfigurationFiles=reflect-config.json"
-    ;"-jar" "./target/${:uberjar-name:-${:name}-${:version}-standalone.jar}"
     "-jar" "./target/${:name}.jar"
     "-H:Name=./target/${:name}"]
 
    "run-native" ["shell" "./target/${:name} scgi"]})
-
-  ; :native-image {:name     "pcp"
-  ;                :jvm-opts ["-Dclojure.compiler.direct-linking=true"]
-  ;                :opts     ["--enable-url-protocols=http,https"
-  ;                           "--report-unsupported-elements-at-runtime"
-  ;                           "--no-fallback"
-  ;                           "--initialize-at-build-time"
-  ;                           "--allow-incomplete-classpath"
-  ;                           "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
-  ;                           "--enable-all-security-services"
-  ;                           "--no-server"
-  ;                           "-H:ReflectionConfigurationFiles=reflect-config.json"]})
-
-

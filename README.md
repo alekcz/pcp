@@ -13,35 +13,31 @@ Too long have we hustled to deploy clojure website. Too long have we spun up one
 
 ### Non-goals
 
-* Performance<sup>1<sup>
-* Provide a mixed Clojure/Bash DSL (see portability).
-* Replace existing shells. Babashka is a tool you can use inside existing shells like bash and it is designed to play well with them. It does not aim to replace them.
-
-<sup>1<sup> Babashka uses [sci](https://github.com/borkdude/sci) for
-interpreting Clojure. Sci implements a suffiently large subset of
-Clojure. Interpreting code is in general not as performant as executing compiled
-code. If your script takes more than a few seconds to run, Clojure on the JVM
-may be a better fit, since the performance of Clojure on the JVM outweighs its
-startup time penalty. Read more about the differences with Clojure
-[here](#differences-with-clojure).
-
+* Performance.  __PCP should be sufficient for prototypes and small websites  (<= 40 req/s)__
 
 ### How PCP works
-There 
+There two portions to PCP
+- The utility
+- The SCGI server
+
+#### The utility
 
 
+#### The SCGI Server
 
 ### Available libraries
 The following libraries are available in the pcp environment. 
 
-`[cheshire.core :as json]`
-`[clostache.parser :as parser]`
-`[clj-http.lite.client :as client]`
-`[next.jdbc :as jdbc]`
-`[honeysql.core :as sql]`
-`[honeysql.helpers :as helpers]`
-`[postal.core :as email]`
-`[clojurewerkz.scrypt.core :as sc]`
+```clojure
+(require  '[cheshire.core :as json]
+          '[clostache.parser :as parser]
+          '[clj-http.lite.client :as client]
+          '[next.jdbc :as jdbc]
+          '[honeysql.core :as sql]
+          '[honeysql.helpers :as helpers]
+          '[postal.core :as email]
+          '[clojurewerkz.scrypt.core :as sc])
+```
 
 ### Talk
 
@@ -72,11 +68,6 @@ $ pcp /path/to/file.clj
 
 
 ### Setting up a server
-
-Functionality regarding `clojure.core` and `java.lang` can be considered stable
-and is unlikely to change. Changes may happen in other parts of babashka,
-although we will try our best to prevent them. Always check the release notes or
-[CHANGES.md](CHANGES.md) before upgrading.
 
 
 ## Thanks

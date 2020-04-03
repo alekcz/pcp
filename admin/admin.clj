@@ -5,9 +5,8 @@
 (def main 
     [:div {:class "container"}  
         [:h1 {:class "title"} "Welcome to the PCP Admin Panel"]
-        [:code (-> pcp :body)]
         [:br]
-        [:p (sc/encrypt "secret" 16384 8 1)]
+        ;[:p (sc/encrypt "secret" 16384 8 1)]
         (primary-button "Login" "/login.clj")
      ])
 

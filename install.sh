@@ -41,7 +41,7 @@ fi
 
 mv -f "$download_dir/pcp" "$PWD/pcp"
 
-mv -f "$download_dir/pcp.jar" "$PWD/pcp.jar"
+mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
 
 mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"
 

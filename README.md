@@ -1,6 +1,6 @@
 # Welcome to PCP
 
-PCP: Clojure Processor -- _Like drugs but better_
+#### PCP: Clojure Processor -- _Like drugs but better_
 
 ## Introduction
 

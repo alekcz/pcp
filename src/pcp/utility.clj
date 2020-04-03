@@ -86,8 +86,8 @@
     (let [port (Integer/parseInt (or (System/getenv "PORT") "3000"))]
       (case path
         "" (start-local-server port)
-        "-v" "pcp v0.0.1-beta"
-        "--version" "pcp v0.0.1-beta"
+        "-v" (println "pcp v0.0.1-beta")
+        "--version" (println "pcp v0.0.1-beta")
         (do
           (reset! root path)
           (start-local-server port))))))

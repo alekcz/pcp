@@ -31,13 +31,13 @@
             [nrepl/lein-nrepl "0.3.2"]]
   :profiles { ;:uberjar {:aot :all
                ;         :uberjar-name "pcp-server.jar"}
-              :scgi { :aot [pcp.core pcp.scgi pcp.includes pcp.resp]
+              :scgi { :aot :all
                       :main pcp.core
-                      :jar-name "pcp-server-useless.jar"
+                      :jar-name "useless-pcp-server.jar"
                       :uberjar-name "pcp-server.jar"}
               :utility   {  :main pcp.utility
                             :aot [pcp.utility pcp.resp]
-                            :jar-name "pcp-useless.jar"
+                            :jar-name "useless-pcp.jar"
                             :uberjar-name "pcp.jar"}
               :dev {:plugins [[lein-shell "0.5.0"]]}}
   :aliases

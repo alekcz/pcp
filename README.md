@@ -1,10 +1,13 @@
 # Welcome to PCP
 
-#### PCP: Clojure Processor -- _Like drugs but better_
+> PCP: Clojure Processor -- _Like drugs but better_
 
 ## Introduction
 
 Too long have we hustled to deploy clojure website. Too long have we spun up one instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
+
+### Status
+Experimental. Flux. Active development. Chaos.
 
 ### Goals
 

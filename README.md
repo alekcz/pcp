@@ -16,7 +16,7 @@ Too long have we hustled to deploy clojure website. Too long have we spun up one
 * Performance.  __PCP should be sufficient for prototypes and small websites  (<= 40 req/s)__
 
 ### How PCP works
-There two portions to PCP
+PCP has two parts
 - The utility
 - The SCGI server
 

@@ -179,13 +179,10 @@
     response))
 
 (defn start-servers [scgi-port admin-port]
-  (println (str "SCGI server started on http://127.0.0.1:" scgi-port))
-  (println (str "Admin server started on http://127.0.0.1:" admin-port))
   (future (scgi/serve scgi-port scgi-handler))
   (future (web/run-simpleweb admin-handler {:port admin-port})))
 
-(defn start-local-server [port scgi-port admin-port] 
-  (start-servers scgi-port admin-port)
+(defn start-local-server [port] 
   (println (str "Local server started on http://127.0.0.1:" port))
   (web/run-simpleweb local-handler {:port port}))
 
@@ -197,8 +194,10 @@
           scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))
           admin-port (Integer/parseInt (or (System/getenv "ADMIN_PORT") "8000"))]
       (case path
-        "" (start-local-server port scgi-port admin-port)
-        "serve" (start-local-server port scgi-port admin-port)
+        "" (start-local-server port)
+        "all" (do
+                (start-servers scgi-port admin-port)
+                (start-local-server port))
         "scgi" (start-servers scgi-port admin-port)                    
         (run path)))))
 

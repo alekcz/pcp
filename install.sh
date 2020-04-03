@@ -45,4 +45,8 @@ mv -f "$download_dir/pcp.jar" "$PWD/pcp.jar"
 
 mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"
 
+systemctl enable pcp.service
+
+systemctl start pcp.service
+
 echo "Successfully installed pcp in $install_dir."

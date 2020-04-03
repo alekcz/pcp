@@ -11,7 +11,7 @@
                   [ring-simpleweb-adapter "0.2.0"]
                   [org.simpleframework/simple "4.1.21"]
                   [io.replikativ/konserve "0.5.1"]
-                  
+                  [org.clojars.mihaelkonjevic/konserve-pg "0.1.2"]
                   ;optimizing
                   ;[com.climate/claypoole "1.1.4"]
                   

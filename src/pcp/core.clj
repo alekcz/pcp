@@ -160,7 +160,7 @@
       :else (serve-file root path))))
 
 (defn local-handler [request]
-  (let [root (.getCanonicalPath (io/file "admin"));(.getCanonicalPath (io/file "."))
+  (let [root (.getCanonicalPath (io/file "."))
         path (str root (:uri request))]
     (cond 
       (str/ends-with? path ".clj")  (handle-index request root path)
@@ -199,6 +199,8 @@
                 (start-servers scgi-port admin-port)
                 (start-local-server port))
         "scgi" (start-servers scgi-port admin-port)                    
+        "-v" "pcp v0.0.1-beta"
+        "--version" "pcp v0.0.1-beta"
         (run path)))))
 
       

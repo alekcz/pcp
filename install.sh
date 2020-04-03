@@ -47,6 +47,8 @@ mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"
 
 systemctl enable pcp.service
 
+systemctl stop pcp.service
+
 systemctl start pcp.service
 
 chmod a+x "$PWD/pcp"

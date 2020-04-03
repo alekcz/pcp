@@ -49,4 +49,6 @@ systemctl enable pcp.service
 
 systemctl start pcp.service
 
+chmod a+x"$PWD/pcp"
+
 echo "Successfully installed pcp in $install_dir."

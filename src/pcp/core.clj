@@ -53,17 +53,13 @@
     (try
       (let [ans (sci/eval-string full-source opts)]
         ans)
-      (catch Exception e  (do 
-                            (println "error")
-                            (println (.getMessage e))
-                            (format-response 500 nil nil)))))
+      (catch Exception e  (format-response 500 (.getMessage e) nil))))
 
 (defn run [url-path &{:keys [root params]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
         parent (or root (-> file (.getParentFile) str))]
-    (println path)
     (if (string? source)
       (let [opts  (-> { :namespaces includes
                         :bindings { 'pcp (sci/new-var 'pcp params)
@@ -75,10 +71,8 @@
                                     'html html}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
-            full-source (process-includes source parent)
-            ans (process-script full-source opts)]
-        (println full-source)
-        ans)
+            full-source (process-includes source parent)]
+        (process-script full-source opts))
       (format-response 404 nil nil))))
 
 (defn scgi-handler [request]

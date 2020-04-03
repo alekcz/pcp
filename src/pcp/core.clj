@@ -7,9 +7,7 @@
     [clojure.string :as str]
     [pcp.scgi :as scgi]
     [pcp.includes :refer [includes html]])
-  (:import  [java.net URLDecoder]
-            [java.net Socket SocketException InetAddress]
-            [java.io BufferedWriter]) 
+  (:import [java.net URLDecoder]) 
   (:gen-class))
 
 

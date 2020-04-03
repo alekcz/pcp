@@ -1,3 +1,3 @@
 #!/usr/bin/env bash
 
-lein do clean, uberjar, native
+lein do clean, build-server, build-pcp, native

@@ -26,22 +26,25 @@
                   [com.draines/postal "2.0.3"]
                   [clojurewerkz/scrypt "1.2.0"]
                 ]
-  :main pcp.core
+  :auto-clean false
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [nrepl/lein-nrepl "0.3.2"]]
-  :profiles { :uberjar {:aot :all
-                        :uberjar-name "pcp-server.jar"}
-              :scgi {:aot :all
-                        :main pcp.core
-                        :uberjar-name "pcp-server.jar"}
-              :utility   { :aot :all
-                        :main pcp.utility
-                        :uberjar-name "pcp.jar"}
+  :profiles { ;:uberjar {:aot :all
+               ;         :uberjar-name "pcp-server.jar"}
+              :scgi { :aot [pcp.core pcp.scgi pcp.includes pcp.resp]
+                      :main pcp.core
+                      :jar-name "pcp-server-useless.jar"
+                      :uberjar-name "pcp-server.jar"}
+              :utility   {  :main pcp.utility
+                            :aot [pcp.utility pcp.resp]
+                            :jar-name "pcp-useless.jar"
+                            :uberjar-name "pcp.jar"}
               :dev {:plugins [[lein-shell "0.5.0"]]}}
   :aliases
   {"pcp" ["run" "-m" "pcp.utility"]
    "scgi" ["run" "-m" "pcp.core"]
-   "build-utility" ["with-profile" "utility" "uberjar"] 
+   "build-pcp" ["with-profile" "utility" "uberjar"] 
+   "build-server" ["with-profile" "scgi" "uberjar"] 
    "native"
    ["shell"
     "native-image" 

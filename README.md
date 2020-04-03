@@ -109,7 +109,7 @@ $ service nginx restart
 Now that we've switched to `pcp` let generate a ton of requests using [artillery](https://artillery.io/).
 
 ```bash
-$  artillery quick -d 30 -r 400 http://pcp.org/
+$  artillery quick -d 30 -r 400 http://pcp.musketeers.io/
 
 ...some output ommitted...
 

@@ -134,8 +134,8 @@ Summary report @ 08:05:48(+0200) 2020-03-31
 And would you look at that. You're running clojure and your server didn't even flinch. 
 
 
-## Thanks
-For all the 
+## Special thanks
+For the guidance and examples, special thanks to
 
 - [Bruno Bonacci](https://github.com/BrunoBonacci) 
 - [Michiel Borkent](https://github.com/borkdude) 

@@ -8,7 +8,8 @@ Too long have we hustled to deploy clojure website. Too long have we spun up one
 
 ### Goals
 
-* Low latency Clojure scripting alternative to JVM Clojure.
+* Any easy to use, drop-in replacement for php scripts
+* Allow multiple website to be hosted on single $5 VPS
 
 ### Non-goals
 

@@ -2,7 +2,7 @@
 Description= pcp scgi server
 
 [Service]
-ExecStart=/usr/bin/java -jar pcp-install-dir
+ExecStart=/usr/bin/java -jar /usr/local/bin/pcp.jar
 Restart=always
 
 [Install]

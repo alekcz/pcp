@@ -5,7 +5,7 @@
     [clojure.string :as str]
     [ring.adapter.simpleweb :as web])
   (:import  [java.net Socket]
-            [java.io BufferedWriter]) 
+            [java.io BufferedWriter InputStream]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -16,12 +16,12 @@
   (let [is (io/input-stream socket)
         bufsize 4096
         buf (byte-array bufsize)
-        _ (.read is buf)]
+        _ (.read ^InputStream   is buf 0 bufsize)]
     buf))
 
 (defn send! [^Socket socket ^String msg]
   (let [^BufferedWriter writer (io/writer socket)] 
-    (.write writer msg (int 0) (count msg))
+    (.write writer msg 0 ^Integer (count msg))
     (.flush writer)))
 
 (defn forward [scgi-req]

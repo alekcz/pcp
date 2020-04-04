@@ -11,7 +11,8 @@
     [manifold.stream :as s]
     [manifold.deferred :as d]
     [byte-streams :as bs])
-  (:import [java.net URLDecoder]) 
+  (:import [java.net URLDecoder]
+           [java.io File]) 
   (:gen-class))
 
 
@@ -45,10 +46,11 @@
       (resp/status status)
       (resp/content-type mime-type))) 
 
-(defn file-response [path file]
-  (let [mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
+(defn file-response [path ^File file]
+  (let [code (if (.exists file) 200 404)
+        mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
     (-> (resp/response file)    
-        (resp/status 200)
+        (resp/status code)
         (resp/content-type mime))))
 
 (defn process-script [full-source opts]
@@ -61,7 +63,7 @@
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
-        parent (or root (-> file (.getParentFile) str))]
+        parent (or root (-> ^File file (.getParentFile) str))]
     (if (string? source)
       (let [opts  (-> { :namespaces includes
                         :bindings { 'pcp (sci/new-var 'pcp params)

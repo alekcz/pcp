@@ -30,7 +30,8 @@
                 ]
   :auto-clean false
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
-            [nrepl/lein-nrepl "0.3.2"]]
+            [nrepl/lein-nrepl "0.3.2"]
+            [lein-cloverage "1.1.2"]]
   :profiles { ;:uberjar {:aot :all
                ;         :uberjar-name "pcp-server.jar"}
               :scgi { :aot :all

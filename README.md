@@ -48,9 +48,6 @@ None yet.
 
 ## Getting Started
 
-On Windows you can install using [scoop](https://scoop.sh/) and the
-[scoop-clojure](https://github.com/littleli/scoop-clojure) bucket.
-
 ### Installer script
 
 Install via the installer script:

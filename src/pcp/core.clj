@@ -87,42 +87,13 @@
         response (str (:status r) nl (str "Content-Type: " mime) nl nl (:body r))]
     response))
 
-(defn extract-headers [scgi-req]
-  (let [req (bs/convert scgi-req String)
-        data (-> req (str/replace "\0" "\n") (str/replace #",$" ""))
-        vec-data (str/split data #"\n")
-        keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 vec-data))
-        values (take-nth 2 (rest vec-data))]
-    (zipmap keys values)))
-
-(defn process-request [scgi-req]
-  (-> scgi-req extract-headers scgi-handler))
-
-(defn stream-handler [s info]
-   (d/chain 
-    
-      (s/take! s ::drained)
-      
-      (fn [msg]
-        (if (identical? ::drained msg)
-          ::drained
-          (process-request msg)))
-      
-      (fn [msg]
-        (s/put! s msg))
-
-      (fn [msg]
-        (s/close! s)
-        (println s)
-        (flush))))
-
 (defn -main 
   ([]
     (-main ""))
   ([path]       
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
-        ""  (tcp/start-server stream-handler {:port scgi-port}) ;(scgi/serve scgi-port scgi-handler)
+        ""  (scgi/serve scgi-handler scgi-port)
         (run path)))))
 
       

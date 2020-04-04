@@ -8,6 +8,8 @@
                   [org.clojure/clojure "1.9.0"]
                   [org.clojure/tools.cli "1.0.194"]
                   [borkdude/sci "0.0.13-alpha.12"]
+                  [aleph "0.4.6"]
+                  [byte-streams "0.2.4"]
                   [ring-simpleweb-adapter "0.2.0"]
                   [org.simpleframework/simple "4.1.21"]
                   [io.replikativ/konserve "0.5.1"]

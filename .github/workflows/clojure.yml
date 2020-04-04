@@ -88,6 +88,11 @@ jobs:
           gu install native-image
           bash build.sh
           cp pcp.service target/pcp.service 
+          rm target/useless-pcp-server.jar
+          rm target/useless-pcp.jar
+          rm -rf target/classes
+          rm -rf target/stale
+
 
       - uses: actions/upload-artifact@v1
         with:
@@ -140,6 +145,10 @@ jobs:
           gu install native-image
           bash build.sh
           cp pcp.service target/pcp.service 
+          rm target/useless-pcp-server.jar
+          rm target/useless-pcp.jar
+          rm -rf target/classes
+          rm -rf target/stale
 
       - uses: actions/upload-artifact@v1
         with:

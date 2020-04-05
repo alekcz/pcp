@@ -10,8 +10,11 @@
   (testing "Test SCGI server"
     (let [running (atom true)
           handler #(core/scgi-handler %)
-          _ (future (scgi/serve handler 55555 running))
-          socket (Socket. (InetAddress/getByName "127.0.0.1") 55555)
+          scgi-port 55555
+          _ (do 
+              (Thread/sleep 1000)
+              (future (scgi/serve handler scgi-port running)))
+          socket (Socket. (InetAddress/getByName "127.0.0.1") scgi-port)
           message (slurp "test-resources/scgi-request.txt")
           len (count message)]
       (with-open [^Writer w (io/writer socket)

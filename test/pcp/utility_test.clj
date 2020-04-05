@@ -44,7 +44,7 @@
   (testing "Test local server"
     (let [scgi (atom true)
           local (atom nil)
-          scgi-port 9000
+          scgi-port 33333
           handler #(core/scgi-handler %)
           _ (future (scgi/serve handler scgi-port scgi))
           port 44444

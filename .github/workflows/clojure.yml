@@ -30,11 +30,7 @@ jobs:
         run: |
           lein deps
 
-      - name: Run tests
-        run: |
-          lein test
-
-      - name: Calculate coverage
+      - name: Tests and coverage
         env: 
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         run: |

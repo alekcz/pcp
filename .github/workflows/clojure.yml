@@ -33,13 +33,13 @@ jobs:
       - name: Run tests
         run: |
           lein test
-          
+
       - name: Calculate coverage
-          env: 
-            CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          run: |
-            lein cloverage --codecov
-            bash <(curl -s https://codecov.io/bash)
+        env: 
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+        run: |
+          lein cloverage --codecov
+          bash <(curl -s https://codecov.io/bash)
 
   linux:
     needs: [jvm]

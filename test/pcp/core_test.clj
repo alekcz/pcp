@@ -4,36 +4,36 @@
             [pcp.resp :as resp]
             [pcp.core :as core]
             [pcp.scgi :as scgi])
-  (:import  [java.io File]) )
+  (:import  [java.io File]))
 
 (deftest read-source-test
-  (testing "FIXME, I fail."
+  (testing "Test reading source"
     (is (= "(def simple 1234)" (core/read-source "test-resources/read-source.clj")))))
 
 (deftest read-source-not-found-test
-  (testing "FIXME, I fail."
+  (testing "Test reading source when file does not exist"
     (is (= nil (core/read-source "test-resources/not-found")))))
 
 (deftest build-path-test
-  (testing "FIXME, I fail."
+  (testing "Test building path for includes"
     (is (= "/root/file/path" (core/build-path "file/path" "/root" )))))
 
 (deftest process-includes-test
-  (testing "FIXME, I fail."
+  (testing "Test including other files"
     (is (=  "(def test 1234)\n(def test2 5678)" 
             (core/process-includes (slurp "test-resources/process-includes.clj") "test-resources")))))
 
 (deftest process-includes-2-test
-  (testing "FIXME, I fail."
+  (testing "Test including file that doesn't exist"
     (is (thrown? Exception 
             (core/process-includes (slurp "test-resources/process-includes2.clj") "test-resources")))))
 
 (deftest format-response-test
-  (testing "FIXME, I fail."
+  (testing "Test formatting response"
     (is (resp/response? (core/format-response 202 "text" "text/plain")))))
 
 (deftest file-response-test
-  (testing "FIXME, I fail."
+  (testing "Test file response"
     (let [path "test-resources/file-response.csv"
           response (core/file-response path (io/file path))]
       (is (= 200 (:status response)))
@@ -42,7 +42,7 @@
       (is (resp/response? response)))))
 
 (deftest file-response-404-test
-  (testing "FIXME, I fail."
+  (testing "Test file response when file does not exist"
     (let [path "test-resources/not-found"
           response (core/file-response path (io/file path))]
       (is (= 404 (:status response)))
@@ -51,7 +51,7 @@
       (is (resp/response? response)))))     
 
 (deftest core-test
-  (testing "FIXME, I fail."
+  (testing "Test processing clj file"
     (let [root "test-resources"
           uri "/simple.clj"
           scgi-request {:document-root root :document-uri uri }
@@ -63,7 +63,7 @@
     (is (= "text/plain" (-> ans :headers (get "Content-Type")))))))
 
 (deftest core-2-test
-  (testing "FIXME, I fail."
+  (testing "Test processing scgi request when file does not exist"
     (let [root "test-resources"
           uri "/broken.clj"
           ans  (core/run (str root uri))]
@@ -71,7 +71,7 @@
     (is (= {"Content-Type" ""} (:headers ans))))))
 
 (deftest core-3-test
-  (testing "FIXME, I fail."
+  (testing "Test processing file directly"
     (let [root "test-resources"
           uri "/simple.clj"
           expected {:status 200, :headers {"Content-Type" "text/plain"}, :body 1275}
@@ -79,14 +79,14 @@
     (is (= expected ans)))))    
 
 (deftest core-4-test
-  (testing "FIXME, I fail."
+  (testing "Test processing file directly that does not exist"
     (let [root "test-resources"
           uri "/non-existent"
           ans  (core/-main (str root uri))]
     (is (nil? ans)))))     
 
 (deftest core-5-test
-  (testing "FIXME, I fail."
+  (testing "Test processing slurping file that doesn't exist"
     (let [root "test-resources"
           uri "/slurp.clj"
           expected "slurp"

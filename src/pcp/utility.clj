@@ -6,7 +6,7 @@
     [clojure.walk :as walk]
     [org.httpkit.server :as server])
   (:import  [java.net Socket]
-            [java.io BufferedWriter InputStream]) 
+            [java.io File BufferedWriter InputStream]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -68,10 +68,11 @@
       (resp/status status)
       (resp/content-type mime-type))) 
 
-(defn file-response [path file]
-  (let [mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
+(defn file-response [path ^File file]
+  (let [code (if (.exists file) 200 404)
+        mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
     (-> (resp/response file)    
-        (resp/status 200)
+        (resp/status code)
         (resp/content-type mime))))
 
 (defn create-resp [scgi-response]

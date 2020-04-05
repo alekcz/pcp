@@ -1,18 +1,17 @@
 (ns pcp.scgi-test
   (:require [clojure.test :refer :all]
-            [clojure.string :as str]
             [pcp.scgi :as scgi]
             [pcp.core :as core]
             [clojure.java.io :as io])
-  (:import  [java.net Socket]
+  (:import  [java.net Socket InetAddress]
             [java.io Writer]))
 
 (deftest serve-test
-  (testing "FIXME, I fail."
+  (testing "Test SCGI server"
     (let [running (atom true)
           handler #(core/scgi-handler %)
           _ (future (scgi/serve handler 55555 running))
-          socket (Socket. "127.0.0.1",55555)
+          socket (Socket. (InetAddress/getByName "127.0.0.1") 55555)
           message (slurp "test-resources/scgi-request.txt")
           len (count message)]
       (with-open [^Writer w (io/writer socket)

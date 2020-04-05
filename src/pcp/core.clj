@@ -6,11 +6,7 @@
     [clojure.java.io :as io]
     [clojure.string :as str]
     [pcp.scgi :as scgi]
-    [pcp.includes :refer [includes html]]
-    [aleph.tcp :as tcp]
-    [manifold.stream :as s]
-    [manifold.deferred :as d]
-    [byte-streams :as bs])
+    [pcp.includes :refer [includes html]])
   (:import [java.net URLDecoder]
            [java.io File]) 
   (:gen-class))

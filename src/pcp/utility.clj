@@ -4,7 +4,7 @@
     [clojure.java.io :as io]
     [clojure.string :as str]
     [clojure.walk :as walk]
-    [ring.adapter.simpleweb :as web])
+    [org.httpkit.server :as server])
   (:import  [java.net Socket]
             [java.io BufferedWriter InputStream]) 
   (:gen-class))
@@ -107,9 +107,11 @@
         :else (format-response 404 nil nil))))
 
 
-(defn start-local-server [port] 
+(defn start-local-server [port path] 
+  (if (nil? path) nil (reset! root path))
   (println (str "Local server started on http://127.0.0.1:" port))
-  (web/run-simpleweb local-handler {:port port}))
+  (println "Serving" @root)
+  (server/run-server local-handler {:port port}))
 
 (defn -main 
   ([]
@@ -117,11 +119,9 @@
   ([path]       
     (let [port (Integer/parseInt (or (System/getenv "PORT") "3000"))]
       (case path
-        "" (start-local-server port)
-        "-v" (println "pcp v0.0.1-beta")
-        "--version" (println "pcp v0.0.1-beta")
-        (do
-          (reset! root path)
-          (start-local-server port))))))
+        "" (start-local-server port nil)
+        "-v" (println "pcp" (slurp "resources/PCP_VERSION"))
+        "--version" (println "pcp" (slurp "resources/PCP_VERSION"))
+        (start-local-server port path)))))
 
       

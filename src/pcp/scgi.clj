@@ -1,7 +1,7 @@
 (ns pcp.scgi
   (:require [com.climate.claypoole :as cp]
             [clojure.string :as str])
-  (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey SelectableChannel ]
+  (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey SelectableChannel]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress])
   (:gen-class))
@@ -43,9 +43,6 @@
         (.cancel key)))
     (catch Exception e (.printStackTrace e))))
 
-(defn withUnknown [^SelectionKey key]
-  (println "unkonwn type" (.readyOps key)))
-
 (defn build-server [port]
   (let [^ServerSocketChannel serverChannel (ServerSocketChannel/open)
         portAddr (InetSocketAddress. (InetAddress/getByName "127.0.0.1") (int port))]
@@ -53,17 +50,19 @@
       (.bind (.socket serverChannel) portAddr)
       (.register serverChannel selector SelectionKey/OP_ACCEPT)))
 
-(defn serve [handler port]
-  (build-server port)
-  (while true
-    (if (not= 0 (.select selector 50))
-        (let [keys (.selectedKeys selector)]      
-          (doseq [^SelectionKey key keys]
-            (let [ops (.readyOps key)]
-              (cond
-                (= ops SelectionKey/OP_ACCEPT) (withAccept key)
-                (= ops SelectionKey/OP_READ)   (withRead key handler)
-                :else (withUnknown key))))
-          (.clear keys))
-          nil)))
+(defn serve 
+  ([handler port] 
+    (serve handler port (atom true)))
+  ([handler port active]
+    (build-server port)
+    (while (some? @active)
+      (if (not= 0 (.select selector 50))
+          (let [keys (.selectedKeys selector)]      
+            (doseq [^SelectionKey key keys]
+              (let [ops (.readyOps key)]
+                (cond
+                  (= ops SelectionKey/OP_ACCEPT) (withAccept key)
+                  (= ops SelectionKey/OP_READ)   (withRead key handler))))
+            (.clear keys))
+            nil))))
 

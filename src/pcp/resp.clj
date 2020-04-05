@@ -118,4 +118,4 @@
     :.7z "application/x-7z-compressed"})
 
 (defn get-mime-type [extention]
-  (get mime-types (keyword extention) "application/octet-stream"))
+  (get mime-types (keyword extention) ""))

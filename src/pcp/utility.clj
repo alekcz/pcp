@@ -12,6 +12,7 @@
 (set! *warn-on-reflection* 1)
 
 (def root (atom "."))
+(def scgi (atom "9000"))
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (:headers req))]
@@ -45,11 +46,8 @@
       "\n,")))
 
 (defn receive! [socket]
-  (let [is (io/input-stream socket)
-      bufsize 4096
-      buf (byte-array bufsize)
-      _ (.read ^InputStream   is buf 0 bufsize)]
-    buf))
+  (let [rdr (io/reader socket)]
+    (slurp rdr)))
 
 (defn send! [^Socket socket ^String msg]
   (let [^BufferedWriter writer (io/writer socket)] 
@@ -57,10 +55,10 @@
     (.flush writer)))
 
 (defn forward [scgi-req]
-  (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))
+  (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") @scgi))
         socket (Socket. "127.0.0.1" scgi-port)]
         (send! socket scgi-req)
-        (let [ans (-> socket receive! resp/to-string)]
+        (let [ans (receive! socket)]
           ans)))
 
 (defn format-response [status body mime-type]
@@ -77,9 +75,10 @@
 
 (defn create-resp [scgi-response]
   (let [resp-array (str/split scgi-response #"\r\n")
-        status (Integer/parseInt (first resp-array))
+        resp-status (first resp-array)
+        status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
         body (str/join "\n" (-> resp-array rest rest))
-        mime "text/html"
+        mime (second (re-find #"Content-Type: (.*)$" (second resp-array)))
         final-resp (format-response status body mime)]
     final-resp))
 
@@ -108,11 +107,12 @@
         :else (format-response 404 nil nil))))
 
 
-(defn start-local-server [port path] 
-  (if (nil? path) nil (reset! root path))
-  (println (str "Local server started on http://127.0.0.1:" port))
+(defn start-local-server [opts] 
+  (if (nil? (:root opts)) nil (reset! root (:root opts)))
+  (if (nil? (:root scgi)) nil (reset! scgi (:scgi opts)))
+  (println (str "Local server started on http://127.0.0.1:" (:port opts)))
   (println "Serving" @root)
-  (server/run-server local-handler {:port port}))
+  (server/run-server local-handler {:port (:port opts)}))
 
 (defn -main 
   ([]
@@ -120,9 +120,9 @@
   ([path]       
     (let [port (Integer/parseInt (or (System/getenv "PORT") "3000"))]
       (case path
-        "" (start-local-server port nil)
+        "" (start-local-server {:port port})
         "-v" (println "pcp" (slurp "resources/PCP_VERSION"))
         "--version" (println "pcp" (slurp "resources/PCP_VERSION"))
-        (start-local-server port path)))))
+        (start-local-server {:port port :root path})))))
 
       

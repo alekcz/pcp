@@ -44,11 +44,11 @@
   (testing "Test local server"
     (let [scgi (atom true)
           local (atom nil)
+          scgi-port 9000
           handler #(core/scgi-handler %)
-          _ (future (scgi/serve handler 9000 scgi))
+          _ (future (scgi/serve handler scgi-port scgi))
           port 44444
-          _ (reset! local (utility/start-local-server 44444 "test-resources/site"))]
-      (Thread/sleep 1000)
+          _ (reset! local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port}))]
       (let [resp-index (client/get (str "http://localhost:" port "/"))
             resp-text  (client/get (str "http://localhost:" port "/text.txt"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))

@@ -1,7 +1,7 @@
 (ns pcp.scgi
   (:require [com.climate.claypoole :as cp]
             [clojure.string :as str])
-  (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey SelectableChannel]
+  (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress])
   (:gen-class))
@@ -36,7 +36,7 @@
           buf (ByteBuffer/allocate 4096)]
       (.clear buf)
       (.read socket-channel buf)
-      (.flip buf)          
+      (.flip buf)   
       (let [^ByteBuffer resp (-> buf to-string extract-headers handler to-byte-array)]
         (.write socket-channel resp)
         (.close socket-channel)

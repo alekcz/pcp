@@ -23,6 +23,11 @@
     (is (=  "(def test 1234)\n(def test2 5678)" 
             (core/process-includes (slurp "test-resources/process-includes.clj") "test-resources")))))
 
+(deftest process-includes-2-test
+  (testing "FIXME, I fail."
+    (is (thrown? Exception 
+            (core/process-includes (slurp "test-resources/process-includes2.clj") "test-resources")))))
+
 (deftest format-response-test
   (testing "FIXME, I fail."
     (is (resp/response? (core/format-response 202 "text" "text/plain")))))
@@ -56,3 +61,19 @@
     (is (= 200 (:status ans)))
     (is (= 1275 (:body ans)))
     (is (= "text/plain" (-> ans :headers (get "Content-Type")))))))
+
+(deftest core-2-test
+  (testing "FIXME, I fail."
+    (let [root "test-resources"
+          uri "/broken.clj"
+          ans  (core/run (str root uri))]
+    (is (= 500 (:status ans)))
+    (is (= {"Content-Type" ""} (:headers ans))))))
+
+(deftest core-3-test
+  (testing "FIXME, I fail."
+    (let [root "test-resources"
+          uri "/simple.clj"
+          expected {:status 200, :headers {"Content-Type" "text/plain"}, :body 1275}
+          ans  (core/-main (str root uri))]
+    (is (= expected ans)))))    

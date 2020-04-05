@@ -1,6 +1,4 @@
 (ns pcp.resp
-  (:require [clojure.walk :as walk]
-            [clojure.string :as str])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -120,35 +118,4 @@
     :.7z "application/x-7z-compressed"})
 
 (defn get-mime-type [extention]
-  (get mime-types (keyword extention)))
-
-(defn http-to-scgi [req]
-  (let [header (walk/keywordize-keys (:headers req))]
-    (str
-      "REQUEST_METHOD\0" (-> req :request-method name str/upper-case)  "\n"
-      "REQUEST_URI\0" (-> req :uri) "\n"
-      "QUERY_STRING\0" (-> req :query-string) "\n"
-      "CONTENT_TYPE\0" (-> req :content-type) "\n"
-      "DOCUMENT_URI\0" (-> req :document-uri) "\n"
-      "DOCUMENT_ROOT\0" (-> req :document-root) "\n"
-      "SCGI\0" 1 "\n"
-      "SERVER_PROTOCOL\0" (-> req :protocol) "\n"
-      "REQUEST_SCHEME\0" (-> req :scheme) "\n"
-      "HTTPS\0" (-> req :name) "\n"
-      "REMOTE_ADDR\0" (-> req :remote-addr) "\n"
-      "REMOTE_PORT\0" (-> req :name) "\n"
-      "SERVER_PORT\0" (-> req :server-port) "\n"
-      "SERVER_NAME\0" (-> req :server-name) "\n"
-      "HTTP_CONNECTION\0" (-> header :connection) "\n"
-      "HTTP_CACHE_CONTROL\0" (-> header :cache-control) "\n"
-      "HTTP_UPGRADE_INSECURE_REQUESTS\0" (-> header :upgrade-insecure-requests) "\n"
-      "HTTP_USER_AGENT\0" (-> header :user-agent) "\n"
-      "HTTP_SEC_FETCH_DEST\0" (-> header :sec-fetch-dest) "\n"
-      "HTTP_ACCEPT\0" (-> header :cookie) "\n"
-      "HTTP_SEC_FETCH_SITE\0" (-> header :sec-fetch-site) "\n"
-      "HTTP_SEC_FETCH_MODE\0" (-> header :sec-fetch-mode) "\n"
-      "HTTP_SEC_FETCH_USER\0" (-> header :sec-fetch-user) "\n"
-      "HTTP_ACCEPT_ENCODING\0" (-> header :accept-encoding) "\n"
-      "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\n"
-      "HTTP_COOKIE\0" (-> header :cookie) "\n"
-      "\n,")))
+  (get mime-types (keyword extention) "application/octet-stream"))

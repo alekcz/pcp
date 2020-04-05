@@ -77,3 +77,19 @@
           expected {:status 200, :headers {"Content-Type" "text/plain"}, :body 1275}
           ans  (core/-main (str root uri))]
     (is (= expected ans)))))    
+
+(deftest core-4-test
+  (testing "FIXME, I fail."
+    (let [root "test-resources"
+          uri "/non-existent"
+          expected {:status 200, :headers {"Content-Type" "text/plain"}, :body 1275}
+          ans  (core/-main (str root uri))]
+    (is (= expected ans)))))     
+
+(deftest core-5-test
+  (testing "FIXME, I fail."
+    (let [root "test-resources"
+          uri "/slurp.clj"
+          expected "slurp"
+          ans  (core/-main (str root uri))]
+    (is (= expected ans)))))  

@@ -77,7 +77,7 @@
                         (addons/future))
             full-source (process-includes source parent)]
         (process-script full-source opts))
-      (format-response 404 nil nil))))
+      nil)))
 
 (defn scgi-handler [request]
   (let [root (:document-root request)

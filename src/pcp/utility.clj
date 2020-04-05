@@ -3,6 +3,7 @@
     [pcp.resp :as resp]
     [clojure.java.io :as io]
     [clojure.string :as str]
+    [clojure.walk :as walk]
     [ring.adapter.simpleweb :as web])
   (:import  [java.net Socket]
             [java.io BufferedWriter InputStream]) 
@@ -12,11 +13,42 @@
 
 (def root (atom "."))
 
- (defn receive! [socket]
+(defn http-to-scgi [req]
+  (let [header (walk/keywordize-keys (:headers req))]
+    (str
+      "REQUEST_METHOD\0" (-> req :request-method name str/upper-case)  "\n"
+      "REQUEST_URI\0" (-> req :uri) "\n"
+      "QUERY_STRING\0" (-> req :query-string) "\n"
+      "CONTENT_TYPE\0" (-> req :content-type) "\n"
+      "DOCUMENT_URI\0" (-> req :document-uri) "\n"
+      "DOCUMENT_ROOT\0" (-> req :document-root) "\n"
+      "SCGI\0" 1 "\n"
+      "SERVER_PROTOCOL\0" (-> req :protocol) "\n"
+      "REQUEST_SCHEME\0" (-> req :scheme) "\n"
+      "HTTPS\0" (-> req :name) "\n"
+      "REMOTE_ADDR\0" (-> req :remote-addr) "\n"
+      "REMOTE_PORT\0" (-> req :name) "\n"
+      "SERVER_PORT\0" (-> req :server-port) "\n"
+      "SERVER_NAME\0" (-> req :server-name) "\n"
+      "HTTP_CONNECTION\0" (-> header :connection) "\n"
+      "HTTP_CACHE_CONTROL\0" (-> header :cache-control) "\n"
+      "HTTP_UPGRADE_INSECURE_REQUESTS\0" (-> header :upgrade-insecure-requests) "\n"
+      "HTTP_USER_AGENT\0" (-> header :user-agent) "\n"
+      "HTTP_SEC_FETCH_DEST\0" (-> header :sec-fetch-dest) "\n"
+      "HTTP_ACCEPT\0" (-> header :cookie) "\n"
+      "HTTP_SEC_FETCH_SITE\0" (-> header :sec-fetch-site) "\n"
+      "HTTP_SEC_FETCH_MODE\0" (-> header :sec-fetch-mode) "\n"
+      "HTTP_SEC_FETCH_USER\0" (-> header :sec-fetch-user) "\n"
+      "HTTP_ACCEPT_ENCODING\0" (-> header :accept-encoding) "\n"
+      "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\n"
+      "HTTP_COOKIE\0" (-> header :cookie) "\n"
+      "\n,")))
+
+(defn receive! [socket]
   (let [is (io/input-stream socket)
-        bufsize 4096
-        buf (byte-array bufsize)
-        _ (.read ^InputStream   is buf 0 bufsize)]
+      bufsize 4096
+      buf (byte-array bufsize)
+      _ (.read ^InputStream   is buf 0 bufsize)]
     buf))
 
 (defn send! [^Socket socket ^String msg]
@@ -67,11 +99,11 @@
                   :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))]
       (cond 
         (and (str/ends-with? (:document-uri full) ".clj") exists)
-          (-> full resp/http-to-scgi forward create-resp)
+          (-> full http-to-scgi forward create-resp)
         exists 
           (serve-file path)
         (file-exists? not-found)
-          (-> (assoc full :document-uri "/404.clj") resp/http-to-scgi forward create-resp)
+          (-> (assoc full :document-uri "/404.clj") http-to-scgi forward create-resp)
         :else (format-response 404 nil nil))))
 
 

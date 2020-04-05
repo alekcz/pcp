@@ -7,7 +7,8 @@
 Too long have we hustled to deploy clojure website. Too long have we spun up one instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
 
 ### Status
-Experimental. Flux. Active development. Chaos.
+Experimental. Flux. Active development. Chaos.    
+![Clojure CI](https://github.com/alekcz/pcp/workflows/Clojure%20CI/badge.svg?branch=master) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
 
 ### Goals
 

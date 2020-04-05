@@ -41,8 +41,10 @@
           _ (reset! local (utility/start-local-server 44444 "test-resources/site"))]
       (Thread/sleep 1000)
       (let [resp-index (client/get (str "http://localhost:" port "/"))
-            resp-text  (client/get (str "http://localhost:" port "/text.txt"))]
+            resp-text  (client/get (str "http://localhost:" port "/text.txt"))
+            resp-404  (client/get (str "http://localhost:" port "/not-there"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
         (is (= "12345678" (:body resp-text)))
+        (is (= 404 (:status resp-404)))
         (reset! local nil)
         (reset! scgi nil)))))

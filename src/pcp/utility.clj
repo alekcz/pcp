@@ -11,7 +11,7 @@
 
 (set! *warn-on-reflection* 1)
 
-(def root (atom "."))
+(def root (atom nil))
 (def scgi (atom "9000"))
 
 (defn http-to-scgi [req]
@@ -54,9 +54,8 @@
     (.write writer msg 0 ^Integer (count msg))
     (.flush writer)))
 
-(defn forward [scgi-req]
-  (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") @scgi))
-        socket (Socket. "127.0.0.1" scgi-port)]
+(defn forward [scgi-req scgi-port]
+  (let [socket (Socket. "127.0.0.1" ^Integer scgi-port)]
         (send! socket scgi-req)
         (let [ans (receive! socket)]
           ans)))
@@ -88,41 +87,47 @@
 (defn serve-file [path]
   (file-response path (io/file path)))
 
-(defn local-handler [request]
-  (let [root (.getCanonicalPath (io/file @root))
-        path (str root (:uri request))
-        slashpath (str path "index.clj")
-        exists (or (file-exists? path) (file-exists? slashpath))
-        not-found (str root "/404.clj")
-        full (assoc request 
-                  :document-root root 
-                  :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))]
-      (cond 
-        (and (str/ends-with? (:document-uri full) ".clj") exists)
-          (-> full http-to-scgi forward create-resp)
-        exists 
-          (serve-file path)
-        (file-exists? not-found)
-          (-> (assoc full :document-uri "/404.clj") http-to-scgi forward create-resp)
-        :else (format-response 404 nil nil))))
+(defn local-handler [opts]
+  (fn [request]
+    (let [root (.getCanonicalPath (io/file (:root opts)))
+          path (str root (:uri request))
+          slashpath (str path "index.clj")
+          exists (or (file-exists? path) (file-exists? slashpath))
+          not-found (str root "/404.clj")
+          full (assoc request 
+                    :document-root root 
+                    :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))]
+        (cond 
+          (and (str/ends-with? (:document-uri full) ".clj") exists)
+            (-> full http-to-scgi (forward (:scgi-port opts)) create-resp)
+          exists 
+            (serve-file path)
+          (file-exists? not-found)
+            (-> (assoc full :document-uri "/404.clj") http-to-scgi (forward (:scgi-port opts)) create-resp)
+          :else (format-response 404 nil nil)))))
 
 
-(defn start-local-server [opts] 
-  (if (nil? (:root opts)) nil (reset! root (:root opts)))
-  (if (nil? (:root scgi)) nil (reset! scgi (:scgi opts)))
-  (println (str "Local server started on http://127.0.0.1:" (:port opts)))
-  (println "Serving" @root)
-  (server/run-server local-handler {:port (:port opts)}))
+(defn start-local-server [options] 
+  (let [opts (merge 
+              {:port (Integer/parseInt (or (System/getenv "PORT") "3000")) 
+               :root "./" 
+               :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
+              options)
+        server (server/run-server (local-handler opts) {:port (:port opts)})]
+    (println "Targeting SCGI server on port" (:scgi-port opts))
+    (println (str "Local server started on http://127.0.0.1:" (:port opts)))
+    (println "Serving" (:root opts))
+    
+    server))
 
 (defn -main 
   ([]
     (-main ""))
   ([path]       
-    (let [port (Integer/parseInt (or (System/getenv "PORT") "3000"))]
       (case path
-        "" (start-local-server {:port port})
+        "" (start-local-server {})
         "-v" (println "pcp" (slurp "resources/PCP_VERSION"))
         "--version" (println "pcp" (slurp "resources/PCP_VERSION"))
-        (start-local-server {:port port :root path})))))
+        (start-local-server {:root path}))))
 
       

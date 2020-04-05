@@ -14,7 +14,7 @@
           _ (future (scgi/serve handler scgi-port running))
           message (slurp "test-resources/scgi-request.txt")
           len (count message)]
-      (Thread/sleep 4000)
+      (Thread/sleep 500)
       (let [socket (Socket. (InetAddress/getByName "127.0.0.1") scgi-port)]
         (with-open [^Writer w (io/writer socket)
                       rdr (io/reader socket)]

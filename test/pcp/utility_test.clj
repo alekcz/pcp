@@ -8,12 +8,13 @@
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
             [pcp.utility :as utility])
-  (:import  [java.io File]))
+  (:import  [java.io File]
+            [org.httpkit.server HttpServer]))
 
 (deftest version-test
   (testing "Test version flags"
     (let [output (str/trim (with-out-str (utility/-main "-v")))
-          output2 (str/trim (with-out-str (utility/-main "-v")))
+          output2 (str/trim (with-out-str (utility/-main "--version")))
           version (str "pcp " (slurp "resources/PCP_VERSION"))]
       (is (= version output))
       (is (= version output2)))))
@@ -43,16 +44,46 @@
 (deftest server-test
   (testing "Test local server"
     (let [scgi (atom true)
-          local (atom nil)
           scgi-port 33333
           handler #(core/scgi-handler %)
           _ (future (scgi/serve handler scgi-port scgi))
           port 44444
-          _ (reset! local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port}))]
+          local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})]
       (let [resp-index (client/get (str "http://localhost:" port "/"))
             resp-text  (client/get (str "http://localhost:" port "/text.txt"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
         (is (= "12345678" (:body resp-text)))
         (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
-        (reset! local nil)
+        (local)
+        (reset! scgi nil)))))
+
+
+(defn private-field [obj fn-name-string]
+  (let [m (.. obj getClass (getDeclaredField fn-name-string))]
+    (. m (setAccessible true))
+    (. m (get obj))))
+
+(deftest server-2-test
+  (testing "Test local server on default port"
+    (let [scgi (atom true)
+          scgi-port 9000
+          handler #(core/scgi-handler %)
+          _ (future (scgi/serve handler scgi-port scgi))
+          local (utility/-main "test-resources/site")
+          resp-index (client/get (str "http://localhost:3000/"))
+          resp-text  (client/get (str "http://localhost:3000/text.txt"))]
+      (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
+      (is (= "12345678" (:body resp-text)))
+      (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
+      (local)
+      (while (.isAlive ^Thread (private-field (:server (meta local)) "serverThread")))
+      (Thread/sleep 500)
+      (let [local2 (utility/-main)
+            _ (Thread/sleep 1000)
+            resp-index-2 (client/get (str "http://localhost:3000/test-resources/site/index.clj"))
+            resp-text-2  (client/get (str "http://localhost:3000/test-resources/site/text.txt"))]
+        (is (= {:name "Test" :num 1275 :end nil} (-> resp-index-2 :body (json/decode true))))
+        (is (= "12345678" (:body resp-text-2)))
+        (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
+      (local2)
         (reset! scgi nil)))))

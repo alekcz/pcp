@@ -22,8 +22,11 @@
 (defn build-path [path root]
   (str root "/" path))
 
+(defn clean-source [source]
+  (str/replace source #"\u003B.*\n" ""))
+
 (defn process-includes [raw-source parent]
-  (let [source raw-source
+  (let [source (clean-source raw-source)
         includes-used (re-seq #"\(include\s*?\"(.*?)\"\s*?\)" source)]
     (loop [code source externals includes-used]
       (if (empty? externals)
@@ -50,16 +53,17 @@
         (resp/content-type mime))))
 
 (defn process-script [full-source opts]
-    (try
-      (let [ans (sci/eval-string full-source opts)]
-        ans)
-      (catch Exception e  (format-response 500 (.getMessage e) nil))))
+  (sci/eval-string full-source opts))
+
+(defn longer [str1 str2]
+  (if (> (count str1) (count str2)) str1 str2))
 
 (defn run [url-path &{:keys [root params]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
-        parent (or root (-> ^File file (.getParentFile) str))]
+        parent (longer root (-> ^File file (.getParentFile) str))
+        _ (println parent)]
     (if (string? source)
       (let [opts  (-> { :namespaces includes
                         :bindings { 'pcp (sci/new-var 'pcp params)
@@ -79,7 +83,7 @@
   (let [root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
-        r (run path :root root :params request)
+        r (try (run path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))
         mime (-> r :headers (get "Content-Type"))
         nl "\r\n"
         response (str (:status r) nl (str "Content-Type: " mime) nl nl (:body r))]

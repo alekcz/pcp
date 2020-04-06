@@ -16,7 +16,7 @@
 (def scgi (atom "9000"))
 
 (defn http-to-scgi [req]
-  (let [header (walk/keywordize-keys (:headers req))]
+  (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))]
     (str
       "REQUEST_METHOD\0" (-> req :request-method name str/upper-case)  "\n"
       "REQUEST_URI\0" (-> req :uri) "\n"
@@ -107,6 +107,12 @@
             (-> (assoc full :document-uri "/404.clj") http-to-scgi (forward (:scgi-port opts)) create-resp)
           :else (format-response 404 nil nil)))))
 
+(defn run-file [path]
+  (let [path (str/replace (str "/" path) "//" "/")
+        root (.getCanonicalPath (io/file "./"))
+        scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))
+        request {:document-root root :document-uri path :request-method :get}]
+    (println (-> request http-to-scgi (forward scgi-port) create-resp :body))))
 
 (defn start-local-server [options] 
   (let [opts (merge 
@@ -150,11 +156,13 @@
   ([path]       
     (case path
       "" (start-local-server {})
-      "-v" (println "pcp" (slurp "resources/PCP_VERSION"))
-      "--version" (println "pcp" (slurp "resources/PCP_VERSION"))
-      (start-local-server {:root path})))
+      "-v" (println "v0.0.1-beta.4")
+      "--version" (println "v0.0.1-beta.4")
+      "serve" (start-local-server {})
+      (if (str/ends-with? path ".clj")
+        (run-file path)
+        (start-local-server {:root path}))))
   ([service command]    
-    (println service command)   
     (case service
       "service" (case command 
                   "start" (do (println (start-scgi)) (shutdown-agents))

@@ -1,7 +1,7 @@
 (require '[cheshire.core :as json]
          '[clostache.parser :as parser])    
 
-(include "/db/connect.clj")
+;(include "/db/connect.clj")
 (def names ["Alexander" "Alex" "Al"])
   
 ; (with-open [connection (jdbc/get-connection datasource)]

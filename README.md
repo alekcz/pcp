@@ -1,6 +1,7 @@
 # Welcome to PCP
 
 > PCP: Clojure Processor -- _Like drugs but better_
+![Clojure CI](https://github.com/alekcz/pcp/workflows/Clojure%20CI/badge.svg?branch=master) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
 
 ## Introduction
 
@@ -8,7 +9,6 @@ Too long have we hustled to deploy clojure website. Too long have we spun up one
 
 ### Status
 Experimental. Flux. Active development. Chaos.    
-![Clojure CI](https://github.com/alekcz/pcp/workflows/Clojure%20CI/badge.svg?branch=master) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
 
 ### Goals
 
@@ -54,7 +54,7 @@ None yet.
 Install via the installer script:
 
 ``` shellsession
-$ bash <(curl -s https://raw.githubusercontent.com/alekcz/pcp/master/install.sh)
+$ bash -c "$(curl -sSL https://raw.githubusercontent.com/alekcz/pcp/master/install.sh)"
 ```
 
 ### Running scripts

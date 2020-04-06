@@ -4,7 +4,7 @@
     [clojure.java.io :as io]
     [clojure.string :as str]
     [clojure.walk :as walk]
-    [clojure.java.shell :refer [sh]]
+    [clojure.java.shell :as shell]
     [org.httpkit.server :as server])
   (:import  [java.net Socket]
             [java.io File BufferedWriter InputStream]) 
@@ -124,17 +124,27 @@
 (def linux? 
   (-> "os.name" System/getProperty str/lower-case (str/includes? "linux")))
 
+(defn process-service-output [output]
+  (let [err (:err output)]
+    (if (empty? err) "success!" (str "failed: " err))))
+
 (defn start-scgi []
-  (if linux?
-    (println (:err (sh "systemctl" "start" "pcp.service")))
-    (println (:err (sh "launchctl" "load" "-w" "~/Library/LaunchAgents/com.alekcz.pcp.plist"))))
-  (shutdown-agents))
+  (let [ans (if linux?
+              (process-service-output  
+                (shell/sh "systemctl" "start" "pcp.service"))
+              (process-service-output  
+                (shell/sh "launchctl" "load" "-w" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
+    (println (type ans))
+    ans))
 
 (defn stop-scgi []
-  (if linux?
-    (println (:err (sh "systemctl" "stop" "pcp.service")))
-    (println (:err (sh "launchctl" "unload" "~/Library/LaunchAgents/com.alekcz.pcp.plist"))))
-  (shutdown-agents))
+  (let [ans (if linux?
+              (process-service-output 
+                (shell/sh "systemctl" "stop" "pcp.service"))
+              (process-service-output 
+                (shell/sh "launchctl" "unload" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
+    (println (type ans))
+    ans))
 
 (defn -main 
   ([]
@@ -149,7 +159,8 @@
     (println service command)   
     (case service
       "service" (case command 
-                  "start" (start-scgi) 
-                  "stop"  (stop-scgi)))))
+                  "start" (do (println (start-scgi)) (shutdown-agents))
+                  "stop"  (do (println (stop-scgi))  (shutdown-agents))
+                  (println "unknown command:" command)))))
 
       

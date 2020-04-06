@@ -19,9 +19,19 @@
       (is (= version output))
       (is (= version output2)))))
 
+(deftest stop-service-test
+  (testing "Stop service"
+    (let [output (str/trim (with-out-str (utility/-main "service" "stop")))]
+      (is (= output output)))))
+
+(deftest start-service-test
+  (testing "Start service"
+    (let [output (str/trim (with-out-str (utility/-main "service" "start")))]
+      (is (= output output)))))
+
 (deftest format-response-test
   (testing "Test formatting response"
-    (is (resp/response? (utility/format-response 202 "text" "text/plain")))))
+    (is (resp/response? (utility/format-response 200 "text" "text/plain")))))
 
 (deftest file-response-test
   (testing "Test file response"

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+		<string>com.alekcz.pcp</string>
+	<key>Program</key>
+		<string>/usr/bin/java</string>
+	<key>ProgramArguments</key>
+		<array>
+			<string>/usr/bin/java</string>
+			<string>-jar</string>
+			<string>/usr/local/bin/pcp-server.jar</string>
+		</array>
+	<key>RunAtLoad</key>
+		<true/>
+	<key>KeepAlive</key>
+		<true/>
+</dict>
+</plist>

@@ -43,13 +43,20 @@ mv -f "$download_dir/pcp" "$PWD/pcp"
 
 mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
 
-mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"
-
-systemctl enable pcp.service
-
-systemctl stop pcp.service
-
-systemctl start pcp.service
+case "$(uname -s)" in
+    Linux*)     
+        cp -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"
+        systemctl enable pcp.service
+        systemctl start pcp.service
+        #systemctl stop pcp.service
+        ;;
+    Darwin*)    
+        cp -f "$download_dir/com.alekcz.pcp.plist" ~/Library/LaunchAgents/com.alekcz.pcp.plist
+        chown "$(id -un):$(id -g)"  "~/Library/LaunchAgents/com.alekcz.pcp.plist"
+        launchctl load -w ~/Library/LaunchAgents/com.alekcz.pcp.plist
+        #launchctl unload  ~/Library/LaunchAgents/com.alekcz.pcp.plist
+        ;;
+esac
 
 chmod a+x "$PWD/pcp"
 

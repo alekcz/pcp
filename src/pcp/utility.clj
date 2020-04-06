@@ -4,6 +4,7 @@
     [clojure.java.io :as io]
     [clojure.string :as str]
     [clojure.walk :as walk]
+    [clojure.java.shell :refer [sh]]
     [org.httpkit.server :as server])
   (:import  [java.net Socket]
             [java.io File BufferedWriter InputStream]) 
@@ -120,14 +121,35 @@
     
     server))
 
+(def linux? 
+  (-> "os.name" System/getProperty str/lower-case (str/includes? "linux")))
+
+(defn start-scgi []
+  (if linux?
+    (println (:err (sh "systemctl" "start" "pcp.service")))
+    (println (:err (sh "launchctl" "load" "-w" "~/Library/LaunchAgents/com.alekcz.pcp.plist"))))
+  (shutdown-agents))
+
+(defn stop-scgi []
+  (if linux?
+    (println (:err (sh "systemctl" "stop" "pcp.service")))
+    (println (:err (sh "launchctl" "unload" "~/Library/LaunchAgents/com.alekcz.pcp.plist"))))
+  (shutdown-agents))
+
 (defn -main 
   ([]
     (-main ""))
   ([path]       
-      (case path
-        "" (start-local-server {})
-        "-v" (println "pcp" (slurp "resources/PCP_VERSION"))
-        "--version" (println "pcp" (slurp "resources/PCP_VERSION"))
-        (start-local-server {:root path}))))
+    (case path
+      "" (start-local-server {})
+      "-v" (println "pcp" (slurp "resources/PCP_VERSION"))
+      "--version" (println "pcp" (slurp "resources/PCP_VERSION"))
+      (start-local-server {:root path})))
+  ([service command]    
+    (println service command)   
+    (case service
+      "service" (case command 
+                  "start" (start-scgi) 
+                  "stop"  (stop-scgi)))))
 
       

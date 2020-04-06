@@ -30,9 +30,9 @@ download_url="https://github.com/alekcz/pcp/releases/download/v$latest_release/p
 
 cd "$download_dir"
 echo -e "Downloading $download_url."
-curl -o "pcp-$latest_release-$platform-amd64.zip" -sL "https://github.com/alekcz/pcp/releases/download/v$latest_release/pcp-v$latest_release-$platform-amd64.zip"
-unzip -qqo "pcp-$latest_release-$platform-amd64.zip"
-rm "pcp-$latest_release-$platform-amd64.zip"
+curl -o "pcp-v$latest_release-$platform-amd64.zip" -sL "https://github.com/alekcz/pcp/releases/download/v$latest_release/pcp-v$latest_release-$platform-amd64.zip"
+unzip -qqo "pcp-v$latest_release-$platform-amd64.zip"
+rm "pcp-v$latest_release-$platform-amd64.zip"
 
 cd "$install_dir"
 if [ -f pcp ]; then

@@ -101,7 +101,7 @@ jobs:
       - uses: actions/upload-artifact@v1
         with:
           path: target
-          name: pcp-v${{ steps.pcp-version.outputs.version }}-linux-amd64
+          name: pcp-${{ steps.pcp-version.outputs.version }}-linux-amd64
 
   mac:
     needs: [jvm]
@@ -158,4 +158,4 @@ jobs:
       - uses: actions/upload-artifact@v1
         with:
           path: target
-          name: pcp-v${{ steps.pcp-version.outputs.version }}-macos-amd64
+          name: pcp-${{ steps.pcp-version.outputs.version }}-macos-amd64

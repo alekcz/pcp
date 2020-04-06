@@ -65,7 +65,7 @@ jobs:
           restore-keys: |
                 ${{ runner.os }}-graalvm-20.0.0
                 
-      - name: pcp version
+      - name: Set version
         id: pcp-version
         run: |
           PCP_VERSION=$(cat resources/PCP_VERSION)
@@ -130,7 +130,7 @@ jobs:
             tar xzf graalvm-ce-java8-darwin-amd64-20.0.0.tar.gz
           fi
 
-      - name: pcp version
+      - name: Set version
         id: pcp-version
         run: |
             PCP_VERSION=$(cat resources/PCP_VERSION)

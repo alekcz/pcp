@@ -21,12 +21,14 @@
 
 (deftest stop-service-test
   (testing "Stop service"
-    (let [output (str/trim (with-out-str (utility/-main "service" "stop")))]
+    (let [output (utility/stop-scgi)]
+      (println (type output))
       (is (= output output)))))
 
 (deftest start-service-test
   (testing "Start service"
-    (let [output (str/trim (with-out-str (utility/-main "service" "start")))]
+    (let [output (utility/start-scgi)]
+      (println (type output))
       (is (= output output)))))
 
 (deftest format-response-test
@@ -64,7 +66,7 @@
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
         (is (= "12345678" (:body resp-text)))
         (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
-        (println "Here" (local))
+        (local)
         (reset! scgi nil)))))
 
 
@@ -95,5 +97,5 @@
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index-2 :body (json/decode true))))
         (is (= "12345678" (:body resp-text-2)))
         (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
-      (local2)
+        (local2)
         (reset! scgi nil)))))

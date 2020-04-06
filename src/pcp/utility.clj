@@ -134,7 +134,6 @@
                 (shell/sh "systemctl" "start" "pcp.service"))
               (process-service-output  
                 (shell/sh "launchctl" "load" "-w" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
-    (println (type ans))
     ans))
 
 (defn stop-scgi []
@@ -143,7 +142,6 @@
                 (shell/sh "systemctl" "stop" "pcp.service"))
               (process-service-output 
                 (shell/sh "launchctl" "unload" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
-    (println (type ans))
     ans))
 
 (defn -main 

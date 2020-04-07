@@ -22,17 +22,17 @@
       (is (= version output2))
       (is (= version leinversion)))))
 
-(deftest service-test
-  (testing "Stop and start service"
-    (let [_ (utility/stop-scgi)  
-          stop1 (utility/stop-scgi)
-          start1 (str/trim (utility/start-scgi))
-          stop2 (str/trim (with-out-str (utility/-main "service" "stop")))
-          start2 (str/trim (with-out-str (utility/-main "service" "start")))
-          unknown (str/trim (with-out-str (utility/-main "service" "what the hell?")))]
-      (is (= stop1 stop2))
-      (is (= start1 start2))
-      (is (str/includes? unknown "unknown")))))
+; (deftest service-test
+;   (testing "Stop and start service"
+;     (let [_ (utility/stop-scgi)  
+;           stop1 (utility/stop-scgi)
+;           start1 (str/trim (utility/start-scgi))
+;           stop2 (str/trim (with-out-str (utility/-main "service" "stop")))
+;           start2 (str/trim (with-out-str (utility/-main "service" "start")))
+;           unknown (str/trim (with-out-str (utility/-main "service" "what the hell?")))]
+;       (is (= stop1 stop2))
+;       (is (= start1 start2))
+;       (is (str/includes? unknown "unknown")))))
 
 (deftest format-response-test
   (testing "Test formatting response"

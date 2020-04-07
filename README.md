@@ -27,6 +27,19 @@ PCP has two parts
 
 #### The utility
 
+```
+PCP: Clojure Processor -- Like drugs but better
+v0.0.1-beta.5
+
+Usage: pcp [option] [value]
+
+Options:
+  service [stop/start]    Stop/start the PCP SCGI server daemon
+  -e, --evaluate [path]   Evaluate a clojure file using PCP
+  -s, --serve [root]      Start a local server at . or [root]
+  -v, --version           Print the version string and exit
+  -h, --help              Print the command line help
+```      
 
 #### The SCGI Server
 

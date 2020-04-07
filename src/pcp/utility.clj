@@ -7,7 +7,7 @@
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server])
   (:import  [java.net Socket]
-            [java.io File BufferedWriter InputStream]) 
+            [java.io File BufferedWriter]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -45,6 +45,18 @@
       "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\n"
       "HTTP_COOKIE\0" (-> header :cookie) "\n"
       "\n,")))
+
+(def help 
+"PCP: Clojure Processor -- Like drugs but better
+
+Usage: pcp [option] [value]
+
+Options:
+  service [stop/start]    Stop/start the PCP SCGI server daemon
+  -e, --evaluate [path]   Evaluate a clojure file using PCP
+  -s, --serve [root]      Start a local server at . or [root]
+  -v, --version           Print the version string and exit
+  -h, --help              Print the command line help")
 
 (defn receive! [socket]
   (let [rdr (io/reader socket)]
@@ -152,21 +164,25 @@
 
 (defn -main 
   ([]
-    (-main ""))
+    (-main "" ""))
   ([path]       
-    (case path
-      "" (start-local-server {})
-      "-v" (println "pcp" "v0.0.1-beta.5")
-      "--version" (println "pcp" "v0.0.1-beta.5")
-      "serve" (start-local-server {})
-      (if (str/ends-with? path ".clj")
-        (println (run-file path 9000))
-        (start-local-server {:root path}))))
-  ([service command]    
-    (case service
-      "service" (case command 
+    (-main path ""))
+  ([option value]    
+    (case option
+      "-s" (start-local-server {:root value})
+      "--serve" (start-local-server {:root value})
+      "-v" (println "pcp" "v0.0.1-beta.6")
+      "--version" (println "pcp" "v0.0.1-beta.6")
+      "-e" (println (run-file value 9000))
+      "--evaluate" (println (run-file value 9000))
+      "service" (case value 
                   "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
                   "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
-                  (println "unknown command:" command)))))              ;crashing down.
+                  (do                                                   ;crashing down.
+                    (println "unknown command:" value)
+                    (println help)))
+      "" (println help)
+      (println help))))                               
+                  
 
       

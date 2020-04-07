@@ -14,6 +14,18 @@
 
 (set! *warn-on-reflection* 1)
 
+(defn format-response [status body mime-type]
+  (-> (resp/response body)    
+      (resp/status status)
+      (resp/content-type mime-type))) 
+
+(defn file-response [path ^File file]
+  (let [code (if (.exists file) 200 404)
+        mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
+    (-> (resp/response file)    
+        (resp/status code)
+        (resp/content-type mime))))
+
 (defn read-source [path]
   (try
     (str (slurp path))
@@ -39,18 +51,6 @@
             (recur 
               (str/replace code (-> externals first first) included) 
               (rest externals))))))))
- 
-(defn format-response [status body mime-type]
-  (-> (resp/response body)    
-      (resp/status status)
-      (resp/content-type mime-type))) 
-
-(defn file-response [path ^File file]
-  (let [code (if (.exists file) 200 404)
-        mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
-    (-> (resp/response file)    
-        (resp/status code)
-        (resp/content-type mime))))
 
 (defn process-script [full-source opts]
   (sci/eval-string full-source opts))

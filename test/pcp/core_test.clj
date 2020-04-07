@@ -65,10 +65,8 @@
 (deftest core-2-test
   (testing "Test processing scgi request when file does not exist"
     (let [root "test-resources"
-          uri "/broken.clj"
-          ans  (core/run (str root uri))]
-    (is (= 500 (:status ans)))
-    (is (= {"Content-Type" ""} (:headers ans))))))
+          uri "/broken.clj"]
+    (is (thrown? Exception (core/run (str root uri)))))))
 
 (deftest core-3-test
   (testing "Test processing file directly"

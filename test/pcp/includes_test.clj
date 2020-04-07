@@ -8,8 +8,6 @@
           ans {'html #'pcp.includes/html, 'includes #'pcp.includes/includes, 'extract-namespace #'pcp.includes/extract-namespace}]
       (is (= ans result)))))
 
-
-
 (deftest html-test
   (testing "Test hiccup lite with html"
     (let [result (includes/html [:div {:class "test"} "pcp"])]

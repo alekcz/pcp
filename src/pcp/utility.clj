@@ -4,7 +4,6 @@
     [clojure.java.io :as io]
     [clojure.string :as str]
     [clojure.walk :as walk]
-    [clojure.java.shell :as shell]
     [org.httpkit.server :as server])
   (:import  [java.net Socket]
             [java.io File BufferedWriter InputStream]) 
@@ -127,28 +126,24 @@
     
     server))
 
-(def linux? 
+(defn linux? []
   (-> "os.name" System/getProperty str/lower-case (str/includes? "linux")))
 
-(defn process-service-output [output]
-  (let [err (:err output)]
-    (if (empty? err) "success!" (str "failed: " err))))
+(defn execute [^String command]
+  (.waitFor ^Process (.exec (Runtime/getRuntime) command)))
+
+(defn process-output [output]
+  (if (= 0 output) "success." (str "failed.")))
 
 (defn start-scgi []
-  (let [ans (if linux?
-              (process-service-output  
-                (shell/sh "systemctl" "start" "pcp.service"))
-              (process-service-output  
-                (shell/sh "launchctl" "load" "-w" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
-    ans))
-
+  (if (linux?)
+    (-> (str "systemctl start pcp.service") execute process-output)  
+    (-> (str "launchctl load -w " (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist") execute process-output)))
+    
 (defn stop-scgi []
-  (let [ans (if linux?
-              (process-service-output 
-                (shell/sh "systemctl" "stop" "pcp.service"))
-              (process-service-output 
-                (shell/sh "launchctl" "unload" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
-    ans))
+  (if (linux?)
+    (-> (str "systemctl stop pcp.service") execute process-output)  
+    (-> (str "launchctl unload " (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist") execute process-output)))
 
 (defn -main 
   ([]
@@ -156,8 +151,8 @@
   ([path]       
     (case path
       "" (start-local-server {})
-      "-v" (println "v0.0.1-beta.4")
-      "--version" (println "v0.0.1-beta.4")
+      "-v" (println "pcp v0.0.1-beta.4")
+      "--version" (println "pcp v0.0.1-beta.4")
       "serve" (start-local-server {})
       (if (str/ends-with? path ".clj")
         (run-file path)
@@ -165,8 +160,8 @@
   ([service command]    
     (case service
       "service" (case command 
-                  "start" (do (println (start-scgi)) (shutdown-agents))
-                  "stop"  (do (println (stop-scgi))  (shutdown-agents))
+                  "start" (println (start-scgi))
+                  "stop"  (println (stop-scgi))
                   (println "unknown command:" command)))))
 
       

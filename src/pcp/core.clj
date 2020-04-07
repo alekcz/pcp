@@ -62,8 +62,7 @@
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
-        parent (longer root (-> ^File file (.getParentFile) str))
-        _ (println parent)]
+        parent (longer root (-> ^File file (.getParentFile) str))]
     (if (string? source)
       (let [opts  (-> { :namespaces includes
                         :bindings { 'pcp (sci/new-var 'pcp params)

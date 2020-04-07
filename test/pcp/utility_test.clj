@@ -11,6 +11,7 @@
   (:import  [java.io File]
             [org.httpkit.server HttpServer]))
 
+
 (deftest version-test
   (testing "Test version flags"
     (let [output (str/trim (with-out-str (utility/-main "-v")))
@@ -19,17 +20,17 @@
       (is (= version output))
       (is (= version output2)))))
 
-(deftest stop-service-test
-  (testing "Stop service"
-    (let [output (utility/stop-scgi)]
-      (println (type output))
-      (is (= output output)))))
-
-(deftest start-service-test
-  (testing "Start service"
-    (let [output (utility/start-scgi)]
-      (println (type output))
-      (is (= output output)))))
+(deftest service-test
+  (testing "Stop and start service"
+    (let [_ (utility/stop-scgi)  
+          stop1 (utility/stop-scgi)
+          start1 (str/trim (utility/start-scgi))
+          stop2 (str/trim (with-out-str (utility/-main "service" "stop")))
+          start2 (str/trim (with-out-str (utility/-main "service" "start")))
+          unknown (str/trim (with-out-str (utility/-main "service" "what the hell?")))]
+      (is (= stop1 stop2))
+      (is (= start1 start2))
+      (is (str/includes? unknown "unknown")))))
 
 (deftest format-response-test
   (testing "Test formatting response"
@@ -99,3 +100,19 @@
         (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
         (local2)
         (reset! scgi nil)))))
+
+(deftest run-file-test
+  (testing "Test local server on default port"
+    (let [scgi (atom true)
+          scgi-port 9000
+          handler #(core/scgi-handler %)
+          _ (future (scgi/serve handler scgi-port scgi))
+          ans (str/trim (with-out-str (utility/-main "test-resources/simple.clj")))
+          _ (utility/-main "test-resources/site")
+          _ (Thread/sleep 1000)
+          resp-index (client/get (str "http://localhost:3000/"))
+          resp-text  (client/get (str "http://localhost:3000/text.txt"))]
+      (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
+      (is (= "12345678" (:body resp-text)))
+      (is (= "1275" ans))
+      (reset! scgi nil))))       

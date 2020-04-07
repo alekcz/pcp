@@ -1,7 +1,8 @@
 # Welcome to PCP
 
-> PCP: Clojure Processor -- _Like drugs but better_
-![Clojure CI](https://github.com/alekcz/pcp/workflows/Clojure%20CI/badge.svg?branch=master) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
+> PCP: Clojure Processor -- _Like drugs but better_  
+  
+![master](https://github.com/alekcz/pcp/workflows/Clojure%20CI/badge.svg?branch=master) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
 
 ## Introduction
 
@@ -34,7 +35,9 @@ The following libraries are available in the pcp environment.
 
 ```clojure
 (require  '[cheshire.core :as json]
-          '[clostache.parser :as parser]
+          '[clostache.parser :as clo]
+          '[selmer.parser :as parser]
+          '[selmer.filters :as filters]
           '[clj-http.lite.client :as client]
           '[next.jdbc :as jdbc]
           '[honeysql.core :as sql]

@@ -24,14 +24,17 @@
 (deftest stop-service-test
   (testing "Stop service"
     (let [output (utility/stop-scgi)]
-      (println (type output))
       (is (= output output)))))
 
 (deftest start-service-test
   (testing "Start service"
     (let [output (utility/start-scgi)]
-      (println (type output))
       (is (= output output)))))
+
+(deftest unknown-service-test
+  (testing "Start service"
+    (let [unknown (str/trim (with-out-str (utility/-main "service" "lala")))]
+      (is (str/includes? unknown "unknown")))))     
 
 (deftest format-response-test
   (testing "Test formatting response"
@@ -54,6 +57,16 @@
       (is (false? (.exists ^File (:body response))))
       (is (= "" (-> response :headers (get "Content-Type"))))
       (is (resp/response? response)))))     
+
+(deftest run-file-test
+  (testing "Run a file"
+    (let [scgi (atom true)
+          scgi-port 22222
+          handler #(core/scgi-handler %)
+          _ (future (scgi/serve handler scgi-port scgi))
+          output (utility/run-file "test-resources/simple.clj" 22222)]
+      (is (= "1275" (str/trim (:body output))))
+      (reset! scgi nil))))
 
 (deftest server-test
   (testing "Test local server"
@@ -79,7 +92,8 @@
 
 (deftest server-2-test
   (testing "Test local server on default port"
-    (let [scgi (atom true)
+    (let [_ (utility/stop-scgi)
+          scgi (atom true)
           scgi-port 9000
           handler #(core/scgi-handler %)
           _ (future (scgi/serve handler scgi-port scgi))

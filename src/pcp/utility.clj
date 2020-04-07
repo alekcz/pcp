@@ -107,12 +107,12 @@
             (-> (assoc full :document-uri "/404.clj") http-to-scgi (forward (:scgi-port opts)) create-resp)
           :else (format-response 404 nil nil)))))
 
-(defn run-file [path]
+(defn run-file [path port]
   (let [path (str/replace (str "/" path) "//" "/")
         root (.getCanonicalPath (io/file "./"))
-        scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))
+        scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") (str port) "9000"))
         request {:document-root root :document-uri path :request-method :get}]
-    (println (-> request http-to-scgi (forward scgi-port) create-resp :body))))
+    (-> request http-to-scgi (forward scgi-port) create-resp)))
 
 (defn start-local-server [options] 
   (let [opts (merge 
@@ -160,13 +160,13 @@
       "--version" (println "pcp" "v0.0.1-beta.5")
       "serve" (start-local-server {})
       (if (str/ends-with? path ".clj")
-        (run-file path)
+        (println (run-file path 9000))
         (start-local-server {:root path}))))
   ([service command]    
     (case service
       "service" (case command 
-                  "start" (do (println (start-scgi)) (shutdown-agents))
-                  "stop"  (do (println (stop-scgi))  (shutdown-agents))
-                  (println "unknown command:" command)))))
+                  "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
+                  "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
+                  (println "unknown command:" command)))))              ;crashing down.
 
       

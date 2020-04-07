@@ -55,12 +55,14 @@
     (serve handler port (atom true)))
   ([handler port active]
     (build-server port)
-    (future
-      (while (some? @active)
-        (if (not= 0 (.select selector 50))
-            (let [keys (.selectedKeys selector)]      
-              (doseq [^SelectionKey key keys]
-                (if (= SelectionKey/OP_ACCEPT (.readyOps key)) (withAccept key) (withRead key handler)))
-              (.clear keys))
-              nil)))))
+    (while (some? @active)
+      (if (not= 0 (.select selector 50))
+          (let [keys (.selectedKeys selector)]      
+            (doseq [^SelectionKey key keys]
+              (let [ops (.readyOps key)]
+                (cond
+                  (= ops SelectionKey/OP_ACCEPT) (withAccept key)
+                  (= ops SelectionKey/OP_READ)   (withRead key handler))))
+            (.clear keys))
+            nil))))
 

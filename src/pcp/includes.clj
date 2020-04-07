@@ -4,6 +4,8 @@
     ;included in environment
     [cheshire.core]
     [clostache.parser]
+    [selmer.parser]
+    [selmer.filters]
     [clj-http.lite.client]
     [next.jdbc]
     [honeysql.core]
@@ -40,6 +42,8 @@
   { 
     'clojurewerkz.scrypt.core (extract-namespace 'clojurewerkz.scrypt.core)
     'postal.core (extract-namespace 'postal.core)
+    'selmer.parser (extract-namespace 'selmer.parser)
+    'selmer.filters (extract-namespace 'selmer.filters)
     'clostache.parser (extract-namespace 'clostache.parser)
     'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
     'next.jdbc (extract-namespace 'next.jdbc)

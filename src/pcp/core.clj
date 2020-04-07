@@ -58,7 +58,7 @@
 (defn longer [str1 str2]
   (if (> (count str1) (count str2)) str1 str2))
 
-(defn run [url-path &{:keys [root params]}]
+(defn run-script [url-path &{:keys [root params]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
@@ -82,7 +82,7 @@
   (let [root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
-        r (try (run path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))
+        r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))
         mime (-> r :headers (get "Content-Type"))
         nl "\r\n"
         response (str (:status r) nl (str "Content-Type: " mime) nl nl (:body r))]
@@ -95,6 +95,6 @@
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
         ""  (scgi/serve scgi-handler scgi-port)
-        (run path)))))
+        (run-script path)))))
 
       

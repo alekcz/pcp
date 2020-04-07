@@ -3,7 +3,7 @@
             [clojure.java.io :as io]
             [pcp.resp :as resp]
             [pcp.core :as core]
-            [pcp.scgi :as scgi])
+            [clojure.string :as str])
   (:import  [java.io File]))
 
 (deftest read-source-test
@@ -56,7 +56,7 @@
           uri "/simple.clj"
           scgi-request {:document-root root :document-uri uri }
           resp (core/scgi-handler scgi-request)
-          ans  (core/run (str root uri))]
+          ans  (core/run-script (str root uri))]
     (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" resp))
     (is (= 200 (:status ans)))
     (is (= 1275 (:body ans)))
@@ -65,8 +65,9 @@
 (deftest core-2-test
   (testing "Test processing scgi request when file does not exist"
     (let [root "test-resources"
-          uri "/broken.clj"]
-    (is (thrown? Exception (core/run (str root uri)))))))
+          uri "/broken.clj"
+          ans  (try (core/run-script (str root uri)) (catch Exception e (.getMessage e)))]
+    (is (str/includes? ans "resolve symbol")))))
 
 (deftest core-3-test
   (testing "Test processing file directly"

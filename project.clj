@@ -19,6 +19,7 @@
                   ;includes for hosted environemnt
                   [cheshire "5.9.0"]
                   [de.ubercode.clostache/clostache "1.4.0"]
+                  [selmer "1.12.19"]
                   [org.martinklepsch/clj-http-lite "0.4.3"]
                   [seancorfield/next.jdbc "1.0.409"]
                   [org.postgresql/postgresql "42.2.11"]
@@ -30,9 +31,7 @@
   :plugins [[io.taylorwood/lein-native-image "0.3.0"]
             [nrepl/lein-nrepl "0.3.2"]
             [lein-cloverage "1.1.2"]]
-  :profiles { ;:uberjar {:aot :all
-               ;         :uberjar-name "pcp-server.jar"}
-              :scgi { :aot :all
+  :profiles { :scgi { :aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"
                       :uberjar-name "pcp-server.jar"}

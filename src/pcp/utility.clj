@@ -151,8 +151,8 @@
   ([path]       
     (case path
       "" (start-local-server {})
-      "-v" (println "pcp v0.0.1-beta.4")
-      "--version" (println "pcp v0.0.1-beta.4")
+      "-v" (println "pcp v0.0.1-beta.5")
+      "--version" (println "pcp v0.0.1-beta.5")
       "serve" (start-local-server {})
       (if (str/ends-with? path ".clj")
         (run-file path)

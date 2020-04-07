@@ -16,9 +16,11 @@
   (testing "Test version flags"
     (let [output (str/trim (with-out-str (utility/-main "-v")))
           output2 (str/trim (with-out-str (utility/-main "--version")))
-          version (str "pcp " (slurp "resources/PCP_VERSION"))]
+          version (str "pcp " (slurp "resources/PCP_VERSION"))
+          leinversion (str "pcp v" (-> "./project.clj" slurp read-string (nth 2)))]
       (is (= version output))
-      (is (= version output2)))))
+      (is (= version output2))
+      (is (= version leinversion)))))
 
 (deftest service-test
   (testing "Stop and start service"

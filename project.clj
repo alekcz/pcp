@@ -1,4 +1,4 @@
-(defproject pcp "0.0.1-beta.6"
+(defproject pcp "0.0.1-beta.7"
   :description "PCP: Clojure Processor - Like drugs but better"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -18,7 +18,6 @@
                   
                   ;includes for hosted environemnt
                   [cheshire "5.9.0"]
-                  [de.ubercode.clostache/clostache "1.4.0"]
                   [selmer "1.12.19"]
                   [org.martinklepsch/clj-http-lite "0.4.3"]
                   [seancorfield/next.jdbc "1.0.409"]

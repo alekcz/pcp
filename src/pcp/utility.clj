@@ -14,6 +14,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
+(def version "v0.0.1-beta.7")
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))]
@@ -171,8 +172,8 @@ Options:
     (case option
       "-s" (start-local-server {:root value})
       "--serve" (start-local-server {:root value})
-      "-v" (println "pcp" "v0.0.1-beta.6")
-      "--version" (println "pcp" "v0.0.1-beta.6")
+      "-v" (println "pcp" version)
+      "--version" (println "pcp" version)
       "-e" (println (run-file value 9000))
       "--evaluate" (println (run-file value 9000))
       "service" (case value 

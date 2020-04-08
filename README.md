@@ -48,7 +48,6 @@ The following libraries are available in the pcp environment.
 
 ```clojure
 (require  '[cheshire.core :as json]
-          '[clostache.parser :as clo]
           '[selmer.parser :as parser]
           '[selmer.filters :as filters]
           '[clj-http.lite.client :as client]

@@ -1,5 +1,5 @@
 (require '[cheshire.core :as json]
-         '[clostache.parser :as parser])    
+         '[selmer.parser :as parser])    
 
 ;(include "/db/connect.clj")
 (def names ["Alexander" "Alex" "Al"])
@@ -18,5 +18,5 @@
 
 (response 200  
     (json/encode {:name "Alex" 
-                  :clostache (parser/render "Hello {{#names}}{{.}} {{/names}}" {:names names})
-                   :end nil}) "text/plain")
+                  :clostache (parser/render "Hello {% for name in names %} {{name}} {% endfor%}" {:names names})
+                 :end nil}) "text/plain")

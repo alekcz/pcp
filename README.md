@@ -29,7 +29,6 @@ PCP has two parts
 
 ```
 PCP: Clojure Processor -- Like drugs but better
-v0.0.1-beta.5
 
 Usage: pcp [option] [value]
 

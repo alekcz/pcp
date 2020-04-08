@@ -71,11 +71,10 @@
                                     'response (sci/new-var 'response format-response)
                                     'echo #(resp/response %)
                                     'println println
-                                    'slurp #(slurp (str root "/" %))
+                                    'slurp #(slurp (str parent "/" %))
                                     'html html}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
-            _ (println root)
             _ (parser/set-resource-path! root)                        
             full-source (process-includes source parent)
             result (process-script full-source opts)]

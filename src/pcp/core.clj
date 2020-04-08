@@ -6,7 +6,8 @@
     [clojure.java.io :as io]
     [clojure.string :as str]
     [pcp.scgi :as scgi]
-    [pcp.includes :refer [includes html]])
+    [pcp.includes :refer [includes html]]
+    [selmer.parser :as parser])
   (:import [java.net URLDecoder]
            [java.io File]) 
   (:gen-class))
@@ -70,12 +71,16 @@
                                     'response (sci/new-var 'response format-response)
                                     'echo #(resp/response %)
                                     'println println
-                                    'slurp #(slurp (str parent "/" %))
+                                    'slurp #(slurp (str root "/" %))
                                     'html html}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
-            full-source (process-includes source parent)]
-        (process-script full-source opts))
+            _ (println root)
+            _ (parser/set-resource-path! root)                        
+            full-source (process-includes source parent)
+            result (process-script full-source opts)]
+        (selmer.parser/set-resource-path! nil)
+        result)
       nil)))
 
 (defn scgi-handler [request]

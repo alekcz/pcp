@@ -23,27 +23,31 @@
 
 (deftest stop-service-test
   (testing "Stop service"
-    (let [output (utility/stop-scgi)]
-      (is (= output output)))))
+    (let [_ (utility/stop-scgi)
+          status (utility/query-scgi)]
+      (is (str/includes? status "stopped")))))
 
 (deftest start-service-test
   (testing "Start service"
-    (let [output (utility/start-scgi)]
-      (is (= output output)))))
+    (let [_ (utility/start-scgi)
+          status (utility/query-scgi)]
+      (is (str/includes? status "running")))))
 
 (deftest unknown-service-test
   (testing "Start service"
-    (let [unknown (str/trim (with-out-str (utility/-main "service" "lala")))]
+    (let [unknown (with-out-str (utility/-main "service" "lala"))]
       (is (str/includes? unknown "unknown")))))     
 
 (deftest help-test
   (testing "Start service"
     (let [help (str/trim (with-out-str (utility/-main "-h")))
           help2 (str/trim (with-out-str (utility/-main "--help")))
-          help3 (str/trim (with-out-str (utility/-main "")))]
+          help3 (str/trim (with-out-str (utility/-main "")))
+          help4 (str/trim (with-out-str (utility/-main)))]
       (is (= utility/help help))    
       (is (= utility/help help2))
-      (is (= utility/help help3)))))   
+      (is (= utility/help help3))
+      (is (= utility/help help4)))))   
 
 (deftest format-response-test
   (testing "Test formatting response"
@@ -108,17 +112,19 @@
           _ (future (scgi/serve handler scgi-port scgi))
           local (utility/-main "-s" "test-resources/site")
           file-eval (str/trim (with-out-str (utility/-main "-e" "test-resources/site/index.clj")))
-          file-eval-expected "{:status 200, :headers {Content-Type application/json}, :body {\"num\":1275,\"name\":\"Test\",\"end\":null}}"
+          file-eval2(str/trim (with-out-str (utility/-main "--evaluate" "test-resources/site/index.clj")))
+          file-eval-expected ":status 200, :headers {Content-Type application/json}"
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]
       (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
       (is (= "12345678" (:body resp-text)))
-      (is (str/includes? file-eval ":status 200, :headers {Content-Type application/json}"))
+      (is (str/includes? file-eval file-eval-expected))
+      (is (str/includes? file-eval2 file-eval-expected))
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (local)
       (while (.isAlive ^Thread (private-field (:server (meta local)) "serverThread")))
       (Thread/sleep 500)
-      (let [local2 (utility/-main "-s")
+      (let [local2 (utility/-main "--serve")
             _ (Thread/sleep 1000)
             resp-index-2 (client/get (str "http://localhost:3000/test-resources/site/index.clj"))
             resp-text-2  (client/get (str "http://localhost:3000/test-resources/site/text.txt"))]

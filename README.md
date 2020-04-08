@@ -71,16 +71,19 @@ Install via the installer script:
 $ bash -c "$(curl -sSL https://raw.githubusercontent.com/alekcz/pcp/master/install.sh)"
 ```
 
-### Running scripts
+### Running clojure files
 
 Read the output from a shell command as a lazy seq of strings:
 
 ``` shell
-$ pcp /path/to/file.clj
+$ pcp -e /path/to/file.clj
 ```
 
 ### Local Server
 
+``` shell
+$ pcp -s /path/to/server/root
+```
 
 ### Replacing php-fpm
 We need to modify the server block in `/etc/nginx/sites-enabled/digitalocean` to switch from `php` to `pcp`.   
@@ -116,12 +119,17 @@ Send our scripts to our SimpleFGI Server at port 9000 and change the filter to b
 ...
 ```
 
-Let's restart nginx with our new configuration. 
-```bash
+One last check, to make sure that the pcp service is running:
+``` shell
+$ pcp service status
+```
+
+And now we can restart nginx with our new configuration. 
+```shell
 $ service nginx restart
 ```
 
-Now that we've switched to `pcp` let generate a ton of requests using [artillery](https://artillery.io/).
+Now that we've switched to `pcp` lets generate a ton of requests using [artillery](https://artillery.io/).
 
 ```bash
 $  artillery quick -d 30 -r 400 http://pcp.musketeers.io/

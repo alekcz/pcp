@@ -147,21 +147,31 @@ Options:
   (let [err (:err output)]
     (if (empty? err) "success!" (str "failed: " err))))
 
+(defn process-query-output [output]
+  (let [ans (:out output)]
+    (if (or (str/includes? ans "pcp.service") (str/includes? ans "com.alekcz.pcp")) 
+      "running" "stopped")))
+
 (defn start-scgi []
-  (let [ans (if linux?
-              (process-service-output  
-                (shell/sh "systemctl" "start" "pcp.service"))
-              (process-service-output  
-                (shell/sh "launchctl" "load" "-w" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
-    ans))
+  (if linux?
+    (process-service-output  
+      (shell/sh "systemctl" "start" "pcp.service"))
+    (process-service-output  
+      (shell/sh "launchctl" "load" "-w" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist")))))
 
 (defn stop-scgi []
-  (let [ans (if linux?
-              (process-service-output 
-                (shell/sh "systemctl" "stop" "pcp.service"))
-              (process-service-output 
-                (shell/sh "launchctl" "unload" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist"))))]
-    ans))
+  (if linux?
+    (process-service-output 
+      (shell/sh "systemctl" "stop" "pcp.service"))
+    (process-service-output 
+      (shell/sh "launchctl" "unload" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp.plist")))))
+
+(defn query-scgi []
+  (if linux?
+    (process-query-output   
+      (shell/sh "systemctl" "list-units" "--type=service" "--state=running"))
+    (process-query-output 
+      (shell/sh "launchctl" "list"))))
 
 (defn -main 
   ([]
@@ -179,7 +189,8 @@ Options:
       "service" (case value 
                   "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
                   "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
-                  (do                                                   ;crashing down.
+                  "status"  (do (println (query-scgi)) (shutdown-agents))  ;crashing down.
+                  (do                                                   
                     (println "unknown command:" value)
                     (println help)))
       "" (println help)

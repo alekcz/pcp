@@ -40,7 +40,7 @@
 
 (defn process-includes [raw-source parent]
   (let [source (clean-source raw-source)
-        includes-used (re-seq #"\(include\s*?\"(.*?)\"\s*?\)" source)]
+        includes-used (re-seq #"\(use\s*?\"(.*?)\"\s*?\)" source)]
     (loop [code source externals includes-used]
       (if (empty? externals)
         code
@@ -65,20 +65,16 @@
         file (io/file path)
         parent (longer root (-> ^File file (.getParentFile) str))]
     (if (string? source)
-      (let [opts  (-> { :namespaces includes
-                        :bindings { 'pcp (sci/new-var 'pcp params)
-                                    'include identity
-                                    'response (sci/new-var 'response format-response)
-                                    'echo #(resp/response %)
-                                    'println println
-                                    'slurp #(slurp (str parent "/" %))
-                                    'html html}
+      (let [opts  (-> { :namespaces (merge includes {'pcp { 'params #(identity params)
+                                                            'response format-response
+                                                            'html html}})
+                        :bindings {'println println 'use identity 'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
             _ (parser/set-resource-path! root)                        
             full-source (process-includes source parent)
-            result (process-script full-source opts)]
-        (selmer.parser/set-resource-path! nil)
+            result (process-script full-source opts)
+            _ (selmer.parser/set-resource-path! nil)]
         result)
       nil)))
 

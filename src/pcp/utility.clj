@@ -89,10 +89,10 @@ Options:
 (defn create-resp [scgi-response]
   (let [resp-array (str/split scgi-response #"\r\n")
         resp-status (first resp-array)
-        status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
-        body (str/join "\n" (-> resp-array rest rest))
-        mime (second (re-find #"Content-Type: (.*)$" (second resp-array)))
-        final-resp (format-response status body mime)]
+        ;status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
+        body (str/join "\n" (-> resp-array rest rest rest))
+        ;mime (second (re-find #"Content-Type: (.*)$" (second resp-array)))
+        final-resp body]
     final-resp))
 
 (defn file-exists? [path]
@@ -137,7 +137,6 @@ Options:
     (println "Targeting SCGI server on port" (:scgi-port opts))
     (println (str "Local server started on http://127.0.0.1:" (:port opts)))
     (println "Serving" (:root opts))
-    
     server))
 
 (def linux? 

@@ -1,2 +1,4 @@
-(echo "I'm a greedy little slurper.")
-(slurp "./slurp.txt")
+(require '[pcp :as pcp])
+
+(println (pcp/params))
+(pcp/params)

@@ -77,6 +77,7 @@
           scgi-port 22222
           handler #(core/scgi-handler %)
           _ (future (scgi/serve handler scgi-port scgi))
+          _ (Thread/sleep 2000)
           output (utility/run-file "test-resources/simple.clj" 22222)]
       (is (= "1275" (str/trim (:body output))))
       (reset! scgi nil))))
@@ -87,6 +88,7 @@
           scgi-port 33333
           handler #(core/scgi-handler %)
           _ (future (scgi/serve handler scgi-port scgi))
+          _ (Thread/sleep 2000)
           port 44444
           local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})]
       (let [resp-index (client/get (str "http://localhost:" port "/"))

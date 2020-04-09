@@ -46,7 +46,7 @@ Options:
 The following libraries are available in the pcp environment. 
 
 ```clojure
-(require  [clojure.string :as str]
+(require  [clojure.string]
           [cheshire.core]
           [selmer.parser]
           [selmer.filters]

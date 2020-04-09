@@ -46,15 +46,24 @@ Options:
 The following libraries are available in the pcp environment. 
 
 ```clojure
-(require  '[cheshire.core :as json]
-          '[selmer.parser :as parser]
-          '[selmer.filters :as filters]
-          '[clj-http.lite.client :as client]
-          '[next.jdbc :as jdbc]
-          '[honeysql.core :as sql]
-          '[honeysql.helpers :as helpers]
-          '[postal.core :as email]
-          '[clojurewerkz.scrypt.core :as sc])
+(require  [clojure.string :as str]
+          [cheshire.core]
+          [selmer.parser]
+          [selmer.filters]
+          [clj-http.lite.client]
+          [next.jdbc]
+          [honeysql.core]
+          [honeysql.helpers]
+          [postal.core]
+          [tick.alpha.api]
+          [buddy.sign.jwt]
+          [buddy.sign.jwe]
+          [buddy.core.hash]
+          [buddy.core.codecs]
+          [buddy.core.keys]
+          [buddy.auth.backends]
+          [buddy.auth.middleware]
+          [buddy.hashers])
 ```
 
 ### Talk

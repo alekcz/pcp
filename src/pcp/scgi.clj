@@ -18,11 +18,23 @@
   (-> buf .array String.))
 
 (defn extract-headers [req]
-  (let [data (-> req (str/replace "\0" "\n") (str/replace #",$" ""))
-        vec-data (str/split data #"\n")
-        keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 vec-data))
-        values (take-nth 2 (rest vec-data))]
-    (zipmap keys values)))
+  (let [data-partial (str/replace req #"\u0000\u0000\u0000" "")
+        len-string (re-find #"(\d*):" data-partial)
+        _ (println len-string)
+        len (+ 1 (Integer/parseInt (or (second len-string) "0")) (count (first len-string)))  
+        _ (println len-string len)
+        header-clean (subs data-partial (count (first len-string)) (- len 1))
+        body (subs data-partial len)
+        header (str/replace header-clean  "\0" "\n")
+        vec-data (str/split header #"\n")
+        raw-headers (butlast vec-data)
+        keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 raw-headers))
+        values (take-nth 2 (rest raw-headers))
+        headers (zipmap keys values)
+        request (assoc headers :body body)]
+    (spit "header.txt" header)
+    (spit "body.txt" body)
+    request))
 
 (defn withAccept [^SelectionKey key]
   (let [^ServerSocketChannel channel     (.channel key)

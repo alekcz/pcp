@@ -7,7 +7,9 @@
     [clojure.string :as str]
     [pcp.scgi :as scgi]
     [pcp.includes :refer [includes html]]
-    [selmer.parser :as parser])
+    [selmer.parser :as parser]
+    [ring.middleware.keyword-params :refer [keyword-params-request]]
+    [ring.middleware.defaults :refer [site-defaults wrap-defaults]])
   (:import [java.net URLDecoder]
            [java.io File]) 
   (:gen-class))

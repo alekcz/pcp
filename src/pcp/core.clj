@@ -8,10 +8,12 @@
     [pcp.scgi :as scgi]
     [pcp.includes :refer [includes html]]
     [selmer.parser :as parser]
-    [ring.middleware.defaults :refer :all]
-    [ring.middleware.params :refer [wrap-params]]
-    [ring.middleware.multipart-params :refer [wrap-multipart-params]]
-    [ring.middleware.lint :as lint])
+    [cheshire.core :as json]
+    [clj-uuid :as uuid]
+    [clojure.walk :as walk]
+    [ring.middleware.lint :refer [wrap-lint]]
+    
+    [ring.util.codec :as codec])
   (:import [java.net URLDecoder]
            [java.io File]) 
   (:gen-class))
@@ -83,43 +85,49 @@
       nil)))
 
 (defn extract-multipart [req]
-  (let [body (:body req)
+  (let [body (-> req :body slurp)
         content-type-string (:content-type req)
-        content-type (second (re-find #"(.*)\u003B" content-type-string))]
-    (if (str/includes? content-type "multipart")
-      (let [boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
-            real-body (str/replace body (re-pattern (str boundary "--.*")) "")
-            parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
-            form  (for [part parts]
-                    {(keyword (second (re-find #"Content-Disposition: form-data\u003B name=\"(.*)\"\r\n" part)))
-                     {:filename (second (re-find #"Content-Disposition: form-data\u003B.*filename=\"(.*)\"\r\n" part))
+        content-type (second (re-find #"(.*)\u003B" content-type-string))
+        boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
+        real-body (str/replace body (re-pattern (str boundary "--.*")) "")
+        parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
+        form  (apply merge
+                (for [part parts]
+                  (if (str/includes? part "filename=\"")
+                    {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"" part)))
+                      (let [filename (second (re-find #"form-data\u003B.*filename=\"(.*?)\"\r\n" part))
+                            file (io/file (str "/tmp/pcp/" (uuid/v1) "-" filename))]
+                      {:filename filename
                       :type (second (re-find #"Content-Type: (.*)\r\n" part))
-                      :tempfile nil
-                      :size nil}})
-            ]       
-        (println form)
-        req)
-      req)))
+                      :tempfile file
+                      :size (.length file)})}
+                    {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"\r\n" part)))
+                    (second (re-find #"\r\n\r\n(.*)$" part))})))]       
+      (assoc req :body form)))
+
+(defn make-map [thing]
+  (if (map? thing) thing {}))
+
+(defn body-handler [req]
+  (let [type (:content-type req)
+        req-new  (cond 
+                  (str/includes? type "application/x-www-form-urlencoded")
+                    (update req :body #(-> % slurp codec/form-decode make-map walk/keywordize-keys))
+                  (str/includes? type "application/json")
+                    (update req :body #(-> % slurp (json/decode true)))
+                  (str/includes? type "multipart/form-data")
+                      (extract-multipart req)
+                  :else req)]
+    req-new))
 
 (defn scgi-handler [req]
-  (let [request req
-        ;_ (println (dissoc request :body))
+  (let [request (body-handler req)
+        _ (println request)
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
         r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))]
     r))
-
-(defn wrappers [handler]
-  (-> handler
-      (wrap-defaults
-       (-> site-defaults
-           ;(assoc-in [:headers  "Cache-Control"] "max-age=7200")
-           ;(assoc-in [:headers  "Pragma"] "max-age=7200")
-           (assoc-in [:security :anti-forgery] false)
-           (dissoc :session)))
-      (wrap-params)
-      (wrap-multipart-params)))
 
 (defn -main 
   ([]
@@ -128,7 +136,7 @@
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
         ;""  (scgi/serve (lint/wrap-lint scgi-handler) scgi-port)
-        ""  (scgi/serve (wrappers scgi-handler) scgi-port)
+        ""  (scgi/serve scgi-handler scgi-port)
         (run-script path)))))
 
       

@@ -91,3 +91,5 @@
           expected "slurp"
           ans  (core/-main (str root uri))]
     (is (= expected ans)))))  
+
+;curl -i -X POST -F "foo=bar" -F "file=@somefile.txt" localhost:88

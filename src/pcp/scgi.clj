@@ -23,12 +23,12 @@
 (defn extract-headers [req]
   (let [len-string (re-find #"(\d*):" req)
         netring-len (count (first len-string))
-        len (Integer/parseInt (second len-string))
+        len (Integer/parseInt (or (second len-string) "0"))
         header-clean (subs req netring-len len)
         header (str/replace header-clean  "\0" "\n")
         vec-data (str/split header #"\n")
         body-start (+ 1 netring-len len)
-        body-len (Integer/parseInt (second vec-data))
+        body-len (Integer/parseInt (or (second vec-data) "0"))
         content (subs req body-start (+ body-start body-len))
         raw-headers (butlast vec-data)
         keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 raw-headers))
@@ -63,7 +63,7 @@
     (.configureBlocking socketChannel false)
     (.register socketChannel selector SelectionKey/OP_READ)))
 
-(defn extract-scgi-string [resp]
+(defn create-scgi-string [resp]
   (let [mime (-> resp :headers (get "Content-Type"))
         nl "\r\n"
         response (str (:status resp) nl (str "Content-Type: " mime) nl nl (:body resp))]
@@ -76,7 +76,7 @@
       (.clear buf)
       (.read socket-channel buf)
       (.flip buf)   
-      (let [^ByteBuffer resp (-> buf to-string extract-headers handler extract-scgi-string to-byte-array)]
+      (let [^ByteBuffer resp (-> buf to-string extract-headers handler create-scgi-string to-byte-array)]
         (.write socket-channel resp)
         (.close socket-channel)
         (.cancel key)))

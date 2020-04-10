@@ -12,15 +12,15 @@
                   [http-kit "2.3.0"]
                   [io.replikativ/konserve "0.5.1"]
                   [org.clojars.mihaelkonjevic/konserve-pg "0.1.2"]
-                  [ring/ring-defaults "0.3.2"]
                   [ring "1.8.0"]
-
-
+                  [ring/ring-defaults "0.3.2"]
+                  [ring/ring-json "0.5.0"]
+                  [cheshire "5.9.0"]
+                  [danlentz/clj-uuid "0.1.9"]
                   ;optimizing
                   [com.climate/claypoole "1.1.4"]
                   
                   ;includes for hosted environemnt
-                  [cheshire "5.9.0"]
                   [selmer "1.12.19"]
                   [seancorfield/next.jdbc "1.0.409"]
                   [org.postgresql/postgresql "42.2.11"]

@@ -36,8 +36,8 @@
         h (zipmap keys values)]
     ;make the ring linter happy.
     (-> h
-      (update :server-port #(Integer/parseInt %))
-      (update :content-length #(Integer/parseInt %))
+      (update :server-port #(Integer/parseInt (if (or (nil? %) (empty? %)) "0" %)))
+      (update :content-length #(Integer/parseInt (if (or (nil? %) (empty? %)) "0" %)))
       (update :request-method #(-> % str/lower-case keyword))
       (assoc :headers { "sec-fetch-site" (-> h :http-sec-fetch-site)   
                         "host" (-> h :http-host)   

@@ -1,9 +1,12 @@
 (ns pcp.scgi
   (:require [com.climate.claypoole :as cp]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clojure.java.io :as io]
+            [clojure.pprint :as pp])
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
-           [java.net InetSocketAddress InetAddress])
+           [java.net InetSocketAddress InetAddress]
+           [java.io ByteArrayInputStream])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -18,38 +21,62 @@
   (-> buf .array String.))
 
 (defn extract-headers [req]
-  (let [data-partial (str/replace req #"\u0000\u0000\u0000" "")
-        len-string (re-find #"(\d*):" data-partial)
-        _ (println len-string)
-        len (+ 1 (Integer/parseInt (or (second len-string) "0")) (count (first len-string)))  
-        _ (println len-string len)
-        header-clean (subs data-partial (count (first len-string)) (- len 1))
-        body (subs data-partial len)
+  (let [len-string (re-find #"(\d*):" req)
+        netring-len (count (first len-string))
+        len (Integer/parseInt (second len-string))
+        header-clean (subs req netring-len len)
         header (str/replace header-clean  "\0" "\n")
         vec-data (str/split header #"\n")
+        body-start (+ 1 netring-len len)
+        body-len (Integer/parseInt (second vec-data))
+        content (subs req body-start (+ body-start body-len))
         raw-headers (butlast vec-data)
         keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 raw-headers))
         values (take-nth 2 (rest raw-headers))
-        headers (zipmap keys values)
-        request (assoc headers :body body)]
-    (spit "header.txt" header)
-    (spit "body.txt" body)
-    request))
+        h (zipmap keys values)]
+    ;make the ring linter happy.
+    (-> h
+      (update :server-port #(Integer/parseInt %))
+      (update :content-length #(Integer/parseInt %))
+      (update :request-method #(-> % str/lower-case keyword))
+      (assoc :headers { "sec-fetch-site" (-> h :http-sec-fetch-site)   
+                        "host" (-> h :http-host)   
+                        "user-agent" (-> h :http-user-agent)     
+                        "cookie" (-> h :http-cookie)   
+                        "sec-fetch-user" (-> h :http-sec-fetch-user)   
+                        "connection" (-> h :hhttp-connection)   
+                        "upgrade-insecure-requests" (-> h :http-sec-fetch-site)   
+                        "accept"  (-> h :http-accept)   
+                        "accept-language"   (-> h :http-accept-language)   
+                        "sec-fetch-dest" (-> h :http-sec-fetch-dest)   
+                        "accept-encoding" (-> h :http-accept-encoding)   
+                        "sec-fetch-mode" (-> h :http-sec-fetch-mode)    
+                        "cache-control" (-> h :http-cache-control)})
+      (assoc :headers {})
+      (assoc :uri (:request-uri h))
+      (assoc :scheme (-> h :request-scheme keyword))
+      (assoc :body (ByteArrayInputStream. (.getBytes content))))))
 
-(defn withAccept [^SelectionKey key]
+(defn on-accept [^SelectionKey key]
   (let [^ServerSocketChannel channel     (.channel key)
         ^SocketChannel socketChannel   (.accept channel)]
     (.configureBlocking socketChannel false)
     (.register socketChannel selector SelectionKey/OP_READ)))
 
-(defn withRead [^SelectionKey key handler]
+(defn extract-scgi-string [resp]
+  (let [mime (-> resp :headers (get "Content-Type"))
+        nl "\r\n"
+        response (str (:status resp) nl (str "Content-Type: " mime) nl nl (:body resp))]
+    response))
+
+(defn on-read [^SelectionKey key handler]
   (try
     (let [^SocketChannel socket-channel (.channel key)
-          buf (ByteBuffer/allocate 4096)]
+          buf (ByteBuffer/allocate 2097152)]
       (.clear buf)
       (.read socket-channel buf)
       (.flip buf)   
-      (let [^ByteBuffer resp (-> buf to-string extract-headers handler to-byte-array)]
+      (let [^ByteBuffer resp (-> buf to-string extract-headers handler extract-scgi-string to-byte-array)]
         (.write socket-channel resp)
         (.close socket-channel)
         (.cancel key)))
@@ -73,8 +100,8 @@
             (doseq [^SelectionKey key keys]
               (let [ops (.readyOps key)]
                 (cond
-                  (= ops SelectionKey/OP_ACCEPT) (withAccept key)
-                  (= ops SelectionKey/OP_READ)   (withRead key handler))))
+                  (= ops SelectionKey/OP_ACCEPT) (on-accept key)
+                  (= ops SelectionKey/OP_READ)   (on-read key handler))))
             (.clear keys))
             nil))))
 

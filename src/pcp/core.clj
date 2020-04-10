@@ -8,8 +8,10 @@
     [pcp.scgi :as scgi]
     [pcp.includes :refer [includes html]]
     [selmer.parser :as parser]
-    [ring.middleware.keyword-params :refer [keyword-params-request]]
-    [ring.middleware.defaults :refer [site-defaults wrap-defaults]])
+    [ring.middleware.defaults :refer :all]
+    [ring.middleware.params :refer [wrap-params]]
+    [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+    [ring.middleware.lint :as lint])
   (:import [java.net URLDecoder]
            [java.io File]) 
   (:gen-class))
@@ -80,15 +82,44 @@
         result)
       nil)))
 
-(defn scgi-handler [request]
-  (let [root (:document-root request)
+(defn extract-multipart [req]
+  (let [body (:body req)
+        content-type-string (:content-type req)
+        content-type (second (re-find #"(.*)\u003B" content-type-string))]
+    (if (str/includes? content-type "multipart")
+      (let [boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
+            real-body (str/replace body (re-pattern (str boundary "--.*")) "")
+            parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
+            form  (for [part parts]
+                    {(keyword (second (re-find #"Content-Disposition: form-data\u003B name=\"(.*)\"\r\n" part)))
+                     {:filename (second (re-find #"Content-Disposition: form-data\u003B.*filename=\"(.*)\"\r\n" part))
+                      :type (second (re-find #"Content-Type: (.*)\r\n" part))
+                      :tempfile nil
+                      :size nil}})
+            ]       
+        (println form)
+        req)
+      req)))
+
+(defn scgi-handler [req]
+  (let [request req
+        ;_ (println (dissoc request :body))
+        root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
-        r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))
-        mime (-> r :headers (get "Content-Type"))
-        nl "\r\n"
-        response (str (:status r) nl (str "Content-Type: " mime) nl nl (:body r))]
-    response))
+        r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))]
+    r))
+
+(defn wrappers [handler]
+  (-> handler
+      (wrap-defaults
+       (-> site-defaults
+           ;(assoc-in [:headers  "Cache-Control"] "max-age=7200")
+           ;(assoc-in [:headers  "Pragma"] "max-age=7200")
+           (assoc-in [:security :anti-forgery] false)
+           (dissoc :session)))
+      (wrap-params)
+      (wrap-multipart-params)))
 
 (defn -main 
   ([]
@@ -96,7 +127,8 @@
   ([path]       
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
-        ""  (scgi/serve scgi-handler scgi-port)
+        ;""  (scgi/serve (lint/wrap-lint scgi-handler) scgi-port)
+        ""  (scgi/serve (wrappers scgi-handler) scgi-port)
         (run-script path)))))
 
       

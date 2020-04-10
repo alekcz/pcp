@@ -13,6 +13,8 @@
                   [io.replikativ/konserve "0.5.1"]
                   [org.clojars.mihaelkonjevic/konserve-pg "0.1.2"]
                   [ring/ring-defaults "0.3.2"]
+                  [ring "1.8.0"]
+
 
                   ;optimizing
                   [com.climate/claypoole "1.1.4"]

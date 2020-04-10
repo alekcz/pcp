@@ -1,8 +1,7 @@
 (ns pcp.scgi
   (:require [com.climate.claypoole :as cp]
             [clojure.string :as str]
-            [clojure.java.io :as io]
-            [clojure.pprint :as pp])
+            [clojure.java.io :as io])
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]

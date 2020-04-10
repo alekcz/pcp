@@ -11,8 +11,6 @@
     [cheshire.core :as json]
     [clj-uuid :as uuid]
     [clojure.walk :as walk]
-    [ring.middleware.lint :refer [wrap-lint]]
-    
     [ring.util.codec :as codec])
   (:import [java.net URLDecoder]
            [java.io File]) 
@@ -71,7 +69,7 @@
         file (io/file path)
         parent (longer root (-> ^File file (.getParentFile) str))]
     (if (string? source)
-      (let [opts  (-> { :namespaces (merge includes {'pcp { 'params #(identity params)
+      (let [opts  (-> { :namespaces (merge includes {'pcp { 'request params
                                                             'response format-response
                                                             'html html}})
                         :bindings {'println println 'use identity 'slurp #(slurp (str parent "/" %))}
@@ -87,7 +85,6 @@
 (defn extract-multipart [req]
   (let [body (-> req :body slurp)
         content-type-string (:content-type req)
-        content-type (second (re-find #"(.*)\u003B" content-type-string))
         boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
         real-body (str/replace body (re-pattern (str boundary "--.*")) "")
         parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
@@ -97,12 +94,12 @@
                     {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"" part)))
                       (let [filename (second (re-find #"form-data\u003B.*filename=\"(.*?)\"\r\n" part))
                             file (io/file (str "/tmp/pcp/" (uuid/v1) "-" filename))]
-                      {:filename filename
-                      :type (second (re-find #"Content-Type: (.*)\r\n" part))
-                      :tempfile file
-                      :size (.length file)})}
+                      { :filename filename
+                        :type (second (re-find #"Content-Type: (.*)\r\n" part))
+                        :tempfile file
+                        :size (.length file)})}
                     {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"\r\n" part)))
-                    (second (re-find #"\r\n\r\n(.*)$" part))})))]       
+                      (second (re-find #"\r\n\r\n(.*)$" part))})))]       
       (assoc req :body form)))
 
 (defn make-map [thing]
@@ -122,7 +119,6 @@
 
 (defn scgi-handler [req]
   (let [request (body-handler req)
-        _ (println request)
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)

@@ -119,7 +119,6 @@
           file-eval-expected "{\"num\":1275,\"name\":\"Test\",\"end\":null}"
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]
-      (println file-eval)
       (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
       (is (= "12345678" (:body resp-text)))
       (is (= file-eval-expected file-eval))

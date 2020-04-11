@@ -106,7 +106,6 @@
                                   (.write baos bytes start (- len start))
                                   (+ start (Bytes/indexOf (.toByteArray baos) boundary-byte)))
                             tempfilename (str "./tmp/pcp/" (uuid/v1) "-" filename)
-                            _ (println len start (- end start))
                             _ (let [_ (io/make-parents tempfilename)
                                     f (FileOutputStream. tempfilename)]
                                 (.write f bytes start (- end start))

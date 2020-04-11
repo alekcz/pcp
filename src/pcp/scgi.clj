@@ -1,12 +1,10 @@
 (ns pcp.scgi
   (:require [com.climate.claypoole :as cp]
-            [clojure.string :as str]
-            [clojure.java.io :as io])
+            [clojure.string :as str])
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]
-           [java.io ByteArrayInputStream ByteArrayOutputStream]
-           [org.apache.commons.io IOUtils])
+           [java.io ByteArrayInputStream ByteArrayOutputStream FileOutputStream])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -71,6 +69,16 @@
             header-out (ByteArrayOutputStream.)
             body-out (ByteArrayOutputStream.)]
         (.clear buf)
+        ;Saving multiparts
+        ; (loop [len (.read socket-channel real-buf)]
+        ;     (when (> len 0)
+        ;       (.write body-out (.array real-buf) 0 len)
+        ;       (.clear real-buf)
+        ;       (recur (.read socket-channel real-buf)))) 
+        ; (let [f (FileOutputStream. "test-resources/multipart.bin")
+        ;       byties (.toByteArray body-out)]
+        ;   (.write f byties 0 (count byties))
+        ;   (.close f))
         (loop [_ (.read socket-channel buf)]
           (when (not= (-> buf .array String.) ":")
             (.write len-out (.array buf) 0 1)

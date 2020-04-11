@@ -11,16 +11,12 @@
     [cheshire.core :as json]
     [clj-uuid :as uuid]
     [clojure.walk :as walk]
-    [ring.util.codec :as codec]
-    [ring.middleware.lint :as lint]
-    [ring.middleware.multipart-params :as multi]
-    [ring.middleware.params :as params])
+    [ring.util.codec :as codec])
   (:import [java.net URLDecoder]
-           [java.io File FileOutputStream ByteArrayOutputStream]
+           [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
            [com.google.common.primitives Bytes]) 
   (:gen-class))
-
 
 (set! *warn-on-reflection* 1)
 
@@ -78,7 +74,7 @@
                                                             'request params
                                                             'response format-response
                                                             'html html}})
-                        :bindings {'println println 'use identity 'slurp #(slurp (str parent "/" %))}
+                        :bindings {'println println 'use identity  'include identity 'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
             _ (parser/set-resource-path! root)                        
@@ -89,9 +85,9 @@
       nil)))
 
 (defn extract-multipart [req]
-  (let [bytes (IOUtils/toByteArray (:body req))
+  (let [bytes (IOUtils/toByteArray ^ByteArrayInputStream  (:body req))
         len (count bytes)
-        body (IOUtils/toString bytes "UTF-8")
+        body (IOUtils/toString ^"[B" bytes "UTF-8")
         content-type-string (:content-type req)
         boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
         boundary-byte (IOUtils/toByteArray boundary)
@@ -104,8 +100,8 @@
                       (let [filename (second (re-find #"form-data\u003B.*filename=\"(.*?)\"\r\n" part))
                             filetype-result (re-find #"Content-Type: (.*)\r\n\r\n" part)
                             mark (first (re-find #"(?sm)(.*?)\r\n\r\n" part))
-                            realmark (IOUtils/toByteArray mark)
-                            start (+ (Bytes/indexOf bytes realmark) (count realmark))
+                            realmark (IOUtils/toByteArray ^String mark)
+                            start (+ (Bytes/indexOf ^"[B" bytes ^"[B" realmark) (count realmark))
                             end (let [baos (ByteArrayOutputStream.)]
                                   (.write baos bytes start (- len start))
                                   (+ start (Bytes/indexOf (.toByteArray baos) boundary-byte)))
@@ -128,30 +124,25 @@
   (if (map? thing) thing {}))
 
 (defn body-handler [req]
-  (let [type (:content-type req)
-        req-new  (cond 
-                  (str/includes? type "application/x-www-form-urlencoded")
-                    (update req :body #(-> % slurp codec/form-decode make-map walk/keywordize-keys))
-                  (str/includes? type "application/json")
-                    (update req :body #(-> % slurp (json/decode true)))
-                  (str/includes? type "multipart/form-data")
-                      (extract-multipart req)
-                  :else req)]
-    req-new))
+  (let [type (:content-type req)]
+    (if (nil? type)
+      req
+      (cond 
+        (str/includes? type "application/x-www-form-urlencoded")
+          (update req :body #(-> % slurp codec/form-decode make-map walk/keywordize-keys))
+        (str/includes? type "application/json")
+          (update req :body #(-> % slurp (json/decode true)))
+        (str/includes? type "multipart/form-data")
+            (extract-multipart req)
+        :else req))))
 
 (defn scgi-handler [req]
   (let [request (body-handler req)
-        ; _ (println request)
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
         r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))]
     r))
-
-(defn wrappers [handler]
-  (-> handler identity))
-    ;(multi/wrap-multipart-params)))
-    ;(lint/wrap-lint)))
 
 (defn -main 
   ([]
@@ -159,8 +150,7 @@
   ([path]       
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
-        ;""  (scgi/serve (lint/wrap-lint scgi-handler) scgi-port)
-        ""  (scgi/serve (wrappers scgi-handler) scgi-port)
+        ""  (scgi/serve scgi-handler scgi-port)
         (run-script path)))))
 
       

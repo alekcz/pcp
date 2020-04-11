@@ -57,7 +57,7 @@
           scgi-request {:document-root root :document-uri uri }
           resp (core/scgi-handler scgi-request)
           ans  (core/run-script (str root uri))]
-    (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" resp))
+    (is (= ans resp))
     (is (= 200 (:status ans)))
     (is (= 1275 (:body ans)))
     (is (= "text/plain" (-> ans :headers (get "Content-Type")))))))

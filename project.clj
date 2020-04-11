@@ -16,7 +16,6 @@
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]
                   [commons-io/commons-io "2.6"]
-                  [ring/ring-devel "1.7.0"]
                   [com.google.guava/guava "28.2-jre"]
 
                   ;optimizing

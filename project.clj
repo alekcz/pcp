@@ -15,6 +15,10 @@
                   [ring "1.8.0"]
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]
+                  [commons-io/commons-io "2.6"]
+                  [ring/ring-devel "1.7.0"]
+                  [com.google.guava/guava "28.2-jre"]
+
                   ;optimizing
                   [com.climate/claypoole "1.1.4"]
                   
@@ -37,7 +41,8 @@
                             :aot [pcp.utility pcp.resp]
                             :jar-name "useless-pcp.jar"
                             :uberjar-name "pcp.jar"}
-              :dev {:plugins [[lein-shell "0.5.0"]]}}
+              :dev {:dependencies [[org.martinklepsch/clj-http-lite "0.4.3"]]
+                    :plugins [[lein-shell "0.5.0"]]}}
   :aliases
   {"pcp" ["run" "-m" "pcp.utility"]
    "scgi" ["run" "-m" "pcp.core"]

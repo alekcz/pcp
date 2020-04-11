@@ -5,8 +5,7 @@
     [clojure.string :as str]
     [clojure.walk :as walk]
     [clojure.java.shell :as shell]
-    [org.httpkit.server :as server]
-    [ring.middleware.defaults :refer :all])
+    [org.httpkit.server :as server])
   (:import  [java.net Socket]
             [java.io File BufferedWriter]) 
   (:gen-class))

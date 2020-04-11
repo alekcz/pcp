@@ -11,9 +11,14 @@
     [cheshire.core :as json]
     [clj-uuid :as uuid]
     [clojure.walk :as walk]
-    [ring.util.codec :as codec])
+    [ring.util.codec :as codec]
+    [ring.middleware.lint :as lint]
+    [ring.middleware.multipart-params :as multi]
+    [ring.middleware.params :as params])
   (:import [java.net URLDecoder]
-           [java.io File]) 
+           [java.io File FileOutputStream ByteArrayOutputStream]
+           [org.apache.commons.io IOUtils]
+           [com.google.common.primitives Bytes]) 
   (:gen-class))
 
 
@@ -84,9 +89,12 @@
       nil)))
 
 (defn extract-multipart [req]
-  (let [body (-> req :body slurp)
+  (let [bytes (IOUtils/toByteArray (:body req))
+        len (count bytes)
+        body (IOUtils/toString bytes "UTF-8")
         content-type-string (:content-type req)
         boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
+        boundary-byte (IOUtils/toByteArray boundary)
         real-body (str/replace body (re-pattern (str boundary "--.*")) "")
         parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
         form  (apply merge
@@ -94,12 +102,22 @@
                   (if (str/includes? part "filename=\"")
                     {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"" part)))
                       (let [filename (second (re-find #"form-data\u003B.*filename=\"(.*?)\"\r\n" part))
+                            filetype-result (re-find #"Content-Type: (.*)\r\n\r\n" part)
+                            mark (first (re-find #"(?sm)(.*?)\r\n\r\n" part))
+                            realmark (IOUtils/toByteArray mark)
+                            start (+ (Bytes/indexOf bytes realmark) (count realmark))
+                            end (let [baos (ByteArrayOutputStream.)]
+                                  (.write baos bytes start (- len start))
+                                  (+ start (Bytes/indexOf (.toByteArray baos) boundary-byte)))
                             tempfilename (str "./tmp/pcp/" (uuid/v1) "-" filename)
-                            _ (io/make-parents tempfilename)
-                            _ (spit tempfilename body)
+                            _ (println len start (- end start))
+                            _ (let [_ (io/make-parents tempfilename)
+                                    f (FileOutputStream. tempfilename)]
+                                (.write f bytes start (- end start))
+                                (.close f))
                             file (io/file tempfilename)]
                       { :filename filename
-                        :type (second (re-find #"Content-Type: (.*)\r\n" part))
+                        :type (second filetype-result)
                         :tempfile file
                         :size (.length file)})}
                     {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"\r\n" part)))
@@ -123,11 +141,17 @@
 
 (defn scgi-handler [req]
   (let [request (body-handler req)
+        ; _ (println request)
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
         r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))]
     r))
+
+(defn wrappers [handler]
+  (-> handler identity))
+    ;(multi/wrap-multipart-params)))
+    ;(lint/wrap-lint)))
 
 (defn -main 
   ([]
@@ -136,7 +160,7 @@
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
         ;""  (scgi/serve (lint/wrap-lint scgi-handler) scgi-port)
-        ""  (scgi/serve scgi-handler scgi-port)
+        ""  (scgi/serve (wrappers scgi-handler) scgi-port)
         (run-script path)))))
 
       

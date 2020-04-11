@@ -4,7 +4,8 @@
             [pcp.core :as core]
             [clojure.java.io :as io])
   (:import  [java.net Socket InetAddress]
-            [java.io Writer]))
+            [java.io Writer]
+            [org.apache.commons.io IOUtils]))
 
 (deftest serve-test
   (testing "Test SCGI server"
@@ -12,8 +13,9 @@
           handler #(core/scgi-handler %)
           scgi-port 55555
           _ (future (scgi/serve handler scgi-port running))
-          message (slurp "test-resources/scgi-request.txt")
-          len (count message)]
+          message (IOUtils/toByteArray (io/input-stream "test-resources/scgi.bin"))
+          len (count message)
+          _ (println (IOUtils/toString message "UTF-8"))]
       (Thread/sleep 500)
       (let [socket (Socket. (InetAddress/getByName "127.0.0.1") scgi-port)]
         (with-open [^Writer w (io/writer socket)

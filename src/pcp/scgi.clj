@@ -5,7 +5,8 @@
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]
-           [java.io ByteArrayInputStream ByteArrayOutputStream FileOutputStream])
+           [java.io ByteArrayInputStream ByteArrayOutputStream]
+           [org.apache.commons.io IOUtils])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -20,19 +21,11 @@
   (-> buf .array String.))
 
 (defn extract-headers [req]
-  (let [len-string (re-find #"(\d*):" req)
-        netring-len (count (first len-string))
-        len (Integer/parseInt (or (second len-string) "0"))
-        header-clean (subs req netring-len (+ 1 len))
+  (let [header-clean (:header req)
         header (str/replace header-clean  "\0" "\n")
-        vec-data (str/split header #"\n")
-        body-start (+ 1 netring-len len)
-        body-len (Integer/parseInt (or (second vec-data) "0"))
-        _ (println netring-len (count header-clean) body-start body-len)
-        content (subs req body-start)
-        raw-headers (butlast vec-data)
-        keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 raw-headers))
-        values (take-nth 2 (rest raw-headers))
+        data (str/split header #"\n")
+        keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 data))
+        values (take-nth 2 (rest data))
         h (zipmap keys values)]
     ;make the ring linter happy.
     (-> h
@@ -55,7 +48,7 @@
       (assoc :headers {})
       (assoc :uri (:request-uri h))
       (assoc :scheme (-> h :request-scheme keyword))
-      (assoc :body (ByteArrayInputStream. (.getBytes content))))))
+      (assoc :body (:body req)))))
 
 (defn on-accept [^SelectionKey key]
   (let [^ServerSocketChannel channel     (.channel key)
@@ -70,21 +63,42 @@
     response))
 
 (defn on-read [^SelectionKey key handler]
-  (try
-    (let [^SocketChannel socket-channel (.channel key)
-          buf (ByteBuffer/allocate 16384)
-          tmp-out (ByteArrayOutputStream.)]
-      (.clear buf)
-      (loop [len (.read socket-channel buf)]
-        (when (> len 0)
-         (.write tmp-out (.array buf) 0 len)
-         (.clear buf)
-         (recur (.read socket-channel buf))))      
-      (let [^ByteBuffer resp (-> (.toString tmp-out "UTF-8") extract-headers handler create-scgi-string to-byte-array)]
-        (.write socket-channel resp)
+  (let [^SocketChannel socket-channel (.channel key)]
+    (try
+      (let [buf (ByteBuffer/allocate 1)
+            real-buf (ByteBuffer/allocate 16384)
+            len-out (ByteArrayOutputStream.)
+            header-out (ByteArrayOutputStream.)
+            body-out (ByteArrayOutputStream.)]
+        (.clear buf)
+        (loop [_ (.read socket-channel buf)]
+          (when (not= (-> buf .array String.) ":")
+            (.write len-out (.array buf) 0 1)
+            (.clear buf)
+            (recur (.read socket-channel buf))))
+        (let [maxi-string (.toString len-out "UTF-8")
+              _ (spit "max.txt" maxi-string)
+              maxi (try (Integer/parseInt maxi-string) (catch Exception _ 0))]         
+          (.clear buf)
+          (loop [read 0 len (.read socket-channel buf)]
+            (when (< read maxi)
+              (.write header-out (.array buf) 0 len)
+              (.clear buf)
+              (recur (+ read len) (.read socket-channel buf)))))              
+        (let [header (.toString header-out "UTF-8")]  
+          (loop [len (.read socket-channel real-buf)]
+            (when (> len 0)
+              (.write body-out (.array real-buf) 0 len)
+              (.clear real-buf)
+              (recur (.read socket-channel real-buf))))   
+              (let [^ByteBuffer resp (-> {:header header :body (ByteArrayInputStream. (.toByteArray body-out))} extract-headers handler create-scgi-string to-byte-array)]
+                (.write socket-channel resp)
+                (.close socket-channel)
+                (.cancel key))))
+      (catch Exception e    
         (.close socket-channel)
-        (.cancel key)))
-    (catch Exception e (.printStackTrace e))))
+        (.cancel key)
+        (.printStackTrace e)))))
 
 (defn build-server [port]
   (let [^ServerSocketChannel serverChannel (ServerSocketChannel/open)
@@ -100,12 +114,13 @@
     (build-server port)
     (while (some? @active)
       (if (not= 0 (.select selector 50))
+        (cp/future pool 
           (let [keys (.selectedKeys selector)]      
             (doseq [^SelectionKey key keys]
               (let [ops (.readyOps key)]
                 (cond
                   (= ops SelectionKey/OP_ACCEPT) (on-accept key)
                   (= ops SelectionKey/OP_READ)   (on-read key handler))))
-            (.clear keys))
+            (.clear keys)))
             nil))))
 

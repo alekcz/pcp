@@ -69,7 +69,8 @@
         file (io/file path)
         parent (longer root (-> ^File file (.getParentFile) str))]
     (if (string? source)
-      (let [opts  (-> { :namespaces (merge includes {'pcp { 'request params
+      (let [opts  (-> { :namespaces (merge includes {'pcp { 'params (:body params)
+                                                            'request params
                                                             'response format-response
                                                             'html html}})
                         :bindings {'println println 'use identity 'slurp #(slurp (str parent "/" %))}
@@ -93,7 +94,10 @@
                   (if (str/includes? part "filename=\"")
                     {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"" part)))
                       (let [filename (second (re-find #"form-data\u003B.*filename=\"(.*?)\"\r\n" part))
-                            file (io/file (str "/tmp/pcp/" (uuid/v1) "-" filename))]
+                            tempfilename (str "./tmp/pcp/" (uuid/v1) "-" filename)
+                            _ (io/make-parents tempfilename)
+                            _ (spit tempfilename body)
+                            file (io/file tempfilename)]
                       { :filename filename
                         :type (second (re-find #"Content-Type: (.*)\r\n" part))
                         :tempfile file

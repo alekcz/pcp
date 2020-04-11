@@ -5,7 +5,7 @@
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]
-           [java.io ByteArrayInputStream])
+           [java.io ByteArrayInputStream ByteArrayOutputStream FileOutputStream])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -71,11 +71,15 @@
 (defn on-read [^SelectionKey key handler]
   (try
     (let [^SocketChannel socket-channel (.channel key)
-          buf (ByteBuffer/allocate 2097152)]
+          buf (ByteBuffer/allocate 16384)
+          tmp-out (ByteArrayOutputStream.)]
       (.clear buf)
-      (.read socket-channel buf)
-      (.flip buf)   
-      (let [^ByteBuffer resp (-> buf to-string extract-headers handler create-scgi-string to-byte-array)]
+      (loop [len (.read socket-channel buf)]
+        (when (> len 0)
+         (.write tmp-out (.array buf) 0 len)
+         (.clear buf)
+         (recur (.read socket-channel buf))))      
+      (let [^ByteBuffer resp (-> (.toString tmp-out "UTF-8") extract-headers handler create-scgi-string to-byte-array)]
         (.write socket-channel resp)
         (.close socket-channel)
         (.cancel key)))

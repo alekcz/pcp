@@ -12,3 +12,5 @@ pom.xml.asc
 .hg/
 /www
 /.pcp
+/*.txt
+/tmp

@@ -7,11 +7,16 @@
     [clojure.string :as str]
     [pcp.scgi :as scgi]
     [pcp.includes :refer [includes html]]
-    [selmer.parser :as parser])
+    [selmer.parser :as parser]
+    [cheshire.core :as json]
+    [clj-uuid :as uuid]
+    [clojure.walk :as walk]
+    [ring.util.codec :as codec])
   (:import [java.net URLDecoder]
-           [java.io File]) 
+           [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
+           [org.apache.commons.io IOUtils]
+           [com.google.common.primitives Bytes]) 
   (:gen-class))
-
 
 (set! *warn-on-reflection* 1)
 
@@ -40,7 +45,7 @@
 
 (defn process-includes [raw-source parent]
   (let [source (clean-source raw-source)
-        includes-used (re-seq #"\(include\s*?\"(.*?)\"\s*?\)" source)]
+        includes-used (re-seq #"\(use\s*?\"(.*?)\"\s*?\)" source)]
     (loop [code source externals includes-used]
       (if (empty? externals)
         code
@@ -65,32 +70,78 @@
         file (io/file path)
         parent (longer root (-> ^File file (.getParentFile) str))]
     (if (string? source)
-      (let [opts  (-> { :namespaces includes
-                        :bindings { 'pcp (sci/new-var 'pcp params)
-                                    'include identity
-                                    'response (sci/new-var 'response format-response)
-                                    'echo #(resp/response %)
-                                    'println println
-                                    'slurp #(slurp (str parent "/" %))
-                                    'html html}
+      (let [opts  (-> { :namespaces (merge includes {'pcp { 'params (:body params)
+                                                            'request params
+                                                            'response format-response
+                                                            'html html}})
+                        :bindings {'println println 'use identity  'include identity 'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
             _ (parser/set-resource-path! root)                        
             full-source (process-includes source parent)
-            result (process-script full-source opts)]
-        (selmer.parser/set-resource-path! nil)
+            result (process-script full-source opts)
+            _ (selmer.parser/set-resource-path! nil)]
         result)
       nil)))
 
-(defn scgi-handler [request]
-  (let [root (:document-root request)
+(defn extract-multipart [req]
+  (let [bytes (IOUtils/toByteArray ^ByteArrayInputStream  (:body req))
+        len (count bytes)
+        body (IOUtils/toString ^"[B" bytes "UTF-8")
+        content-type-string (:content-type req)
+        boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
+        boundary-byte (IOUtils/toByteArray boundary)
+        real-body (str/replace body (re-pattern (str boundary "--.*")) "")
+        parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
+        form  (apply merge
+                (for [part parts]
+                  (if (str/includes? part "filename=\"")
+                    {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"" part)))
+                      (let [filename (second (re-find #"form-data\u003B.*filename=\"(.*?)\"\r\n" part))
+                            filetype-result (re-find #"Content-Type: (.*)\r\n\r\n" part)
+                            mark (first (re-find #"(?sm)(.*?)\r\n\r\n" part))
+                            realmark (IOUtils/toByteArray ^String mark)
+                            start (+ (Bytes/indexOf ^"[B" bytes ^"[B" realmark) (count realmark))
+                            end (let [baos (ByteArrayOutputStream.)]
+                                  (.write baos bytes start (- len start))
+                                  (+ start (Bytes/indexOf (.toByteArray baos) boundary-byte)))
+                            tempfilename (str "/tmp/pcp/" (uuid/v1) "-" filename)
+                            _ (let [_ (io/make-parents tempfilename)
+                                    f (FileOutputStream. tempfilename)]
+                                (.write f bytes start (- end start))
+                                (.close f))
+                            file (io/file tempfilename)]
+                      { :filename filename
+                        :type (second filetype-result)
+                        :tempfile file
+                        :size (.length file)})}
+                    {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"\r\n" part)))
+                      (second (re-find #"\r\n\r\n(.*)$" part))})))]       
+      (assoc req :body form)))
+
+(defn make-map [thing]
+  (if (map? thing) thing {}))
+
+(defn body-handler [req]
+  (let [type (:content-type req)]
+    (if (nil? type)
+      req
+      (cond 
+        (str/includes? type "application/x-www-form-urlencoded")
+          (update req :body #(-> % slurp codec/form-decode make-map walk/keywordize-keys))
+        (str/includes? type "application/json")
+          (update req :body #(-> % slurp (json/decode true)))
+        (str/includes? type "multipart/form-data")
+            (extract-multipart req)
+        :else req))))
+
+(defn scgi-handler [req]
+  (let [request (body-handler req)
+        root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
-        r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))
-        mime (-> r :headers (get "Content-Type"))
-        nl "\r\n"
-        response (str (:status r) nl (str "Content-Type: " mime) nl nl (:body r))]
-    response))
+        r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))]
+    r))
 
 (defn -main 
   ([]

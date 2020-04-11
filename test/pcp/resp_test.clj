@@ -1,6 +1,5 @@
 (ns pcp.resp-test
   (:require [clojure.test :refer :all]
-            [clj-http.lite.client]
             [pcp.resp :as resp]))
 
 (deftest reponse-test

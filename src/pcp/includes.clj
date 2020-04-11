@@ -5,7 +5,7 @@
     [cheshire.core]
     [selmer.parser]
     [selmer.filters]
-    [clj-http.lite.client]
+    [org.httpkit.client]
     [next.jdbc]
     [honeysql.core]
     [honeysql.helpers]
@@ -51,7 +51,7 @@
     'cheshire.core (extract-namespace 'cheshire.core)
     'selmer.parser (extract-namespace 'selmer.parser)
     'selmer.filters (extract-namespace 'selmer.filters)
-    'clj-http.lite.client (extract-namespace 'clj-http.lite.client)
+    'org.httpkit.client (extract-namespace 'org.httpkit.client)
     'next.jdbc (extract-namespace 'next.jdbc)
     'honeysql.core (extract-namespace 'honeysql.core)
     'honeysql.helpers (extract-namespace 'honeysql.helpers)                 

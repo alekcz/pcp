@@ -50,7 +50,7 @@ The following libraries are available in the pcp environment.
           [cheshire.core]
           [selmer.parser]
           [selmer.filters]
-          [clj-http.lite.client]
+          [org.httpkit.client]
           [next.jdbc]
           [honeysql.core]
           [honeysql.helpers]

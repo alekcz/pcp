@@ -14,38 +14,42 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.9")
+(def version "v0.0.1-beta.10")
 
 (defn http-to-scgi [req]
-  (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))]
-    (str
-      "REQUEST_METHOD\0" (-> req :request-method name str/upper-case)  "\n"
-      "REQUEST_URI\0" (-> req :uri) "\n"
-      "QUERY_STRING\0" (-> req :query-string) "\n"
-      "CONTENT_TYPE\0" (-> req :content-type) "\n"
-      "DOCUMENT_URI\0" (-> req :document-uri) "\n"
-      "DOCUMENT_ROOT\0" (-> req :document-root) "\n"
-      "SCGI\0" 1 "\n"
-      "SERVER_PROTOCOL\0" (-> req :protocol) "\n"
-      "REQUEST_SCHEME\0" (-> req :scheme) "\n"
-      "HTTPS\0" (-> req :name) "\n"
-      "REMOTE_ADDR\0" (-> req :remote-addr) "\n"
-      "REMOTE_PORT\0" (-> req :name) "\n"
-      "SERVER_PORT\0" (-> req :server-port) "\n"
-      "SERVER_NAME\0" (-> req :server-name) "\n"
-      "HTTP_CONNECTION\0" (-> header :connection) "\n"
-      "HTTP_CACHE_CONTROL\0" (-> header :cache-control) "\n"
-      "HTTP_UPGRADE_INSECURE_REQUESTS\0" (-> header :upgrade-insecure-requests) "\n"
-      "HTTP_USER_AGENT\0" (-> header :user-agent) "\n"
-      "HTTP_SEC_FETCH_DEST\0" (-> header :sec-fetch-dest) "\n"
-      "HTTP_ACCEPT\0" (-> header :cookie) "\n"
-      "HTTP_SEC_FETCH_SITE\0" (-> header :sec-fetch-site) "\n"
-      "HTTP_SEC_FETCH_MODE\0" (-> header :sec-fetch-mode) "\n"
-      "HTTP_SEC_FETCH_USER\0" (-> header :sec-fetch-user) "\n"
-      "HTTP_ACCEPT_ENCODING\0" (-> header :accept-encoding) "\n"
-      "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\n"
-      "HTTP_COOKIE\0" (-> header :cookie) "\n"
-      "\n,")))
+  (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
+        body (:body req)
+        body-len (if (nil? body) 0 (count body))
+        scgi-header  (str
+                        "CONTENT_LENGTH\0" body-len "\n"
+                        "REQUEST_METHOD\0" (-> req :request-method name str/upper-case)  "\n"
+                        "REQUEST_URI\0" (-> req :uri) "\n"
+                        "QUERY_STRING\0" (-> req :query-string) "\n"
+                        "CONTENT_TYPE\0" (-> req :content-type) "\n"
+                        "DOCUMENT_URI\0" (-> req :document-uri) "\n"
+                        "DOCUMENT_ROOT\0" (-> req :document-root) "\n"
+                        "SCGI\0" 1 "\n"
+                        "SERVER_PROTOCOL\0" (-> req :protocol) "\n"
+                        "REQUEST_SCHEME\0" (-> req :scheme) "\n"
+                        "HTTPS\0" (-> req :name) "\n"
+                        "REMOTE_ADDR\0" (-> req :remote-addr) "\n"
+                        "REMOTE_PORT\0" (-> req :name) "\n"
+                        "SERVER_PORT\0" (-> req :server-port) "\n"
+                        "SERVER_NAME\0" (-> req :server-name) "\n"
+                        "HTTP_CONNECTION\0" (-> header :connection) "\n"
+                        "HTTP_CACHE_CONTROL\0" (-> header :cache-control) "\n"
+                        "HTTP_UPGRADE_INSECURE_REQUESTS\0" (-> header :upgrade-insecure-requests) "\n"
+                        "HTTP_USER_AGENT\0" (-> header :user-agent) "\n"
+                        "HTTP_SEC_FETCH_DEST\0" (-> header :sec-fetch-dest) "\n"
+                        "HTTP_ACCEPT\0" (-> header :cookie) "\n"
+                        "HTTP_SEC_FETCH_SITE\0" (-> header :sec-fetch-site) "\n"
+                        "HTTP_SEC_FETCH_MODE\0" (-> header :sec-fetch-mode) "\n"
+                        "HTTP_SEC_FETCH_USER\0" (-> header :sec-fetch-user) "\n"
+                        "HTTP_ACCEPT_ENCODING\0" (-> header :accept-encoding) "\n"
+                        "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\n"
+                        "HTTP_COOKIE\0" (-> header :cookie) "\n"
+                        "\n,")]
+      (str (count scgi-header) ":" scgi-header body)))
 
 (def help 
 "PCP: Clojure Processor -- Like drugs but better
@@ -90,7 +94,7 @@ Options:
   (let [resp-array (str/split scgi-response #"\r\n")
         resp-status (first resp-array)
         status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
-        body (str/join "\n" (-> resp-array rest rest))
+        body (str/join "\n" (-> resp-array rest rest rest))
         mime (second (re-find #"Content-Type: (.*)$" (second resp-array)))
         final-resp (format-response status body mime)]
     final-resp))
@@ -110,7 +114,8 @@ Options:
           not-found (str root "/404.clj")
           full (assoc request 
                     :document-root root 
-                    :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))]
+                    :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))
+        ]     
         (cond 
           (and (str/ends-with? (:document-uri full) ".clj") exists)
             (-> full http-to-scgi (forward (:scgi-port opts)) create-resp)
@@ -125,7 +130,7 @@ Options:
         root (.getCanonicalPath (io/file "./"))
         scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") (str port) "9000"))
         request {:document-root root :document-uri path :request-method :get}]
-    (-> request http-to-scgi (forward scgi-port) create-resp)))
+    (-> request http-to-scgi (forward scgi-port) create-resp :body)))
 
 (defn start-local-server [options] 
   (let [opts (merge 
@@ -133,11 +138,11 @@ Options:
                :root "./" 
                :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
               options)
-        server (server/run-server (local-handler opts) {:ip "127.0.0.1" :port (:port opts)})]
+        server (server/run-server (local-handler opts)
+                {:ip "127.0.0.1" :port (:port opts)})]
     (println "Targeting SCGI server on port" (:scgi-port opts))
     (println (str "Local server started on http://127.0.0.1:" (:port opts)))
     (println "Serving" (:root opts))
-    
     server))
 
 (def linux? 

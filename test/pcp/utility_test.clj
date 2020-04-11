@@ -79,7 +79,7 @@
           _ (future (scgi/serve handler scgi-port scgi))
           _ (Thread/sleep 2000)
           output (utility/run-file "test-resources/simple.clj" 22222)]
-      (is (= "1275" (str/trim (:body output))))
+      (is (= "1275" output))
       (reset! scgi nil))))
 
 (deftest server-test
@@ -116,13 +116,13 @@
           _ (Thread/sleep 2000)
           file-eval (str/trim (with-out-str (utility/-main "-e" "test-resources/site/index.clj")))
           file-eval2(str/trim (with-out-str (utility/-main "--evaluate" "test-resources/site/index.clj")))
-          file-eval-expected ":status 200, :headers {Content-Type application/json}"
+          file-eval-expected "{\"num\":1275,\"name\":\"Test\",\"end\":null}"
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]
       (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
       (is (= "12345678" (:body resp-text)))
-      (is (str/includes? file-eval file-eval-expected))
-      (is (str/includes? file-eval2 file-eval-expected))
+      (is (= file-eval-expected file-eval))
+      (is (= file-eval-expected file-eval2))
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (local)
       (while (.isAlive ^Thread (private-field (:server (meta local)) "serverThread")))

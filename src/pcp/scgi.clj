@@ -64,13 +64,13 @@
             header-out (ByteArrayOutputStream.)
             body-out (ByteArrayOutputStream.)]
         (.clear buf)
-        ;Saving multiparts
+        ;Saving reqs
         ; (loop [len (.read socket-channel real-buf)]
         ;     (when (> len 0)
         ;       (.write body-out (.array real-buf) 0 len)
         ;       (.clear real-buf)
         ;       (recur (.read socket-channel real-buf)))) 
-        ; (let [f (FileOutputStream. "test-resources/multipart.bin")
+        ; (let [f (java.io.FileOutputStream. "test-resources/json.bin")
         ;       byties (.toByteArray body-out)]
         ;   (.write f byties 0 (count byties))
         ;   (.close f))

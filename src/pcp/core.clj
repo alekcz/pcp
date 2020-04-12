@@ -140,7 +140,7 @@
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
-        r (try (run-script path :root root :params request) (catch Exception e  (format-response 500 (.getMessage e) nil)))]
+        r (try (run-script path :root root :params request) (catch Exception e  (.printStackTrace e) (format-response 500 (.getMessage e) nil)))]
     r))
 
 (defn -main 

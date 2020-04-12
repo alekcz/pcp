@@ -85,7 +85,6 @@
             (.clear buf)
             (recur (.read socket-channel buf))))
         (let [maxi-string (.toString len-out "UTF-8")
-              _ (spit "max.txt" maxi-string)
               maxi (try (Integer/parseInt maxi-string) (catch Exception _ 0))]         
           (.clear buf)
           (loop [read 0 len (.read socket-channel buf)]
@@ -104,6 +103,7 @@
                 (.close socket-channel)
                 (.cancel key))))
       (catch Exception e    
+        (println "failed")
         (.close socket-channel)
         (.cancel key)
         (.printStackTrace e)))))
@@ -122,13 +122,12 @@
     (build-server port)
     (while (some? @active)
       (if (not= 0 (.select selector 50))
-        (cp/future pool 
           (let [keys (.selectedKeys selector)]      
             (doseq [^SelectionKey key keys]
               (let [ops (.readyOps key)]
                 (cond
                   (= ops SelectionKey/OP_ACCEPT) (on-accept key)
                   (= ops SelectionKey/OP_READ)   (on-read key handler))))
-            (.clear keys)))
+            (.clear keys))
             nil))))
 

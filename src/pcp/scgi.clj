@@ -50,9 +50,8 @@
     (.register socketChannel selector SelectionKey/OP_READ)))
 
 (defn create-scgi-string [resp]
-  (let [mime (-> resp :headers (get "Content-Type"))
-        nl "\r\n"
-        response (str (:status resp) nl (str "Content-Type: " mime) nl nl (:body resp))]
+  (let [nl "\r\n"
+        response (str (:status resp) nl (apply str (for [[k v] (:headers resp)] (str k ": " v nl))) nl (:body resp))]
     response))
 
 (defn on-read [^SelectionKey key handler]

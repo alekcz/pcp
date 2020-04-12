@@ -94,11 +94,12 @@ Options:
 (defn create-resp [scgi-response]
   (let [resp-array (str/split scgi-response #"\r\n")
         resp-status (first resp-array)
+        end  (+ 4 (str/index-of scgi-response "\r\n\r\n"))
         status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
-        body (str/join "\n" (-> resp-array rest rest rest))
-        mime (second (re-find #"Content-Type: (.*)$" (second resp-array)))
-        final-resp (format-response status body mime)]
-    final-resp))
+        body (subs scgi-response end)
+        header-vals (re-seq #"(.*?): (.*?)\r\n" (subs scgi-response 0 end))
+        headers (apply merge (for [h header-vals] {(nth h 1) (nth h 2)}))]
+    {:status status :body body :headers headers}))
 
 (defn file-exists? [path]
   (-> path io/file .exists))

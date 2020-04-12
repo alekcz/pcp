@@ -7,7 +7,7 @@
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server])
   (:import  [java.net Socket]
-            [java.io File ByteArrayOutputStream]
+            [java.io File ByteArrayOutputStream InputStream]
             [org.apache.commons.io IOUtils]) 
   (:gen-class))
 
@@ -15,7 +15,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.10")
+(def version "v0.0.1-beta.11")
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
@@ -49,11 +49,11 @@
                         "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\0"
                         "HTTP_COOKIE\0" (-> header :cookie) "\0")
           scgi-header (str (count partial) ":" partial ",")
-          scgi-bytes (.getBytes scgi-header)
-          body-bytes (IOUtils/toByteArray (:body req))
+          scgi-bytes (.getBytes ^String scgi-header)
+          body-bytes (if (nil? (:body req)) (byte-array 0) (IOUtils/toByteArray ^InputStream (:body req)))
           baos (ByteArrayOutputStream.)]
-          (.write baos scgi-bytes 0 (count scgi-bytes))
-          (.write baos body-bytes 0 (count body-bytes))  
+          (.write ^ByteArrayOutputStream baos scgi-bytes 0 (count scgi-bytes))
+          (.write ^ByteArrayOutputStream baos body-bytes 0 (count body-bytes))  
           (.toByteArray baos)))    
 
 (def help 
@@ -67,16 +67,7 @@ Options:
   -s, --serve [root]      Start a local server at . or [root]
   -v, --version           Print the version string and exit
   -h, --help              Print the command line help")
-
-(defn receive! [socket]
-  (let [rdr (io/reader socket)]
-    (slurp rdr)))
-
-(defn send! [^Socket socket ^"[B" msg]
-  (with-open [os (io/output-stream (.getOutputStream socket))]
-    (.write os msg 0 (count msg))
-    (.flush os)))
-
+  
 (defn forward [scgi-req scgi-port]
   (let [socket (Socket. "127.0.0.1" ^Integer scgi-port)
         os (.getOutputStream socket)

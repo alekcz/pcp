@@ -110,7 +110,7 @@
 
 (defn build-server [port]
   (let [^ServerSocketChannel serverChannel (ServerSocketChannel/open)
-        portAddr (InetSocketAddress. (InetAddress/getByName "127.0.0.1") (int port))]
+        portAddr (InetSocketAddress. ^InetAddress (InetAddress/getByName "127.0.0.1") ^Integer port)]
       (.configureBlocking serverChannel false)
       (.bind (.socket serverChannel) portAddr)
       (.register serverChannel selector SelectionKey/OP_ACCEPT)))

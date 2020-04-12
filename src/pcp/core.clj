@@ -90,7 +90,7 @@
         body (IOUtils/toString ^"[B" bytes "UTF-8")
         content-type-string (:content-type req)
         boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
-        boundary-byte (IOUtils/toByteArray boundary)
+        boundary-byte (IOUtils/toByteArray ^String boundary)
         real-body (str/replace body (re-pattern (str boundary "--.*")) "")
         parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
         form  (apply merge
@@ -104,17 +104,17 @@
                             start (+ (Bytes/indexOf ^"[B" bytes ^"[B" realmark) (count realmark))
                             end (let [baos (ByteArrayOutputStream.)]
                                   (.write baos bytes start (- len start))
-                                  (+ start (Bytes/indexOf (.toByteArray baos) boundary-byte)))
+                                  (+ start (Bytes/indexOf ^"[B" (.toByteArray baos) ^"[B" boundary-byte)))
                             tempfilename (str "/tmp/pcp-temp/" (uuid/v1) "-" filename)
                             _ (let [_ (io/make-parents tempfilename)
-                                    f (FileOutputStream. tempfilename)]
+                                    f (FileOutputStream. ^String tempfilename)]
                                 (.write f bytes start (- end start))
                                 (.close f))
                             file (io/file tempfilename)]
                       { :filename filename
                         :type (second filetype-result)
                         :tempfile file
-                        :size (.length file)})}
+                        :size (.length ^File file)})}
                     {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"\r\n" part)))
                       (second (re-find #"\r\n\r\n(.*)$" part))})))]       
       (assoc req :body form)))

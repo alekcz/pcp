@@ -17,7 +17,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.12")
+(def version "v0.0.1-beta.13")
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
@@ -133,12 +133,18 @@ Options:
         request {:document-root root :document-uri path :request-method :get}]
     (-> request http-to-scgi (forward scgi-port) create-resp :body)))
 
+(defn clean-opts [opts]
+  (apply 
+    merge 
+    (for [[k v] opts]
+      (if (empty? (str v)) {} {k v}))))
+
 (defn start-local-server [options] 
   (let [opts (merge 
               {:port (Integer/parseInt (or (System/getenv "PORT") "3000")) 
                :root "./" 
                :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
-              options)
+              (clean-opts options))
         server (server/run-server (local-handler opts)
                 {:ip "127.0.0.1" :port (:port opts)})]
     (println "Targeting SCGI server on port" (:scgi-port opts))
@@ -180,26 +186,25 @@ Options:
       (shell/sh "launchctl" "list"))))
 
 (defn add-secret [options]
-  (let [opts (merge {:root "."} options)
+  (let [opts (merge {:root "."} (clean-opts options))
         keypath (str (:root opts) "/" ".secrets/PCP_PASSPHRASE_ENV")]
     (if (file-exists? keypath)
       nil
       (let [_ (println "To decrypt at runtime  place your passphase in an ENV variable on your server now.") 
             envkey (do (print "ENV variable with passphrase for this project: ") (flush) (read-line))]
         (io/make-parents keypath)
-        (spit keypath envkey))))
-  (let [_ (do 
-            (println "Encrypt your environment variable for this project") 
-            (println "--------------------------------------------------"))
-        opts (merge {:root "."} options)
-        env-var (do (print "ENV name: ") (flush) (read-line))
-        value (do (print "ENV value: ") (flush) (read-line))
-        password (do (print "Passphrase: ") (flush) (read-line))
-        path (str (:root opts) "/" ".secrets/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
-  (println "encrypting...")
-  (io/make-parents path)
-  (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
-  (println "done.")))
+        (spit keypath envkey)))
+    (let [_ (do 
+              (println "Encrypt your environment variable for this project") 
+              (println "--------------------------------------------------"))
+          env-var (do (print "ENV name: ") (flush) (read-line))
+          value (do (print "ENV value: ") (flush) (read-line))
+          password (do (print "Passphrase: ") (flush) (read-line))
+          path (str (:root opts) "/" ".secrets/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
+    (println "encrypting...")
+    (io/make-parents path)
+    (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
+    (println "done."))))
 
 (defn -main 
   ([]

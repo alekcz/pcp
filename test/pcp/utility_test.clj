@@ -74,14 +74,13 @@
 
 (deftest run-file-test
   (testing "Run a file"
-    (let [scgi (atom true)
-          scgi-port 22222
+    (let [scgi-port 22222
           handler #(core/scgi-handler %)
-          _ (future (scgi/serve handler scgi-port scgi))
+          scgi (scgi/serve handler scgi-port)
           _ (Thread/sleep 2000)
           output (utility/run-file "test-resources/simple.clj" 22222)]
       (is (= "1275" output))
-      (reset! scgi nil))))
+      (scgi))))
 
 (defn rand-str [len]
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
@@ -96,10 +95,9 @@
 
 (deftest server-test
   (testing "Test local server"
-    (let [scgi (atom true)
-          scgi-port 33333
+    (let [scgi-port 33333
           handler #(core/scgi-handler %)
-          _ (future (scgi/serve handler scgi-port scgi))
+          scgi (scgi/serve handler scgi-port)
           _ (Thread/sleep 2000)
           port 44444
           local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})
@@ -117,7 +115,7 @@
         (is (= env-var-value (:body resp-secret)))
         (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
         (local)
-        (reset! scgi nil))))
+        (scgi))))
 
 
 (defn private-field [obj fn-name-string]
@@ -128,10 +126,9 @@
 (deftest server-2-test
   (testing "Test local server on default port"
     (let [_ (utility/stop-scgi)
-          scgi (atom true)
           scgi-port 9000
           handler #(core/scgi-handler %)
-          _ (future (scgi/serve handler scgi-port scgi))
+          scgi (scgi/serve handler scgi-port)
           local (utility/-main "-s" "test-resources/site")
           _ (Thread/sleep 2000)
           file-eval (str/trim (with-out-str (utility/-main "-e" "test-resources/site/index.clj")))
@@ -155,4 +152,4 @@
         (is (= "12345678" (:body resp-text-2)))
         (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
         (local2)
-        (reset! scgi nil)))))
+        (scgi)))))

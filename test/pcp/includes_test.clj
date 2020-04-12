@@ -10,5 +10,10 @@
 
 (deftest html-test
   (testing "Test hiccup lite with html"
-    (let [result (includes/html [:div {:class "test"} "pcp"])]
-      (is (= "<div class=\"test\">pcp</div>\n" result)))))
+    (let [result (includes/html [:div {:class "test" :editable nil} "pcp"])]
+      (is (= "<div class=\"test\" editable>pcp</div>\n" result)))))
+
+(deftest html-2-test
+  (testing "Test hiccup lite with html"
+    (let [result (includes/html [:div [:input {:type "text"}] "pcp"])]
+      (is (= "<div><input type=\"text\"></input>\n pcp</div>\n" result)))))

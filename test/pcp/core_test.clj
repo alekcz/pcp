@@ -4,7 +4,8 @@
             [pcp.resp :as resp]
             [pcp.core :as core]
             [clojure.string :as str])
-  (:import  [java.io File]))
+  (:import  [java.io File]
+            [java.net Socket InetAddress ConnectException]))
 
 (deftest read-source-test
   (testing "Test reading source"
@@ -92,4 +93,14 @@
           ans  (core/-main (str root uri))]
     (is (= expected ans)))))  
 
-;curl -i -X POST -F "foo=bar" -F "file=@somefile.txt" localhost:88
+; (deftest core-6-test
+;   (testing "Test default connection"
+;     (let [server (core/-main)
+;           _ (Thread/sleep 2000)
+;           socket (Socket. (InetAddress/getByName "127.0.0.1") 9000)
+;           connected (.isConnected socket)
+;           _ (do (server) (Thread/sleep 1000))
+;           connection2 (try (Socket. (InetAddress/getByName "127.0.0.1") 9000) (catch ConnectException _ "failed"))]
+;     (is (= true connected))
+;     (is (= "failed" connection2))
+;     (.close socket))))

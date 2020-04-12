@@ -4,15 +4,13 @@
             [pcp.core :as core]
             [clojure.java.io :as io])
   (:import  [java.net Socket InetAddress]
-            [java.io Writer]
             [org.apache.commons.io IOUtils]))
 
 (deftest serve-test
   (testing "Test SCGI server"
-    (let [running (atom true)
-          handler #(core/scgi-handler %)
+    (let [handler #(core/scgi-handler %)
           scgi-port 55555
-          _ (future (scgi/serve handler scgi-port running))
+          server (scgi/serve handler scgi-port)
           message (IOUtils/toByteArray (io/input-stream "test-resources/scgi.bin"))
           len (count message)]
       (Thread/sleep 500)
@@ -24,15 +22,14 @@
                 _ (.close socket)]
             (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" ans))
             (is (true? (.isClosed socket)))
-            (reset! running nil)
+            (server)
             (Thread/sleep 500)))))))
 
-(deftest serve--2test
+(deftest serve-2-test
   (testing "Test SCGI server"
-    (let [running (atom true)
-          handler #(core/scgi-handler %)
+    (let [handler #(core/scgi-handler %)
           scgi-port 11111
-          _ (future (scgi/serve handler scgi-port running))
+          server (scgi/serve handler scgi-port)
           message (IOUtils/toByteArray (io/input-stream "test-resources/multipart.bin"))
           len (count message)]
       (Thread/sleep 500)
@@ -44,5 +41,5 @@
                 _ (.close socket)]
             (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" ans))
             (is (true? (.isClosed socket)))
-            (reset! running nil)
+            (server)
             (Thread/sleep 500)))))))

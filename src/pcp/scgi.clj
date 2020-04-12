@@ -13,9 +13,6 @@
 (defn to-byte-array [^String text]
   (-> text (.getBytes "UTF-8") ByteBuffer/wrap))
 
-(defn to-string [^ByteBuffer buf]
-  (-> buf .array String.))
-
 (defn extract-headers [req]
   (let [header-clean (:header req)
         header (str/replace header-clean  "\0" "\n")
@@ -25,8 +22,8 @@
         h (zipmap keys values)]
     ;make the ring linter happy.
     (-> h
-      (update :server-port #(Integer/parseInt (if (or (nil? %) (empty? %)) "0" %)))
-      (update :content-length #(Integer/parseInt (if (or (nil? %) (empty? %)) "0" %)))
+      (update :server-port #(Integer/parseInt (if (str/blank? %) "0" %)))
+      (update :content-length #(Integer/parseInt (if (str/blank? %) "0" %)))
       (update :request-method #(-> % str/lower-case keyword))
       (assoc :headers { "sec-fetch-site" (-> h :http-sec-fetch-site)   
                         "host" (-> h :http-host)   
@@ -82,8 +79,7 @@
             (.write len-out (.array buf) 0 1)
             (.clear buf)
             (recur (.read socket-channel buf))))
-        (let [maxi-string (.toString len-out "UTF-8")
-              maxi (try (Integer/parseInt maxi-string) (catch Exception _ 0))]         
+        (let [maxi (try (Integer/parseInt (.toString len-out "UTF-8")) (catch Exception _ 0))]         
           (.clear buf)
           (loop [read 0 len (.read socket-channel buf)]
             (when (< read maxi)
@@ -100,32 +96,31 @@
                 (.write socket-channel resp)
                 (.close socket-channel)
                 (.cancel key))))
-      (catch Exception e    
-        (println "failed")
-        (.close socket-channel)
-        (.cancel key)
-        (.printStackTrace e)))))
+      (catch Exception e (.close socket-channel) (.cancel key) (.printStackTrace e)))))
 
 (defn build-server [port]
   (let [^ServerSocketChannel serverChannel (ServerSocketChannel/open)
         portAddr (InetSocketAddress. ^InetAddress (InetAddress/getByName "127.0.0.1") ^Integer port)]
       (.configureBlocking serverChannel false)
       (.bind (.socket serverChannel) portAddr)
-      (.register serverChannel selector SelectionKey/OP_ACCEPT)))
+      (.register serverChannel selector SelectionKey/OP_ACCEPT)
+      serverChannel))
 
-(defn serve 
-  ([handler port] 
-    (serve handler port (atom true)))
-  ([handler port active]
-    (build-server port)
-    (while (some? @active)
-      (if (not= 0 (.select selector 50))
-          (let [keys (.selectedKeys selector)]      
-            (doseq [^SelectionKey key keys]
-              (let [ops (.readyOps key)]
-                (cond
-                  (= ops SelectionKey/OP_ACCEPT) (on-accept key)
-                  (= ops SelectionKey/OP_READ)   (on-read key handler))))
-            (.clear keys))
-            nil))))
+(defn serve [handler port]
+  (let [active (atom true)
+        ^ServerSocketChannel server (build-server port)]
+    (future
+      (while (some? @active)
+        (if (not= 0 (.select selector 50))
+            (let [keys (.selectedKeys selector)]      
+              (doseq [^SelectionKey key keys]
+                (let [ops (.readyOps key)]
+                  (cond
+                    (= ops SelectionKey/OP_ACCEPT) (on-accept key)
+                    (= ops SelectionKey/OP_READ)   (on-read key handler))))
+              (.clear keys))
+              nil)))
+    (fn [] 
+      (.close server)
+      (reset! active false))))
 

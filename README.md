@@ -59,9 +59,13 @@ For convenience the pcp utility comes with a local server. This local sever beha
 $ pcp -s /path/to/server/root
 ```
 
-## User Guide
+## Guides
 
-For tutorials and guides checkout the [docs](./docs/README.md).
+1. [Installation](./docs/installation.md)
+2. [PCP environment](./docs/pcp-environment.md)
+3. [Environment variables and secrets](./docs/environment-variables-and-secrets.md)
+4. [Replacing php](./docs/replacing-php.md)
+5. Examples _(coming soon)_
 
 ## Special thanks
 For the guidance and examples, special thanks to

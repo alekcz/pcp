@@ -1,4 +1,4 @@
-(defproject pcp "0.0.1-beta.13"
+(defproject pcp "0.0.1-beta.14"
   :description "PCP: Clojure Processor - Like drugs but better"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"

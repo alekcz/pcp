@@ -7,7 +7,8 @@
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server])
   (:import  [java.net Socket]
-            [java.io File BufferedWriter]) 
+            [java.io File ByteArrayOutputStream]
+            [org.apache.commons.io IOUtils]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -18,38 +19,42 @@
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
-        body (:body req)
-        body-len (if (nil? body) 0 (count body))
-        scgi-header  (str
-                        "CONTENT_LENGTH\0" body-len "\n"
-                        "REQUEST_METHOD\0" (-> req :request-method name str/upper-case)  "\n"
-                        "REQUEST_URI\0" (-> req :uri) "\n"
-                        "QUERY_STRING\0" (-> req :query-string) "\n"
-                        "CONTENT_TYPE\0" (-> req :content-type) "\n"
-                        "DOCUMENT_URI\0" (-> req :document-uri) "\n"
-                        "DOCUMENT_ROOT\0" (-> req :document-root) "\n"
-                        "SCGI\0" 1 "\n"
-                        "SERVER_PROTOCOL\0" (-> req :protocol) "\n"
-                        "REQUEST_SCHEME\0" (-> req :scheme) "\n"
-                        "HTTPS\0" (-> req :name) "\n"
-                        "REMOTE_ADDR\0" (-> req :remote-addr) "\n"
-                        "REMOTE_PORT\0" (-> req :name) "\n"
-                        "SERVER_PORT\0" (-> req :server-port) "\n"
-                        "SERVER_NAME\0" (-> req :server-name) "\n"
-                        "HTTP_CONNECTION\0" (-> header :connection) "\n"
-                        "HTTP_CACHE_CONTROL\0" (-> header :cache-control) "\n"
-                        "HTTP_UPGRADE_INSECURE_REQUESTS\0" (-> header :upgrade-insecure-requests) "\n"
-                        "HTTP_USER_AGENT\0" (-> header :user-agent) "\n"
-                        "HTTP_SEC_FETCH_DEST\0" (-> header :sec-fetch-dest) "\n"
-                        "HTTP_ACCEPT\0" (-> header :cookie) "\n"
-                        "HTTP_SEC_FETCH_SITE\0" (-> header :sec-fetch-site) "\n"
-                        "HTTP_SEC_FETCH_MODE\0" (-> header :sec-fetch-mode) "\n"
-                        "HTTP_SEC_FETCH_USER\0" (-> header :sec-fetch-user) "\n"
-                        "HTTP_ACCEPT_ENCODING\0" (-> header :accept-encoding) "\n"
-                        "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\n"
-                        "HTTP_COOKIE\0" (-> header :cookie) "\n"
-                        "\n,")]
-      (str (count scgi-header) ":" scgi-header body)))
+        body-len (:content-length req)
+        partial  (str
+                        "CONTENT_LENGTH\0" body-len "\0"
+                        "REQUEST_METHOD\0" (-> req :request-method name str/upper-case) "\0"
+                        "REQUEST_URI\0" (-> req :uri) "\0"
+                        "QUERY_STRING\0" (-> req :query-string) "\0"
+                        "CONTENT_TYPE\0" (-> req :content-type) "\0"
+                        "DOCUMENT_URI\0" (-> req :document-uri) "\0"
+                        "DOCUMENT_ROOT\0" (-> req :document-root) "\0"
+                        "SCGI\0" 1 "\0"
+                        "SERVER_PROTOCOL\0" (-> req :protocol) "\0"
+                        "REQUEST_SCHEME\0" (-> req :scheme) "\0"
+                        "HTTPS\0" (-> req :name) "\0"
+                        "REMOTE_ADDR\0" (-> req :remote-addr) "\0"
+                        "REMOTE_PORT\0" (-> req :name) "\0"
+                        "SERVER_PORT\0" (-> req :server-port) "\0"
+                        "SERVER_NAME\0" (-> req :server-name) "\0"
+                        "HTTP_CONNECTION\0" (-> header :connection) "\0"
+                        "HTTP_CACHE_CONTROL\0" (-> header :cache-control) "\0"
+                        "HTTP_UPGRADE_INSECURE_REQUESTS\0" (-> header :upgrade-insecure-requests) "\0"
+                        "HTTP_USER_AGENT\0" (-> header :user-agent) "\0"
+                        "HTTP_SEC_FETCH_DEST\0" (-> header :sec-fetch-dest) "\0"
+                        "HTTP_ACCEPT\0" (-> header :cookie) "\0"
+                        "HTTP_SEC_FETCH_SITE\0" (-> header :sec-fetch-site) "\0"
+                        "HTTP_SEC_FETCH_MODE\0" (-> header :sec-fetch-mode) "\0"
+                        "HTTP_SEC_FETCH_USER\0" (-> header :sec-fetch-user) "\0"
+                        "HTTP_ACCEPT_ENCODING\0" (-> header :accept-encoding) "\0"
+                        "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\0"
+                        "HTTP_COOKIE\0" (-> header :cookie) "\0")
+          scgi-header (str (count partial) ":" partial ",")
+          scgi-bytes (.getBytes scgi-header)
+          body-bytes (IOUtils/toByteArray (:body req))
+          baos (ByteArrayOutputStream.)]
+          (.write baos scgi-bytes 0 (count scgi-bytes))
+          (.write baos body-bytes 0 (count body-bytes))  
+          (.toByteArray baos)))    
 
 (def help 
 "PCP: Clojure Processor -- Like drugs but better
@@ -67,16 +72,18 @@ Options:
   (let [rdr (io/reader socket)]
     (slurp rdr)))
 
-(defn send! [^Socket socket ^String msg]
-  (let [^BufferedWriter writer (io/writer socket)] 
-    (.write writer msg 0 ^Integer (count msg))
-    (.flush writer)))
+(defn send! [^Socket socket ^"[B" msg]
+  (with-open [os (io/output-stream (.getOutputStream socket))]
+    (.write os msg 0 (count msg))
+    (.flush os)))
 
 (defn forward [scgi-req scgi-port]
-  (let [socket (Socket. "127.0.0.1" ^Integer scgi-port)]
-        (send! socket scgi-req)
-        (let [ans (receive! socket)]
-          ans)))
+  (let [socket (Socket. "127.0.0.1" ^Integer scgi-port)
+        os (.getOutputStream socket)
+        is (.getInputStream socket)]
+      (.write os scgi-req 0 (count scgi-req))
+      (.flush os)
+      (IOUtils/toString is)))
 
 (defn format-response [status body mime-type]
   (-> (resp/response body)    

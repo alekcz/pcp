@@ -141,26 +141,27 @@ $ service nginx restart
 Now that we've switched to `pcp` lets generate a ton of requests using [artillery](https://artillery.io/).
 
 ```bash
-$  artillery quick -d 30 -r 400 http://pcp.musketeers.io/
+$  artillery quick -d 60 -r 200 http://pcp.musketeers.io/
 
 ...some output ommitted...
 
 All virtual users finished
-Summary report @ 08:05:48(+0200) 2020-03-31
+Summary report @ 08:16:45(+0200) 2020-04-12
   Scenarios launched:  12000
   Scenarios completed: 12000
   Requests completed:  12000
-  Mean response/sec: 136.85
+  Mean response/sec: 198.22
   Response time (msec):
-    min: 551.4
-    max: 4758.2
-    median: 674.1
-    p95: 1265.2
-    p99: 2468.1
+    min: 451.5
+    max: 705.3
+    median: 472.2
+    p95: 561.3
+    p99: 623
   Scenario counts:
     0: 12000 (100%)
   Codes:
     200: 12000
+
 ```
 
 And would you look at that. You're running clojure and your server didn't even flinch. 
@@ -169,8 +170,8 @@ And would you look at that. You're running clojure and your server didn't even f
 ## Special thanks
 For the guidance and examples, special thanks to
 
-- [Bruno Bonacci](https://github.com/BrunoBonacci) 
-- [Michiel Borkent](https://github.com/borkdude) 
+- [@BrunoBonacci](https://github.com/BrunoBonacci) 
+- [@borkdude](https://github.com/borkdude) 
 
 ## License
 

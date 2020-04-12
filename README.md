@@ -53,7 +53,6 @@ $ pcp service status
 ```
 You can find instructions on [replacing php here](./docs/replacing-php.md)
 
-### Local Server
 For convenience the pcp utility comes with a local server. This local sever behaves as your pcp site would when deployed with nginx. 
 
 ``` shellsession
@@ -62,7 +61,7 @@ $ pcp -s /path/to/server/root
 
 ## User Guide
 
-For tutorials and guides checkout the [doc](./doc/README.md).
+For tutorials and guides checkout the [docs](./docs/README.md).
 
 ## Special thanks
 For the guidance and examples, special thanks to

@@ -7,7 +7,8 @@
             [clojure.java.io :as io]
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
-            [pcp.utility :as utility])
+            [pcp.utility :as utility]
+            [environ.core :refer [env]])
   (:import  [java.io File]
             [org.httpkit.server HttpServer]))
 
@@ -82,6 +83,17 @@
       (is (= "1275" output))
       (reset! scgi nil))))
 
+(defn rand-str [len]
+  (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
+
+(defn delete-recursively [fname]
+  (let [func (fn [func f]
+               (when (.isDirectory f)
+                 (doseq [f2 (.listFiles f)]
+                   (func func f2)))
+               (clojure.java.io/delete-file f))]
+    (func func (clojure.java.io/file fname))))
+
 (deftest server-test
   (testing "Test local server"
     (let [scgi (atom true)
@@ -90,14 +102,22 @@
           _ (future (scgi/serve handler scgi-port scgi))
           _ (Thread/sleep 2000)
           port 44444
-          local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})]
-      (let [resp-index (client/get (str "http://localhost:" port "/"))
-            resp-text  (client/get (str "http://localhost:" port "/text.txt"))]
+          local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})
+          env-var "SUPER_SECRET_API"
+          env-var-value (rand-str 50)
+          _ (try (delete-recursively "./test-resources/.secrets") (catch Exception _ nil))
+          _ (with-in-str 
+              (str "MY_PASSPHRASE\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
+              (utility/-main "secret" "test-resources"))
+          resp-index (client/get (str "http://localhost:" port "/"))
+          resp-text  (client/get (str "http://localhost:" port "/text.txt"))
+          resp-secret  (client/get (str "http://localhost:" port "/secret.clj"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
         (is (= "12345678" (:body resp-text)))
+        (is (= env-var-value (:body resp-secret)))
         (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
         (local)
-        (reset! scgi nil)))))
+        (reset! scgi nil))))
 
 
 (defn private-field [obj fn-name-string]

@@ -11,11 +11,14 @@
     [cheshire.core :as json]
     [clj-uuid :as uuid]
     [clojure.walk :as walk]
-    [ring.util.codec :as codec])
+    [ring.util.codec :as codec]
+    [taoensso.nippy :as nippy]
+    [environ.core :refer [env]])
   (:import [java.net URLDecoder]
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
-           [com.google.common.primitives Bytes]) 
+           [com.google.common.primitives Bytes]
+           [org.apache.commons.codec.digest DigestUtils]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -35,7 +38,7 @@
 (defn read-source [path]
   (try
     (str (slurp path))
-    (catch java.io.FileNotFoundException fnfe nil)))
+    (catch java.io.FileNotFoundException _ nil)))
 
 (defn build-path [path root]
   (str root "/" path))
@@ -64,6 +67,18 @@
 (defn longer [str1 str2]
   (if (> (count str1) (count str2)) str1 str2))
 
+
+(defn get-secret [root env-var]
+  (try
+    (let [password (-> (str root "/../.secrets/PCP_PASSPHRASE_ENV") slurp str/lower-case (str/replace #"_" "-") keyword)
+          secret (nippy/thaw-from-file (str root "/../.secrets/"  (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") {:password [:cached (env password)]})]
+      (if (= env-var (:name secret)) 
+        (:value secret)
+        nil))
+    (catch java.io.FileNotFoundException _  (println "No passphrase has been set for this project") nil)
+    (catch Exception e (.printStackTrace e) nil)))
+
+
 (defn run-script [url-path &{:keys [root params]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
@@ -73,7 +88,8 @@
       (let [opts  (-> { :namespaces (merge includes {'pcp { 'params (:body params)
                                                             'request params
                                                             'response format-response
-                                                            'html html}})
+                                                            'html html
+                                                            'secret #(get-secret root %)}})
                         :bindings {'println println 'use identity  'include identity 'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))

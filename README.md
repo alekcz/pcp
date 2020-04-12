@@ -166,6 +166,13 @@ Summary report @ 08:16:45(+0200) 2020-04-12
 
 And would you look at that. You're running clojure and your server didn't even flinch. 
 
+## User Guide
+
+### Using other files
+PCP provides other files
+
+### Storing environment variables
+To make 
 
 ## Special thanks
 For the guidance and examples, special thanks to

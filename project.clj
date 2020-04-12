@@ -1,4 +1,4 @@
-(defproject pcp "0.0.1-beta.11"
+(defproject pcp "0.0.1-beta.12"
   :description "PCP: Clojure Processor - Like drugs but better"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -16,11 +16,11 @@
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]
                   [commons-io/commons-io "2.6"]
+                  [commons-codec/commons-codec "1.14"]
                   [com.google.guava/guava "28.2-jre"]
+                  [com.taoensso/nippy "2.14.0"]
+                  [environ "1.1.0"]
 
-                  ;optimizing
-                  [com.climate/claypoole "1.1.4"]
-                  
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
                   [seancorfield/next.jdbc "1.0.409"]
@@ -30,8 +30,10 @@
                   [buddy "2.0.0"]
                   [tick "0.4.23-alpha"]]
   :auto-clean false
+  :env {:my-passphrase "s3cr3t-p455ph4r3"}
   :plugins [[nrepl/lein-nrepl "0.3.2"]
-            [lein-cloverage "1.1.2"]]
+            [lein-cloverage "1.1.2"]
+            [lein-environ "1.1.0"]]
   :profiles { :scgi { :aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"

@@ -5,17 +5,19 @@
     [clojure.string :as str]
     [clojure.walk :as walk]
     [clojure.java.shell :as shell]
-    [org.httpkit.server :as server])
+    [org.httpkit.server :as server]
+    [taoensso.nippy :as nippy])
   (:import  [java.net Socket]
             [java.io File ByteArrayOutputStream InputStream]
-            [org.apache.commons.io IOUtils]) 
+            [org.apache.commons.io IOUtils]
+            [org.apache.commons.codec.digest DigestUtils]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.11")
+(def version "v0.0.1-beta.12")
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
@@ -63,11 +65,12 @@ Usage: pcp [option] [value]
 
 Options:
   service [stop/start]    Stop/start the PCP SCGI server daemon
+  secret [path]           Add and encrypt secrets at . or [path]
   -e, --evaluate [path]   Evaluate a clojure file using PCP
   -s, --serve [root]      Start a local server at . or [root]
   -v, --version           Print the version string and exit
   -h, --help              Print the command line help")
-  
+
 (defn forward [scgi-req scgi-port]
   (let [socket (Socket. "127.0.0.1" ^Integer scgi-port)
         os (.getOutputStream socket)
@@ -176,6 +179,28 @@ Options:
     (process-query-output 
       (shell/sh "launchctl" "list"))))
 
+(defn add-secret [options]
+  (let [opts (merge {:root "."} options)
+        keypath (str (:root opts) "/" ".secrets/PCP_PASSPHRASE_ENV")]
+    (if (file-exists? keypath)
+      nil
+      (let [_ (println "To decrypt at runtime  place your passphase in an ENV variable on your server now.") 
+            envkey (do (print "ENV variable with passphrase for this project: ") (flush) (read-line))]
+        (io/make-parents keypath)
+        (spit keypath envkey))))
+  (let [_ (do 
+            (println "Encrypt your environment variable for this project") 
+            (println "--------------------------------------------------"))
+        opts (merge {:root "."} options)
+        env-var (do (print "ENV name: ") (flush) (read-line))
+        value (do (print "ENV value: ") (flush) (read-line))
+        password (do (print "Passphrase: ") (flush) (read-line))
+        path (str (:root opts) "/" ".secrets/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
+  (println "encrypting...")
+  (io/make-parents path)
+  (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
+  (println "done.")))
+
 (defn -main 
   ([]
     (-main "" ""))
@@ -189,6 +214,7 @@ Options:
       "--version" (println "pcp" version)
       "-e" (println (run-file value 9000))
       "--evaluate" (println (run-file value 9000))
+      "secret" (add-secret {:root value})
       "service" (case value 
                   "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
                   "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 

@@ -1,16 +1,14 @@
 (ns pcp.scgi
-  (:require [com.climate.claypoole :as cp]
-            [clojure.string :as str])
+  (:require [clojure.string :as str])
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]
-           [java.io ByteArrayInputStream ByteArrayOutputStream FileOutputStream])
+           [java.io ByteArrayInputStream ByteArrayOutputStream])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
 
 (def ^Selector selector (Selector/open))
-(def pool (cp/threadpool 100))
 
 (defn to-byte-array [^String text]
   (-> text (.getBytes "UTF-8") ByteBuffer/wrap))

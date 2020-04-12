@@ -90,7 +90,7 @@ jobs:
           java -version
           gu install native-image
           bash build.sh
-          cp pcp.service target/pcp.service 
+          cp resources/pcp.service target/pcp.service 
           rm target/useless-pcp-server.jar
           rm target/useless-pcp.jar
           rm target/pcp.jar
@@ -148,7 +148,7 @@ jobs:
           brew install leiningen
           gu install native-image
           bash build.sh
-          cp com.alekcz.pcp.plist target/com.alekcz.pcp.plist 
+          cp resources/com.alekcz.pcp.plist target/com.alekcz.pcp.plist 
           rm target/useless-pcp-server.jar
           rm target/useless-pcp.jar
           rm target/pcp.jar

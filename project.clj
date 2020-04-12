@@ -60,7 +60,7 @@
     "--initialize-at-run-time=org.postgresql.sspi.SSPIClient"
     "--enable-all-security-services"
     "--no-server"
-    "-H:ReflectionConfigurationFiles=reflect-config.json"
+    "-H:ReflectionConfigurationFiles=resources/reflect-config.json"
     "-jar" "./target/${:name}.jar"
     "-H:Name=./target/${:name}"]
 

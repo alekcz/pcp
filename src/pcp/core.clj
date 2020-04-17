@@ -23,6 +23,18 @@
 
 (set! *warn-on-reflection* 1)
 
+(def environment (atom {}))
+
+(defn get-environment [root]
+  (println root)
+  (let [rootkey (keyword (DigestUtils/sha512Hex (str "env-" root)))
+        env (get @environment rootkey nil)]
+        (if (nil? env) 
+          (do 
+            (swap! environment assoc rootkey (atom {}))
+            (get @environment rootkey))
+          env)))
+
 (defn format-response [status body mime-type]
   (-> (resp/response body)    
       (resp/status status)
@@ -85,7 +97,8 @@
         file (io/file path)
         parent (longer root (-> ^File file (.getParentFile) str))]
     (if (string? source)
-      (let [opts  (-> { :namespaces (merge includes {'pcp { 'params (:body params)
+      (let [opts  (-> { :env (get-environment root)
+                        :namespaces (merge includes {'pcp { 'params (:body params)
                                                             'request params
                                                             'response format-response
                                                             'html html

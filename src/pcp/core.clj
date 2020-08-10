@@ -27,7 +27,6 @@
 (def environment (atom {}))
 
 (defn get-environment [root]
-  (println root)
   (let [rootkey (keyword (DigestUtils/sha512Hex (str "env-" root)))
         env (get @environment rootkey nil)]
         (if (nil? env) 

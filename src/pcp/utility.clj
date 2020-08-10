@@ -191,15 +191,16 @@ Options:
         keypath (str (:root opts) "/" ".secrets/PCP_PASSPHRASE_ENV")]
     (if (file-exists? keypath)
       nil
-      (let [_ (println "To decrypt at runtime  place your passphase in an ENV variable on your server now.") 
+      (let [_ (println "To decrypt at runtime place your passphase in an ENV variable on your server now. 
+                      \nPlease ensure you use the same passphrase for all your secrets in this project") 
             envkey (do (print "ENV variable with passphrase for this project: ") (flush) (read-line))]
         (io/make-parents keypath)
         (spit keypath envkey)))
     (let [_ (do 
               (println "Encrypt your environment variable for this project") 
               (println "--------------------------------------------------"))
-          env-var (do (print "ENV name: ") (flush) (read-line))
-          value (do (print "ENV value: ") (flush) (read-line))
+          env-var (do (print "Secret name: ") (flush) (read-line))
+          value (do (print "Secret value: ") (flush) (read-line))
           password (do (print "Passphrase: ") (flush) (read-line))
           path (str (:root opts) "/" ".secrets/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
     (println "encrypting...")

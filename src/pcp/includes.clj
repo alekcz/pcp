@@ -6,6 +6,7 @@
     [selmer.parser]
     [selmer.filters]
     [org.httpkit.client]
+    [org.httpkit.sni-client]
     [next.jdbc]
     [honeysql.core]
     [honeysql.helpers]
@@ -18,7 +19,9 @@
     [buddy.core.keys]
     [buddy.auth.backends]
     [buddy.auth.middleware]
-    [buddy.hashers])
+    [buddy.hashers]
+    [clj-http.client]
+    [storyblok-clj.core])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -52,6 +55,9 @@
     'selmer.parser (extract-namespace 'selmer.parser)
     'selmer.filters (extract-namespace 'selmer.filters)
     'org.httpkit.client (extract-namespace 'org.httpkit.client)
+    'org.httpkit.sni-client (extract-namespace 'org.httpkit.sni-client)
+    'clj-http.client (extract-namespace 'clj-http.client)
+    'storyblok-clj.core (extract-namespace 'storyblok-clj.core)
     'next.jdbc (extract-namespace 'next.jdbc)
     'honeysql.core (extract-namespace 'honeysql.core)
     'honeysql.helpers (extract-namespace 'honeysql.helpers)                 

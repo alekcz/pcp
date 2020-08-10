@@ -13,7 +13,8 @@
     [clojure.walk :as walk]
     [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
-    [environ.core :refer [env]])
+    [environ.core :refer [env]]
+    [ring.middleware.params :refer [params-request]])
   (:import [java.net URLDecoder]
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
@@ -102,7 +103,9 @@
                                                             'request params
                                                             'response format-response
                                                             'html html
-                                                            'secret #(get-secret root %)}})
+                                                            'secret #(get-secret root %)
+                                                            'now #(quot (System/currentTimeMillis) 1000)
+                                                            'use identity}})
                         :bindings {'println println 'use identity  'include identity 'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
@@ -165,7 +168,7 @@
         :else req))))
 
 (defn scgi-handler [req]
-  (let [request (body-handler req)
+  (let [request (-> req body-handler params-request walk/keywordize-keys)
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)

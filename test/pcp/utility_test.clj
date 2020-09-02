@@ -3,11 +3,11 @@
             [pcp.scgi :as scgi]
             [pcp.core :as core]
             [pcp.resp :as resp]
+            [pcp.utility :as utility]
             [clojure.string :as str]
             [clojure.java.io :as io]
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
-            [pcp.utility :as utility]
             [environ.core :refer [env]])
   (:import  [java.io File]
             [org.httpkit.server HttpServer]))
@@ -93,17 +93,21 @@
                (clojure.java.io/delete-file f))]
     (func func (clojure.java.io/file fname))))
 
-(deftest server-test
+(deftest secrets-passphrase-test
   (testing "Test local server"
     (let [scgi-port 33333
           handler #(core/scgi-handler %)
           scgi (scgi/serve handler scgi-port)
           _ (Thread/sleep 2000)
           port 44444
+          _ (.mkdirs (java.io.File. "/usr/local/bin/pcp-db"))
           local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
           _ (try (delete-recursively "./test-resources/.secrets") (catch Exception _ nil))
+          _ (with-in-str 
+              (str "MY_PASSPHRASE\n" (env :my-passphrase) "\n") 
+              (utility/-main "passphrase"))
           _ (with-in-str 
               (str "MY_PASSPHRASE\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" "test-resources"))
@@ -153,3 +157,8 @@
         (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
         (local2)
         (scgi)))))
+
+(deftest keydb-test
+  (testing "Test that server and utility using the same db"
+    (is core/keydb utility/keydb)))
+

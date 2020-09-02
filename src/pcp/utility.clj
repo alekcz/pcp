@@ -6,7 +6,10 @@
     [clojure.walk :as walk]
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server]
-    [taoensso.nippy :as nippy])
+    [taoensso.nippy :as nippy]
+    [clojure.core.async :refer [<!!] :as async]
+    [konserve.core :as k]
+    [konserve-jdbc.core :refer [new-jdbc-store]])
   (:import  [java.net Socket]
             [java.io File ByteArrayOutputStream InputStream]
             [org.apache.commons.io IOUtils]
@@ -17,7 +20,9 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.16")
+(def keydb "./pcp-db")
+(def conn { :dbtype "sqlite" :dbname keydb})
+(def version "v0.0.1-beta.17")
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
@@ -188,12 +193,12 @@ Options:
 
 (defn add-secret [options]
   (let [opts (merge {:root "."} (clean-opts options))
-        keypath (str (:root opts) "/" ".secrets/PCP_PASSPHRASE_ENV")]
+        keypath (str (:root opts) "/" ".secrets/PCP_PROJECT")]
     (if (file-exists? keypath)
       nil
-      (let [_ (println "To decrypt at runtime place your passphase in an ENV variable on your server now. 
+      (let [_ (println "To decrypt at runtime make sure your passphrase has been added on the server. 
                       \nPlease ensure you use the same passphrase for all your secrets in this project") 
-            envkey (do (print "ENV variable with passphrase for this project: ") (flush) (read-line))]
+            envkey (do (print "Project name: ") (flush) (read-line))]
         (io/make-parents keypath)
         (spit keypath envkey)))
     (let [_ (do 
@@ -208,6 +213,18 @@ Options:
     (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
     (println "done."))))
 
+(defn add-passphrase []
+  (let [_ (do 
+            (println "Set passhrase for this project") 
+            (println "--------------------------------------------------"))
+        store (<!! (new-jdbc-store conn :table "pcp"))
+        project' (do (print "Project name: ") (flush) (read-line))
+        passphrase (do (print "Passphrase: ") (flush) (read-line))
+        project (str/trim project')]
+  (println "adding passphrase...")
+  (println (<!! (k/assoc-in store [(keyword project)] passphrase)))
+  (println "done.")))  
+
 (defn -main 
   ([]
     (-main "" ""))
@@ -221,6 +238,7 @@ Options:
       "--version" (println "pcp" version)
       "-e" (println (run-file value 9000))
       "--evaluate" (println (run-file value 9000))
+      "passphrase" (add-passphrase)
       "secret" (add-secret {:root value})
       "service" (case value 
                   "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
@@ -234,3 +252,7 @@ Options:
                   
 
       
+; "(require '[org.httpkit.sni-client :as sni-client])
+; (require '[org.httpkit.client :as client])
+; (:status (binding [org.httpkit.client/*default-client* sni-client/default-client]
+;   @(client/get \"https://www.google.com\")))"     

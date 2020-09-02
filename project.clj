@@ -1,17 +1,16 @@
-(defproject pcp "0.0.1-beta.16"
+(defproject pcp "0.0.1-beta.17"
   :description "PCP: Clojure Processor - Like drugs but better"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
 
   :dependencies [ ;core
-                  [org.clojure/clojure "1.9.0"]
+                  [org.clojure/clojure "1.10.2-alpha1"]
                   [org.clojure/tools.cli "1.0.194"]
                   [borkdude/sci "0.1.1-alpha.6"]
                   [byte-streams "0.2.4"]
                   [http-kit "2.4.0"]
-                  [io.replikativ/konserve "0.5.1"]
-                  [org.clojars.mihaelkonjevic/konserve-pg "0.1.2"]
+                  [alekcz/konserve-jdbc "0.1.0-20200902.211209-6" :exclusions [com.h2database/h2 org.postgresql/postgresql mysql/mysql-connector-java org.apache.derby/derby]]
                   [ring "1.8.0"]
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]

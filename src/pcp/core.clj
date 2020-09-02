@@ -13,8 +13,10 @@
     [clojure.walk :as walk]
     [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
-    [environ.core :refer [env]]
-    [ring.middleware.params :refer [params-request]])
+    [ring.middleware.params :refer [params-request]]
+    [clojure.core.async :refer [<!!] :as async]
+    [konserve.core :as k]
+    [konserve-jdbc.core :refer [new-jdbc-store]])
   (:import [java.net URLDecoder]
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
@@ -25,6 +27,14 @@
 (set! *warn-on-reflection* 1)
 
 (def environment (atom {}))
+(def store (atom nil))
+(def keydb "./pcp-db")
+(def conn { :dbtype "sqlite" :dbname keydb})
+
+(defn get-store []
+  (when-not @store 
+    (reset! store (<!! (new-jdbc-store conn :table "pcp"))))
+  @store)
 
 (defn get-environment [root]
   (let [rootkey (keyword (DigestUtils/sha512Hex (str "env-" root)))
@@ -82,8 +92,11 @@
 
 (defn get-secret [root env-var]
   (try
-    (let [password (-> (str root "/../.secrets/PCP_PASSPHRASE_ENV") slurp str/lower-case (str/replace #"_" "-") keyword)
-          secret (nippy/thaw-from-file (str root "/../.secrets/"  (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") {:password [:cached (env password)]})]
+    (let [project (-> (str root "/../.secrets/PCP_PROJECT") slurp str/trim keyword)
+          secret (nippy/thaw-from-file 
+                  (str root "/../.secrets/"  
+                    (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") 
+                    {:password [:cached (<!! (k/get-in (get-store) [project]))]})]
       (if (= env-var (:name secret)) 
         (:value secret)
         nil))
@@ -180,7 +193,7 @@
   ([path]       
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
-        ""  (scgi/serve scgi-handler scgi-port)
+        "" (scgi/serve scgi-handler scgi-port)
         (run-script path)))))
 
       

@@ -33,9 +33,13 @@ echo -e "Downloading $download_url."
 curl -o "pcp-$latest_release-$platform-amd64.zip" -sL "https://github.com/alekcz/pcp/releases/download/$latest_release/pcp-$latest_release-$platform-amd64.zip"
 unzip -qqo "pcp-$latest_release-$platform-amd64.zip"
 rm "pcp-$latest_release-$platform-amd64.zip"
+mkdir -p "/usr/local/etc/pcp-db"
 
 cd "$install_dir"
 if [ -f pcp ]; then
+    pcp service stop
+    mv -f "$install_dir/pcp" "$install_dir/pcp.old"
+    mv -f "$install_dir/pcp-server.jar" "$install_dir/pcp-server.old.jar"
     echo "Moving $install_dir/pcp to $install_dir/pcp.old"
 fi
 

@@ -30,6 +30,8 @@ jobs:
           lein deps
 
       - name: Tests and coverage
+        env:
+          PCP_KEYDB: "~/pcp-db"
         run: |
           lein cloverage
 

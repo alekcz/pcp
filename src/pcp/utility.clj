@@ -6,7 +6,8 @@
     [clojure.walk :as walk]
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server]
-    [taoensso.nippy :as nippy])
+    [taoensso.nippy :as nippy]
+    [environ.core :refer [env]])
   (:import  [java.net Socket]
             [java.io File ByteArrayOutputStream InputStream]
             [org.apache.commons.io IOUtils]
@@ -17,8 +18,11 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def keydb "/usr/local/etc/pcp-db")
 (def version "v0.0.1-beta.17")
+
+(defn keydb []
+  (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
+
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
@@ -217,9 +221,9 @@ Options:
         passphrase' (do (print "Passphrase: ") (flush) (read-line))
         project (str/trim project')
         passphrase (str/trim passphrase')]
-  (println (io/make-parents keydb))     
+  (println (io/make-parents (keydb)))     
   (println "adding passphrase...")
-  (spit (str keydb "/" project) passphrase)
+  (spit (str (keydb) "/" project) passphrase)
   (println "done.")))  
 
 (defn -main 

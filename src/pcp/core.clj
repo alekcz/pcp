@@ -14,7 +14,7 @@
     [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
     [ring.middleware.params :refer [params-request]]
-    [clojure.core.async :refer [<!!] :as async])
+    [environ.core :refer [env]])
   (:import [java.net URLDecoder]
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
@@ -26,7 +26,8 @@
 
 (def environment (atom {}))
 (def store (atom nil))
-(def keydb "/usr/local/etc/pcp-db")
+(defn keydb []
+  (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
 (defn get-environment [root]
   (let [rootkey (keyword (DigestUtils/sha512Hex (str "env-" root)))
@@ -85,7 +86,7 @@
 (defn get-secret [root env-var]
   (try
     (let [project (-> (str root "/../.secrets/PCP_PROJECT") slurp str/trim)
-          keypath (str keydb "/" project)
+          keypath (str (keydb) "/" project)
           secret (nippy/thaw-from-file 
                   (str root "/../.secrets/"  
                     (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") 

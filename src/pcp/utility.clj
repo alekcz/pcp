@@ -225,6 +225,7 @@ Options:
   (println "adding passphrase...")
   (println project)
   (println passphrase)
+  (println (str (keydb) "/" project))
   (spit (str (keydb) "/" project) passphrase)
   (println "done.")))  
 

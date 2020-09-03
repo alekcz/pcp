@@ -222,14 +222,10 @@ Options:
         project (str/trim project')
         passphrase (str/trim passphrase')
         path (str (keydb) "/" project ".db")]
-  (println (io/make-parents (keydb)))     
+  (io/make-parents (keydb))
   (println "adding passphrase...")
-  (println project)
-  (println passphrase)
-  (println path)
   (with-open [w (io/writer path)]
     (.write w ^String passphrase))
-  (println (slurp path))
   (println "done.")))  
 
 (defn -main 

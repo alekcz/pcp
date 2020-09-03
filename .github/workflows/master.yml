@@ -33,7 +33,7 @@ jobs:
       - name: Tests and coverage
         env: 
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-          PCP_KEYDB: "pcp-db"
+          PCP_KEYDB: "./test-resources/pcp-db"
         run: |
           lein cloverage --codecov
           bash <(curl -s https://codecov.io/bash)

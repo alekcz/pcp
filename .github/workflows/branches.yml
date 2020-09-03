@@ -31,7 +31,7 @@ jobs:
 
       - name: Tests and coverage
         env:
-          PCP_KEYDB: "pcp-db"
+          PCP_KEYDB: "./test-resources/pcp-db"
         run: |
           lein cloverage
 

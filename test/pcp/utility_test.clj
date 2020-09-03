@@ -100,7 +100,7 @@
           scgi (scgi/serve handler scgi-port)
           _ (Thread/sleep 2000)
           port 44444
-          _ (.mkdirs (java.io.File. "/usr/local/bin/pcp-db"))
+          _ (.mkdirs (java.io.File. "./test-resources/pcp-db"))
           local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)

@@ -21,7 +21,9 @@
     [buddy.auth.middleware]
     [buddy.hashers]
     [clj-http.client]
-    [storyblok-clj.core])
+    [storyblok-clj.core]
+    [konserve.core]
+    [konserve-jdbc.core])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -70,4 +72,6 @@
     'buddy.core.keys (extract-namespace 'buddy.core.keys)
     'buddy.auth.backends (extract-namespace 'buddy.auth.backends)
     'buddy.auth.middleware (extract-namespace 'buddy.auth.middleware)
-    'buddy.hashers (extract-namespace 'buddy.hashers)})
+    'buddy.hashers (extract-namespace 'buddy.hashers)
+    'konserve.core (extract-namespace 'konserve.core)
+    'konserve-jdbc.core (extract-namespace 'konserve-jdbc.core)})

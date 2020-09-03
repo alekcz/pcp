@@ -6,10 +6,7 @@
     [clojure.walk :as walk]
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server]
-    [taoensso.nippy :as nippy]
-    [clojure.core.async :refer [<!!] :as async]
-    [konserve.core :as k]
-    [konserve-jdbc.core :refer [new-jdbc-store]])
+    [taoensso.nippy :as nippy])
   (:import  [java.net Socket]
             [java.io File ByteArrayOutputStream InputStream]
             [org.apache.commons.io IOUtils]
@@ -20,8 +17,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def keydb "./pcp-db")
-(def conn { :dbtype "sqlite" :dbname keydb})
+(def keydb "/usr/local/etc/pcp-db")
 (def version "v0.0.1-beta.17")
 
 (defn http-to-scgi [req]
@@ -217,12 +213,12 @@ Options:
   (let [_ (do 
             (println "Set passhrase for this project") 
             (println "--------------------------------------------------"))
-        store (<!! (new-jdbc-store conn :table "pcp"))
         project' (do (print "Project name: ") (flush) (read-line))
-        passphrase (do (print "Passphrase: ") (flush) (read-line))
-        project (str/trim project')]
+        passphrase' (do (print "Passphrase: ") (flush) (read-line))
+        project (str/trim project')
+        passphrase (str/trim passphrase')]
   (println "adding passphrase...")
-  (println (<!! (k/assoc-in store [(keyword project)] passphrase)))
+  (spit (str keydb "/" project) passphrase)
   (println "done.")))  
 
 (defn -main 

@@ -10,7 +10,6 @@
                   [borkdude/sci "0.1.1-alpha.6"]
                   [byte-streams "0.2.4"]
                   [http-kit "2.4.0"]
-                  [alekcz/konserve-jdbc "0.1.0-20200902.211209-6" :exclusions [com.h2database/h2 org.postgresql/postgresql mysql/mysql-connector-java org.apache.derby/derby]]
                   [ring "1.8.0"]
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]
@@ -22,7 +21,8 @@
 
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
-                  [seancorfield/next.jdbc "1.0.409"]
+                  [alekcz/konserve-jdbc "0.1.0-20200902.211209-6"]
+                  [seancorfield/next.jdbc "1.1.582"]
                   [org.postgresql/postgresql "42.2.11"]
                   [honeysql "0.9.10"]
                   [com.draines/postal "2.0.3"]

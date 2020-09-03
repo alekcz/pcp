@@ -217,7 +217,7 @@ Options:
         passphrase' (do (print "Passphrase: ") (flush) (read-line))
         project (str/trim project')
         passphrase (str/trim passphrase')]
-  (io/make-parents keydb)      
+  (println (io/make-parents keydb))     
   (println "adding passphrase...")
   (spit (str keydb "/" project) passphrase)
   (println "done.")))  

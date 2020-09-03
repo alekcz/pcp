@@ -227,6 +227,7 @@ Options:
   (println passphrase)
   (println (str (keydb) "/" project))
   (spit (str (keydb) "/" project) passphrase)
+  (println (slurp (str (keydb) "/" project)))
   (println "done.")))  
 
 (defn -main 

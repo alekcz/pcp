@@ -223,6 +223,8 @@ Options:
         passphrase (str/trim passphrase')]
   (println (io/make-parents (keydb)))     
   (println "adding passphrase...")
+  (println project)
+  (println passphrase)
   (spit (str (keydb) "/" project) passphrase)
   (println "done.")))  
 

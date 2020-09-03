@@ -86,7 +86,7 @@
 (defn get-secret [root env-var]
   (try
     (let [project (-> (str root "/../.secrets/PCP_PROJECT") slurp str/trim)
-          keypath (str (keydb) "/" project)
+          keypath (str (keydb) "/" project ".db")
           secret (nippy/thaw-from-file 
                   (str root "/../.secrets/"  
                     (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") 

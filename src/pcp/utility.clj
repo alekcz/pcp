@@ -225,9 +225,9 @@ Options:
   (println "adding passphrase...")
   (println project)
   (println passphrase)
-  (println (str (keydb) "/" project))
-  (spit (str (keydb) "/" project) passphrase)
-  (println (slurp (str (keydb) "/" project)))
+  (println (str (keydb) "/" project ".db"))
+  (spit (str (keydb) "/" project ".db") passphrase)
+  (println (slurp (str (keydb) "/" project ".db")))
   (println "done.")))  
 
 (defn -main 

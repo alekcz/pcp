@@ -220,14 +220,16 @@ Options:
         project' (do (print "Project name: ") (flush) (read-line))
         passphrase' (do (print "Passphrase: ") (flush) (read-line))
         project (str/trim project')
-        passphrase (str/trim passphrase')]
+        passphrase (str/trim passphrase')
+        path (str (keydb) "/" project ".db")]
   (println (io/make-parents (keydb)))     
   (println "adding passphrase...")
   (println project)
   (println passphrase)
-  (println (str (keydb) "/" project ".db"))
-  (spit (str (keydb) "/" project ".db") passphrase)
-  (println (slurp (str (keydb) "/" project ".db")))
+  (println path)
+  (with-open [w (io/writer path)]
+    (.write w ^String passphrase))
+  (println (slurp path))
   (println "done.")))  
 
 (defn -main 

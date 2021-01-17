@@ -14,7 +14,10 @@
     [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
     [ring.middleware.params :refer [params-request]]
-    [environ.core :refer [env]])
+    [environ.core :refer [env]]
+    [konserve.core :as k]
+    [clojure.core.async :refer [<!!]]
+    [konserve-rocksdb.core :refer [new-rocksdb-store]])
   (:import [java.net URLDecoder]
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
@@ -58,12 +61,8 @@
 (defn build-path [path root]
   (str root "/" path))
 
-(defn clean-source [source]
-  (str/replace source #"\u003B.*\n" ""))
-
-(defn process-includes [raw-source parent]
-  (let [source (clean-source raw-source)
-        includes-used (re-seq #"\(use\s*?\"(.*?)\"\s*?\)" source)]
+(defn process-includes [source parent]
+  (let [includes-used (re-seq #"\(use\s*?\"(.*?)\"\s*?\)" source)]
     (loop [code source externals includes-used]
       (if (empty? externals)
         code
@@ -77,7 +76,7 @@
               (rest externals))))))))
 
 (defn process-script [full-source opts]
-  (sci/eval-string full-source opts))
+  (sci/eval-string full-source opts)) ;sci/eval-string* pass context
 
 (defn longer [str1 str2]
   (if (> (count str1) (count str2)) str1 str2))
@@ -87,6 +86,9 @@
   (try
     (let [project (-> (str root "/../.secrets/PCP_PROJECT") slurp str/trim)
           keypath (str (keydb) "/" project ".db")
+          store (<!! (new-rocksdb-store (str (keydb) "/rocksdb")))
+          key (<!! (k/get store project))
+          _ (println key)
           secret (nippy/thaw-from-file 
                   (str root "/../.secrets/"  
                     (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") 

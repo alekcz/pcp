@@ -95,12 +95,12 @@
 
 (deftest core-6-test
   (testing "Test default connection"
-    (let [server (core/-main)
+    (let [err-connection (try (Socket. (InetAddress/getByName "127.0.0.1") 9000) (catch ConnectException _ "failed"))
+          server (core/-main)
           _ (Thread/sleep 2000)
           socket (Socket. (InetAddress/getByName "127.0.0.1") 9000)
           connected (.isConnected socket)
-          _ (do (server) (Thread/sleep 1000))
-          connection2 (try (Socket. (InetAddress/getByName "127.0.0.1") 9000) (catch ConnectException _ "failed"))]
+          _ (do (server) (Thread/sleep 1000))]
     (is (= true connected))
-    (is (= "failed" connection2))
+    (is (= "failed" err-connection))
     (.close socket))))

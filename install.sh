@@ -41,6 +41,7 @@ if [ -f pcp ]; then
     mv -f "$install_dir/pcp" "$install_dir/pcp.old"
     mv -f "$install_dir/pcp-server.jar" "$install_dir/pcp-server.old.jar"
     echo "Moving $install_dir/pcp to $install_dir/pcp.old"
+    echo "Moving $install_dir/pcp-server.jar to $install_dir/pcp-server.old.jar"
 fi
 
 mv -f "$download_dir/pcp" "$PWD/pcp"

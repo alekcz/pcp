@@ -37,9 +37,10 @@
         (with-open [os (io/output-stream (.getOutputStream socket))]
           (.write os message 0 len)
           (.flush os)
-          (let [ans (IOUtils/toString (.getInputStream socket))
-                _ (.close socket)]
+          (let [ans (IOUtils/toString (.getInputStream socket))]
             (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" ans))
+            (Thread/sleep 500)
+            (.close socket)
             (is (true? (.isClosed socket)))
             (server)
             (Thread/sleep 500)))))))

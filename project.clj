@@ -7,9 +7,9 @@
   :dependencies [ ;core
                   [org.clojure/clojure "1.10.2-alpha1"]
                   [org.clojure/tools.cli "1.0.194"]
-                  [borkdude/sci "0.1.1-alpha.6"]
+                  [borkdude/sci "0.1.1-alpha.10"]
                   [byte-streams "0.2.4"]
-                  [http-kit "2.4.0"]
+                  [http-kit "2.5.0-RC1"]
                   [ring "1.8.0"]
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]
@@ -18,10 +18,12 @@
                   [com.google.guava/guava "28.2-jre"]
                   [com.taoensso/nippy "2.15.0"]
                   [environ "1.1.0"]
-
+                  [alekcz/konserve-rocksdb "0.1.0-20200923.102238-1"]
+                
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
-                  [alekcz/konserve-jdbc "0.1.0-20200902.211209-6"]
+                  ; [alekcz/konserve-jdbc "0.1.0-20200902.211209-6"]
+                  [alekcz/konserve-redis "0.1.0-20200923.045900-2"]
                   [seancorfield/next.jdbc "1.1.582"]
                   [org.postgresql/postgresql "42.2.11"]
                   [honeysql "0.9.10"]
@@ -33,7 +35,7 @@
   :auto-clean false
   :env {:my-passphrase "s3cr3t-p455ph4r3"}
   :plugins [[nrepl/lein-nrepl "0.3.2"]
-            [lein-cloverage "1.1.2"]
+            [lein-cloverage "1.2.0"]
             [lein-environ "1.1.0"]]
   :profiles { :scgi { :aot :all
                       :main pcp.core

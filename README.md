@@ -1,6 +1,6 @@
 # Welcome to PCP
 
-> PCP: Clojure Processor -- _Like drugs but better_  
+> PCP: Clojure Processor -- _Clojure replacement for PHP_  
   
 ![master](https://github.com/alekcz/pcp/workflows/master/badge.svg) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
 

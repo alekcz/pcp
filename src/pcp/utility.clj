@@ -7,10 +7,7 @@
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
-    [environ.core :refer [env]]
-    [konserve-rocksdb.core :refer [new-rocksdb-store]]
-    [konserve.core :as k]
-    [clojure.core.async :refer [<!!]])
+    [environ.core :refer [env]])
   (:import  [java.net Socket]
             [java.io File ByteArrayOutputStream InputStream]
             [org.apache.commons.io IOUtils]
@@ -21,7 +18,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.18")
+(def version "v0.0.1-beta.19")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -67,7 +64,7 @@
           (.toByteArray baos)))    
 
 (def help 
-"PCP: Clojure Processor -- Like drugs but better
+"PCP: Clojure Processor -- A Clojure replacement for PHP
 
 Usage: pcp [option] [value]
 
@@ -224,13 +221,11 @@ Options:
         passphrase' (do (print "Passphrase: ") (flush) (read-line))
         project (str/trim project')
         passphrase (str/trim passphrase')
-        path (str (keydb) "/" project ".db")
-        store (<!! (new-rocksdb-store (str (keydb) "/rocksdb")))]
+        path (str (keydb) "/" project ".db")]
   (io/make-parents (keydb))
   (println "adding passphrase...")
   (with-open [w (io/writer path)]
     (.write w ^String passphrase))
-  (<!! (k/assoc store project passphrase))
   (println "done.")))  
 
 (defn -main 

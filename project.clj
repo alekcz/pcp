@@ -1,5 +1,5 @@
-(defproject pcp "0.0.1-beta.18"
-  :description "PCP: Clojure Processor - Like drugs but better"
+(defproject pcp "0.0.1-beta.19"
+  :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
             :url "https://www.eclipse.org/legal/epl-2.0/"}
@@ -18,7 +18,7 @@
                   [com.google.guava/guava "28.2-jre"]
                   [com.taoensso/nippy "2.15.0"]
                   [environ "1.1.0"]
-                  [alekcz/konserve-rocksdb "0.1.0-20200923.102238-1"]
+                  ;[alekcz/konserve-rocksdb "0.1.0-20200923.102238-1"]
                 
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]

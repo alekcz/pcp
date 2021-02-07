@@ -24,7 +24,7 @@
     (-> h
       (update :server-port #(Integer/parseInt (if (str/blank? %) "0" %)))
       (update :content-length #(Integer/parseInt (if (str/blank? %) "0" %)))
-      (update :request-method #(-> % str/lower-case keyword))
+      (update :request-method #(-> % str str/lower-case keyword))
       (assoc :headers { "sec-fetch-site" (-> h :http-sec-fetch-site)   
                         "host" (-> h :http-host)   
                         "user-agent" (-> h :http-user-agent)     

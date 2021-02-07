@@ -100,7 +100,7 @@
         file (io/file path)
         parent (longer root (-> ^File file (.getParentFile) str))]
     (if (string? source)
-      (let [opts  (-> { :env (get-environment root)
+      (let [opts  (-> { ;:env (get-environment root) ; the env caches thee namespaces too. oops.
                         :namespaces (merge includes {'pcp { 'params (:body params)
                                                             'request params
                                                             'response format-response
@@ -115,6 +115,7 @@
             full-source (process-includes source parent)
             result (process-script full-source opts)
             _ (selmer.parser/set-resource-path! nil)]
+        (println (str "In:" (-> params :query-params)))
         result)
       nil)))
 

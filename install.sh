@@ -64,5 +64,5 @@ case "$(uname -s)" in
 esac
 
 chmod a+x "$PWD/pcp"
-
+pcp service start
 echo "Successfully installed pcp in $install_dir."

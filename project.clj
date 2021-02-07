@@ -21,9 +21,6 @@
                 
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
-                  ; [alekcz/konserve-jdbc "0.1.0-20200902.211209-6"]
-                  [alekcz/konserve-rocksdb "0.1.0-20200923.102238-1"]
-                  [alekcz/konserve-redis "0.1.0-20200923.045900-2"]
                   [seancorfield/next.jdbc "1.1.582"]
                   [org.postgresql/postgresql "42.2.11"]
                   [honeysql "0.9.10"]

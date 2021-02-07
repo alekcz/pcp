@@ -14,10 +14,7 @@
     [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
     [ring.middleware.params :refer [params-request]]
-    [environ.core :refer [env]]
-    [konserve.core :as k]
-    [clojure.core.async :refer [<!!]]
-    [konserve-rocksdb.core :refer [new-rocksdb-store]])
+    [environ.core :refer [env]])
   (:import [java.net URLDecoder]
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
@@ -86,9 +83,6 @@
   (try
     (let [project (-> (str root "/../.secrets/PCP_PROJECT") slurp str/trim)
           keypath (str (keydb) "/" project ".db")
-          store (<!! (new-rocksdb-store (str (keydb) "/rocksdb")))
-          key (<!! (k/get store project))
-          _ (println key)
           secret (nippy/thaw-from-file 
                   (str root "/../.secrets/"  
                     (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") 

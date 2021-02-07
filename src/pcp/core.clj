@@ -115,7 +115,6 @@
             full-source (process-includes source parent)
             result (process-script full-source opts)
             _ (selmer.parser/set-resource-path! nil)]
-        (println (str "In:" (-> params :query-params)))
         result)
       nil)))
 

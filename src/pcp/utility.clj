@@ -71,9 +71,10 @@
 Usage: pcp [option] [value]
 
 Options:
-  new [project-name]      Create a new pcp project in the [project-name] directory
+  new [project]           Create a new pcp project in the [project] directory
   service [stop/start]    Stop/start the PCP SCGI server daemon
   secret [path]           Add and encrypt secrets at . or [path]
+  passphrase [project]    Set passphrase for [project]
   -e, --evaluate [path]   Evaluate a clojure file using PCP
   -s, --serve [root]      Start a local server at . or [root]
   -v, --version           Print the version string and exit
@@ -196,44 +197,49 @@ Options:
 
 (defn add-secret [options]
   (let [opts (merge {:root "."} (clean-opts options))
-        keypath (str (:root opts) "/" ".secrets/PCP_PROJECT")]
-    (if (file-exists? keypath)
-      nil
+        keypath (str (:root opts) "/" ".pcp/PCP_PROJECT")]
+    (when-not (file-exists? keypath)
       (let [_ (println "To decrypt at runtime make sure your passphrase has been added on the server. 
                       \nPlease ensure you use the same passphrase for all your secrets in this project") 
-            envkey (do (print "Project name: ") (flush) (read-line))]
+            project-name (do (print "Project name: ") (flush) (read-line))]
         (io/make-parents keypath)
-        (spit keypath envkey)))
+        (spit keypath project-name)))
     (let [_ (do 
-              (println "Encrypt your environment variable for this project") 
+              (println "--------------------------------------------------")
+              (println "Set an encrypted secret variable for project:" (slurp keypath)) 
+              (println "Please ensure you use the same passphrase for all your secrets in this project") 
+              (println "and that you add your passphrase to your production server using:") 
+              (println (str "  pcp passphrase " (slurp keypath))) 
               (println "--------------------------------------------------"))
           env-var (do (print "Secret name: ") (flush) (read-line))
           value (do (print "Secret value: ") (flush) (read-line))
           password (do (print "Passphrase: ") (flush) (read-line))
-          path (str (:root opts) "/" ".secrets/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
+          path (str (:root opts) "/" ".pcp/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
     (println "encrypting...")
     (io/make-parents path)
     (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
     (println "done."))))
 
-(defn add-passphrase []
+(defn add-passphrase [project]
   (let [_ (do 
-            (println "Set passhrase for this project") 
+            (println "--------------------------------------------------")
+            (println "Set passphrase for project:" project)
+            (println "This passphrase will be used for decrypting secrets at runtime.") 
             (println "--------------------------------------------------"))
-        project' (do (print "Project name: ") (flush) (read-line))
         passphrase' (do (print "Passphrase: ") (flush) (read-line))
-        project (str/trim project')
         passphrase (str/trim passphrase')
         path (str (keydb) "/" project ".db")]
   (io/make-parents (keydb))
-  (println "adding passphrase...")
+  (println "adding passphrase for project:" project)
   (with-open [w (io/writer path)]
     (.write w ^String passphrase))
   (println "done.")))  
 
 (defn new-project [directory]
+  (io/make-parents (str directory "/.pcp/PCP_PROJECT"))
   (io/make-parents (str directory "/public/index.clj"))
   (io/make-parents (str directory "/public/api.clj"))
+  (spit (str directory "/.pcp/PCP_PROJECT") directory)
   (spit 
     (str directory "/public/index.clj") 
     (slurp (str (template-path) "/index.clj")))
@@ -255,7 +261,7 @@ Options:
       "-e" (println (run-file value 9000))
       "--evaluate" (println (run-file value 9000))
       "new" (new-project value)
-      "passphrase" (add-passphrase)
+      "passphrase" (add-passphrase value)
       "secret" (add-secret {:root value})
       "service" (case value 
                   "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail

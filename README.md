@@ -1,4 +1,4 @@
-<img src="assets/logo/logo@2x.png" width="120px">
+<img src="assets/logo/logo@2x.png" width="200px">
 
 > PCP: Clojure Processor -- _Clojure replacement for PHP_  
   

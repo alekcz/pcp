@@ -73,8 +73,8 @@ Usage: pcp [option] [value]
 Options:
   new [project]           Create a new pcp project in the [project] directory
   service [stop/start]    Stop/start the PCP SCGI server daemon
-  secret [path]           Add and encrypt secrets at . or [path]
   passphrase [project]    Set passphrase for [project]
+  secret [path]           Add and encrypt secrets at . or [path]
   -e, --evaluate [path]   Evaluate a clojure file using PCP
   -s, --serve [root]      Start a local server at . or [root]
   -v, --version           Print the version string and exit

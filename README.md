@@ -1,3 +1,6 @@
+<img src="assets/logo/logo.png" width="160px">
+   
+
 # Welcome to PCP
 
 > PCP: Clojure Processor -- _Clojure replacement for PHP_  

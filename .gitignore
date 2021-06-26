@@ -16,3 +16,6 @@ pom.xml.asc
 .secrets
 /tmp
 examples
+/.DS_Store
+**/DS_Store
+.DS_Store

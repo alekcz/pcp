@@ -1,4 +1,4 @@
-(defproject pcp "0.0.1-beta.20"
+(defproject pcp "0.0.1-beta.21"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
@@ -7,7 +7,7 @@
   :dependencies [ ;core
                   [org.clojure/clojure "1.10.2-alpha1"]
                   [org.clojure/tools.cli "1.0.194"]
-                  [borkdude/sci "0.1.1-alpha.10"]
+                  [borkdude/sci "0.2.5"]
                   [byte-streams "0.2.4"]
                   [http-kit "2.5.0-RC1"]
                   [ring "1.8.0"]
@@ -16,8 +16,9 @@
                   [commons-io/commons-io "2.6"]
                   [commons-codec/commons-codec "1.14"]
                   [com.google.guava/guava "28.2-jre"]
-                  [com.taoensso/nippy "2.15.0"]
-                  [environ "1.1.0"] 
+                  [com.taoensso/nippy "3.1.1"]
+                  [environ "1.1.0"]
+                  [hiccup "2.0.0-alpha2"]
                 
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
@@ -28,9 +29,11 @@
                   [buddy "2.0.0"]
                   [tick "0.4.23-alpha"]
                   [clj-http "3.10.1"]
-                  [alekcz/storyblok-clj "1.2.0"]]
+                  [alekcz/storyblok-clj "1.2.0"]
+                  [garden "1.3.10"]]
   :auto-clean false
-  :env {:my-passphrase "s3cr3t-p455ph4r3"}
+  :env {:my-passphrase "s3cr3t-p455ph4r3"
+        :pcp-template-path "resources/pcp-templates"}
   :plugins [[nrepl/lein-nrepl "0.3.2"]
             [lein-cloverage "1.2.0"]
             [lein-environ "1.1.0"]]

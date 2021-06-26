@@ -21,7 +21,8 @@
     [buddy.auth.middleware]
     [buddy.hashers]
     [clj-http.client]
-    [storyblok-clj.core])
+    [storyblok-clj.core]
+    [garden.core])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -70,4 +71,5 @@
     'buddy.core.keys (extract-namespace 'buddy.core.keys)
     'buddy.auth.backends (extract-namespace 'buddy.auth.backends)
     'buddy.auth.middleware (extract-namespace 'buddy.auth.middleware)
-    'buddy.hashers (extract-namespace 'buddy.hashers)})
+    'buddy.hashers (extract-namespace 'buddy.hashers)
+    'garden.core (extract-namespace 'garden.core)})

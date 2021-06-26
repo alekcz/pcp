@@ -34,6 +34,7 @@ curl -o "pcp-$latest_release-$platform-amd64.zip" -sL "https://github.com/alekcz
 unzip -qqo "pcp-$latest_release-$platform-amd64.zip"
 rm "pcp-$latest_release-$platform-amd64.zip"
 mkdir -p "/usr/local/etc/pcp-db"
+mkdir -p "$install_dir/pcp-templates"
 
 cd "$install_dir"
 if [ -f pcp ]; then
@@ -47,6 +48,9 @@ fi
 mv -f "$download_dir/pcp" "$PWD/pcp"
 
 mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
+
+(cd "$install_dir/pcp-templates/" && curl -osL "index.clj" "https://raw.githubusercontent.com/alekcz/pcp/master/resources/pcp-templates/index.clj")
+(cd "$install_dir/pcp-templates/" && curl -osL "api.clj"   "https://raw.githubusercontent.com/alekcz/pcp/master/resources/pcp-templates/api.clj")
 
 case "$(uname -s)" in
     Linux*)     

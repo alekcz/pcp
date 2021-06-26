@@ -135,9 +135,9 @@
           scgi (scgi/serve handler scgi-port)
           local (utility/-main "-s" "test-resources/site")
           _ (Thread/sleep 2000)
-          file-eval (str/trim (with-out-str (utility/-main "-e" "test-resources/site/index.clj")))
-          file-eval2(str/trim (with-out-str (utility/-main "--evaluate" "test-resources/site/index.clj")))
-          file-eval-expected "{\"num\":1275,\"name\":\"Test\",\"end\":null}"
+          file-eval (json/decode (with-out-str (utility/-main "-e" "test-resources/site/index.clj")) true)
+          file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" "test-resources/site/index.clj")) true)
+          file-eval-expected (json/decode "{\"num\":1275,\"name\":\"Test\",\"end\":null}" true)
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]
       (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
@@ -162,3 +162,8 @@
   (testing "Test that server and utility using the same db"
     (is core/keydb utility/keydb)))
 
+(deftest new-project
+  (testing "Test that new project is created correctly"
+    (let [_ (utility/new-project "tmp")]
+      (is (= (slurp "tmp/public/api.clj") (slurp "resources/pcp-templates/api.clj")))
+      (is (= (slurp "tmp/public/index.clj") (slurp "resources/pcp-templates/index.clj"))))))

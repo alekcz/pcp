@@ -18,11 +18,13 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.20")
+(def version "v0.0.1-beta.21")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
+(defn template-path []
+  (or (env :pcp-template-path) "/usr/local/bin/pcp-templates"))
 
 (defn http-to-scgi [req]
   (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
@@ -69,6 +71,7 @@
 Usage: pcp [option] [value]
 
 Options:
+  new [project-name]      Create a new pcp project in the [project-name] directory
   service [stop/start]    Stop/start the PCP SCGI server daemon
   secret [path]           Add and encrypt secrets at . or [path]
   -e, --evaluate [path]   Evaluate a clojure file using PCP
@@ -228,6 +231,16 @@ Options:
     (.write w ^String passphrase))
   (println "done.")))  
 
+(defn new-project [directory]
+  (io/make-parents (str directory "/public/index.clj"))
+  (io/make-parents (str directory "/public/api.clj"))
+  (spit 
+    (str directory "/public/index.clj") 
+    (slurp (str (template-path) "/index.clj")))
+  (spit 
+    (str directory "/public/api.clj") 
+    (slurp (str (template-path) "/api.clj"))))
+
 (defn -main 
   ([]
     (-main "" ""))
@@ -241,6 +254,7 @@ Options:
       "--version" (println "pcp" version)
       "-e" (println (run-file value 9000))
       "--evaluate" (println (run-file value 9000))
+      "new" (new-project value)
       "passphrase" (add-passphrase)
       "secret" (add-secret {:root value})
       "service" (case value 
@@ -252,10 +266,3 @@ Options:
                     (println help)))
       "" (println help)
       (println help))))                               
-                  
-
-      
-; "(require '[org.httpkit.sni-client :as sni-client])
-; (require '[org.httpkit.client :as client])
-; (:status (binding [org.httpkit.client/*default-client* sni-client/default-client]
-;   @(client/get \"https://www.google.com\")))"     

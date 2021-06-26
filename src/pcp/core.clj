@@ -1,12 +1,14 @@
 (ns pcp.core
   (:require
-    [sci.core :as sci]
+    [sci.core :as sci :refer [copy-var]] 
     [sci.addons :as addons]
     [pcp.resp :as resp]
     [clojure.java.io :as io]
     [clojure.string :as str]
     [pcp.scgi :as scgi]
-    [pcp.includes :refer [includes html]]
+    [pcp.includes :refer [includes]]
+    [hiccup.compiler :as compiler]
+    [hiccup.util :as util]       
     [selmer.parser :as parser]
     [cheshire.core :as json]
     [clj-uuid :as uuid]
@@ -28,6 +30,15 @@
 (def store (atom nil))
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
+
+(def uns (sci/create-ns 'hiccup.util nil))
+(def html-mode (copy-var util/*html-mode* uns))
+(def escape-strings? (copy-var util/*escape-strings?* uns))
+
+(defn render-html [& contents]
+  (binding [util/*html-mode* @html-mode
+            util/*escape-strings?* @escape-strings?]
+    (apply compiler/render-html contents)))
 
 (defn get-environment [root]
   (let [rootkey (keyword (DigestUtils/sha512Hex (str "env-" root)))
@@ -104,7 +115,8 @@
                         :namespaces (merge includes {'pcp { 'params (:body params)
                                                             'request params
                                                             'response format-response
-                                                            'html html
+                                                            'html render-html
+                                                            'render-html render-html
                                                             'secret #(get-secret root %)
                                                             'now #(quot (System/currentTimeMillis) 1000)
                                                             'use identity}})

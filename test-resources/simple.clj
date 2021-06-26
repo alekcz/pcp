@@ -1,3 +1,5 @@
 (require '[pcp :as pcp])
 (pcp/now)
+(pcp/html [:div "pcp"])
+(pcp/render-html [:div "pcp"])
 (pcp/response 200 (apply + (range 51)) "text/plain")

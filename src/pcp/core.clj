@@ -94,8 +94,6 @@
   (try
     (let [project (-> (str root "/../.pcp/PCP_PROJECT") slurp str/trim)
           keypath (str (keydb) "/" project ".db")
-          _ (println "key" (str root "/../.pcp/"  
-                    (-> ^String env-var str/trim ^"[B" DigestUtils/sha512Hex) ".npy") )
           secret (nippy/thaw-from-file 
                   (str root "/../.pcp/"  
                     (-> ^String env-var str/trim ^"[B" DigestUtils/sha512Hex) ".npy") 

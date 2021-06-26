@@ -1,8 +1,10 @@
 <img src="assets/logo/logo@2x.png" width="200px">
 
-> PCP: Clojure Processor -- _Clojure replacement for PHP_  
-  
 ![master](https://github.com/alekcz/pcp/workflows/master/badge.svg) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
+
+**Welcome to PCP**
+
+> PCP: Clojure Processor -- _Clojure replacement for PHP_  
 
 ## Introduction
 

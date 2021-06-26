@@ -1,4 +1,4 @@
-<img src="assets/logo/logo.png" width="160px">
+<img src="assets/logo/logo@2x.png" width="160px">
    
 
 # Welcome to PCP

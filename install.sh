@@ -49,8 +49,7 @@ mv -f "$download_dir/pcp" "$PWD/pcp"
 
 mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
 
-(cd "$install_dir/pcp-templates/" && curl -osL "index.clj" "https://raw.githubusercontent.com/alekcz/pcp/master/resources/pcp-templates/index.clj")
-(cd "$install_dir/pcp-templates/" && curl -osL "api.clj"   "https://raw.githubusercontent.com/alekcz/pcp/master/resources/pcp-templates/api.clj")
+mv -f "$download_dir/pcp-templates" "$PWD/pcp-templates"
 
 case "$(uname -s)" in
     Linux*)     

@@ -92,6 +92,7 @@ jobs:
           gu install native-image
           bash build.sh
           cp resources/pcp.service target/pcp.service 
+          cp -r resources/pcp-templates target/pcp-templates
           rm target/useless-pcp-server.jar
           rm target/useless-pcp.jar
           rm target/pcp.jar
@@ -149,7 +150,8 @@ jobs:
           brew install leiningen
           gu install native-image
           bash build.sh
-          cp resources/com.alekcz.pcp.plist target/com.alekcz.pcp.plist 
+          cp resources/com.alekcz.pcp.plist target/com.alekcz.pcp.plist
+          cp -r resources/pcp-templates target/pcp-templates
           rm target/useless-pcp-server.jar
           rm target/useless-pcp.jar
           rm target/pcp.jar

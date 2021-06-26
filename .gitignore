@@ -14,8 +14,10 @@ pom.xml.asc
 /.pcp
 /*.txt
 .secrets
+.pcp
 /tmp
 examples
 /.DS_Store
 **/DS_Store
 .DS_Store
+/tmp-*

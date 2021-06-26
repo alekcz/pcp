@@ -98,19 +98,19 @@
     (let [scgi-port 33333
           handler #(core/scgi-handler %)
           scgi (scgi/serve handler scgi-port)
-          _ (Thread/sleep 2000)
           port 44444
           _ (.mkdirs (java.io.File. "./test-resources/pcp-db"))
           local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
-          _ (try (delete-recursively "./test-resources/.secrets") (catch Exception _ nil))
+          _ (try (delete-recursively "./test-resources/.pcp") (catch Exception _ nil))
           _ (with-in-str 
-              (str "MY_PASSPHRASE\n" (env :my-passphrase) "\n") 
-              (utility/-main "passphrase"))
+              (str (env :my-passphrase) "\n") 
+              (utility/-main "passphrase" "test-resources"))
           _ (with-in-str 
-              (str "MY_PASSPHRASE\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
+              (str "test-resources\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" "test-resources"))
+          _ (Thread/sleep 5000)
           resp-index (client/get (str "http://localhost:" port "/"))
           resp-text  (client/get (str "http://localhost:" port "/text.txt"))
           resp-secret  (client/get (str "http://localhost:" port "/secret.clj"))]
@@ -163,7 +163,7 @@
     (is core/keydb utility/keydb)))
 
 (deftest new-project
-  (testing "Test that new project is created correctly"
+  (testing "Test that new project is created"
     (let [_ (utility/new-project "tmp")]
       (is (= (slurp "tmp/public/api.clj") (slurp "resources/pcp-templates/api.clj")))
       (is (= (slurp "tmp/public/index.clj") (slurp "resources/pcp-templates/index.clj"))))))

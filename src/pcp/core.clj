@@ -92,16 +92,18 @@
 
 (defn get-secret [root env-var]
   (try
-    (let [project (-> (str root "/../.secrets/PCP_PROJECT") slurp str/trim)
+    (let [project (-> (str root "/../.pcp/PCP_PROJECT") slurp str/trim)
           keypath (str (keydb) "/" project ".db")
+          _ (println "key" (str root "/../.pcp/"  
+                    (-> ^String env-var str/trim ^"[B" DigestUtils/sha512Hex) ".npy") )
           secret (nippy/thaw-from-file 
-                  (str root "/../.secrets/"  
-                    (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy") 
+                  (str root "/../.pcp/"  
+                    (-> ^String env-var str/trim ^"[B" DigestUtils/sha512Hex) ".npy") 
                     {:password [:cached (-> keypath slurp)]})]
       (if (= env-var (:name secret)) 
         (:value secret)
         nil))
-    (catch java.io.FileNotFoundException _  (println "No passphrase has been set for this project") nil)
+    (catch java.io.FileNotFoundException e  (println "No passphrase has been set for this project") (.printStackTrace e) nil)
     (catch Exception e (.printStackTrace e) nil)))
 
 

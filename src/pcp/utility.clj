@@ -211,10 +211,11 @@ Options:
               (println "and that you add your passphrase to your production server using:") 
               (println (str "  pcp passphrase " (slurp keypath))) 
               (println "--------------------------------------------------"))
-          env-var (do (print "Secret name: ") (flush) (read-line))
-          value (do (print "Secret value: ") (flush) (read-line))
-          password (do (print "Passphrase: ") (flush) (read-line))
+          env-var (do (print "Secret name: ") (flush) (str/trim (read-line)))
+          value (do (print "Secret value: ") (flush) (str/trim (read-line)))
+          password (do (print "Passphrase: ") (flush) (str/trim (read-line)))
           path (str (:root opts) "/" ".pcp/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
+    (println env-var password path)
     (println "encrypting...")
     (io/make-parents path)
     (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
@@ -235,17 +236,20 @@ Options:
     (.write w ^String passphrase))
   (println "done.")))  
 
-(defn new-project [directory]
-  (io/make-parents (str directory "/.pcp/PCP_PROJECT"))
-  (io/make-parents (str directory "/public/index.clj"))
-  (io/make-parents (str directory "/public/api.clj"))
-  (spit (str directory "/.pcp/PCP_PROJECT") directory)
-  (spit 
-    (str directory "/public/index.clj") 
-    (slurp (str (template-path) "/index.clj")))
-  (spit 
-    (str directory "/public/api.clj") 
-    (slurp (str (template-path) "/api.clj"))))
+(defn new-project [path]
+  (let [re-filename #"(.*)\\[^\\]*"
+        project-name (or (second (re-find re-filename path)) path)]
+    (io/make-parents (str path "/.pcp/PCP_PROJECT"))
+    (io/make-parents (str path "/public/index.clj"))
+    (io/make-parents (str path "/public/api.clj"))
+    (spit (str path "/.pcp/PCP_PROJECT") project-name)
+    (spit 
+      (str path "/public/index.clj") 
+      (slurp (str (template-path) "/index.clj")))
+    (spit 
+      (str path "/public/api.clj") 
+      (slurp (str (template-path) "/api.clj")))
+    (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath (io/file path)))))
 
 (defn -main 
   ([]

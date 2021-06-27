@@ -47,8 +47,7 @@
                      :pcp-template-path "resources/pcp-templates"}}
               :dev {:dependencies [[org.martinklepsch/clj-http-lite "0.4.3"]]
                     :plugins [[lein-shell "0.5.0"]]
-                    :env {:my-passphrase "s3cr3t-p455ph4r3"
-                    :pcp-template-path "resources/pcp-templates"}}}
+                    :env {:my-passphrase "s3cr3t-p455ph4r3"}}}
   :aliases
   {"pcp" ["run" "-m" "pcp.utility"]
    "scgi" ["run" "-m" "pcp.core"]

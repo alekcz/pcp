@@ -1,5 +1,5 @@
 (ns pcp.core-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [clojure.java.io :as io]
             [pcp.resp :as resp]
             [pcp.core :as core]
@@ -18,16 +18,6 @@
 (deftest build-path-test
   (testing "Test building path for includes"
     (is (= "/root/file/path" (core/build-path "file/path" "/root" )))))
-
-(deftest process-includes-test
-  (testing "Test including other files"
-    (is (=  "(def test 1234)\n(def test2 5678)" 
-            (core/process-includes (slurp "test-resources/process-includes.clj") "test-resources")))))
-
-(deftest process-includes-2-test
-  (testing "Test including file that doesn't exist"
-    (is (thrown? Exception 
-            (core/process-includes (slurp "test-resources/process-includes2.clj") "test-resources")))))
 
 (deftest format-response-test
   (testing "Test formatting response"
@@ -104,3 +94,23 @@
     (is (= true connected))
     (is (= "failed" err-connection))
     (.close socket))))
+
+(deftest core-7-test
+  (testing "Test requiring file"
+    (let [root "test-resources"
+          uri "/process-includes.clj"
+          scgi-request {:document-root root :document-uri uri }
+          _ (core/scgi-handler scgi-request)
+          ans (core/run-script (str root uri))]
+    (is (= (:ans ans) 5678))
+    (is (true? (:working ans))))))
+
+(deftest core-8-test
+  (testing "Test requiring file that doesn't exist"
+    (let [root "test-resources"
+          uri "/process-includes2.clj"
+          scgi-request {:document-root root :document-uri uri }
+          _ (core/scgi-handler scgi-request)
+          ans  (try (core/run-script (str root uri)) (catch Exception _ "error"))]
+    (is (str/includes? ans "error")))))
+    

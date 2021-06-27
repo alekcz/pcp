@@ -166,5 +166,5 @@
 (deftest new-project
   (testing "Test that new project is created"
     (let [_ (utility/new-project "tmp")]
-      (is (= (slurp "tmp/public/api.clj") (slurp "resources/pcp-templates/api.clj")))
+      (is (= (slurp "tmp/public/api/info.clj") (slurp "resources/pcp-templates/api/info.clj")))
       (is (= (slurp "tmp/public/index.clj") (slurp "resources/pcp-templates/index.clj"))))))

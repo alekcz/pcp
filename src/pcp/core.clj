@@ -70,20 +70,6 @@
 (defn build-path [path root]
   (str root "/" path))
 
-(defn process-includes [source parent]
-  (let [includes-used (re-seq #"\(use\s*?\"(.*?)\"\s*?\)" source)]
-    (loop [code source externals includes-used]
-      (if (empty? externals)
-        code
-        (let [included (-> externals first second (build-path parent) read-source)]
-          (if (nil? included)
-            (throw 
-              (ex-info (str "Included file '" (-> externals first second (build-path parent)) "' was not found.")
-                        {:cause   (str (-> externals first first))}))
-            (recur 
-              (str/replace code (-> externals first first) included) 
-              (rest externals))))))))
-
 (defn include [parent {:keys [namespace]}]
   {:file namespace
    :source (slurp (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))})
@@ -117,7 +103,7 @@
     (if (string? source)
       (let [opts  (-> { ;:env (get-environment root) ; the env caches thee namespaces too. oops.
                         :load-fn #(include parent %)
-                        :namespaces (merge includes {'pcp { 'body (slurp (:body params))
+                        :namespaces (merge includes {'pcp { 'body (:body params)
                                                             'request params
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
                                                             'html render-html
@@ -129,10 +115,9 @@
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
             _ (parser/set-resource-path! root)                        
-            full-source (process-includes source parent)
-            result (process-script full-source opts)
+            result (process-script source opts)
             _ (selmer.parser/set-resource-path! nil)]
-        (or @response result))
+        (if (nil? @response) result @response))
       nil)))
 
 (defn extract-multipart [req]

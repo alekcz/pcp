@@ -1,2 +1,4 @@
-(use "included.clj")
-(def test2 5678)
+(require '[included :as i])
+
+{:ans (+ 5578 i/test)
+ :working (i/working?)}

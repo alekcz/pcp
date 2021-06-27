@@ -1,2 +1,3 @@
-(use "notfound.clj")
-(def test2 5678)
+(require '[included2 :as i])
+
+(+ 5578 i/test)

@@ -243,14 +243,14 @@ Options:
         project-name (or (second (re-find re-filename path)) path)]
     (io/make-parents (str path "/pcp.edn"))
     (io/make-parents (str path "/public/index.clj"))
-    (io/make-parents (str path "/public/api.clj"))
+    (io/make-parents (str path "/public/api/info.clj"))
     (spit (str path "/pcp.edn") (pr-str {:project project-name}))
     (spit 
       (str path "/public/index.clj") 
       (slurp (str (template-path) "/index.clj")))
     (spit 
-      (str path "/public/api.clj") 
-      (slurp (str (template-path) "/api.clj")))
+      (str path "/public/api/info.clj") 
+      (slurp (str (template-path) "/api/info.clj")))
     (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath (io/file path)))))
 
 (defn -main 

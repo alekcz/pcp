@@ -1,5 +1,5 @@
 (ns pcp.resp-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [pcp.resp :as resp]))
 
 (deftest reponse-test

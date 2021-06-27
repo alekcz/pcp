@@ -27,8 +27,6 @@
 
 (set! *warn-on-reflection* 1)
 
-(def environment (atom {}))
-(def store (atom nil))
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
@@ -40,15 +38,6 @@
   (binding [util/*html-mode* @html-mode
             util/*escape-strings?* @escape-strings?]
     (apply compiler/render-html contents)))
-
-(defn get-environment [root]
-  (let [rootkey (keyword (DigestUtils/sha512Hex (str "env-" root)))
-        env (get @environment rootkey nil)]
-        (if (nil? env) 
-          (do 
-            (swap! environment assoc rootkey (atom {}))
-            (get @environment rootkey))
-          env)))
 
 (defn format-response [status body mime-type]
   (-> (resp/response body)    
@@ -71,8 +60,10 @@
   (str root "/" path))
 
 (defn include [parent {:keys [namespace]}]
-  {:file namespace
-   :source (slurp (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))})
+  (try
+    {:file namespace
+    :source (slurp (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))}
+    (catch java.io.FileNotFoundException _ nil)))
      
 (defn process-script [full-source opts]
   (sci/eval-string full-source opts)) ;sci/eval-string* pass context
@@ -101,8 +92,7 @@
         parent (longer root (-> ^File file (.getParentFile) str))
         response (atom nil)]
     (if (string? source)
-      (let [opts  (-> { ;:env (get-environment root) ; the env caches thee namespaces too. oops.
-                        :load-fn #(include parent %)
+      (let [opts  (-> { :load-fn #(include parent %)
                         :namespaces (merge includes {'pcp { 'body (:body params)
                                                             'request params
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))

@@ -99,6 +99,7 @@
           handler #(core/scgi-handler %)
           scgi (scgi/serve handler scgi-port)
           port 44444
+          _ (Thread/sleep 3000)
           _ (.mkdirs (java.io.File. "./test-resources/pcp-db"))
           local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})
           env-var "SUPER_SECRET_API"
@@ -111,7 +112,7 @@
           _ (with-in-str 
               (str "test-resources\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" "test-resources"))
-          _ (Thread/sleep 5000)
+          _ (Thread/sleep 3000)
           resp-index (client/get (str "http://localhost:" port "/"))
           resp-text  (client/get (str "http://localhost:" port "/text.txt"))
           resp-secret  (client/get (str "http://localhost:" port "/secret.clj"))]

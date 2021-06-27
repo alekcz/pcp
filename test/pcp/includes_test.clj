@@ -5,5 +5,5 @@
 (deftest extract-namespace-test
   (testing "Test extracting namespaces"
     (let [result (includes/extract-namespace 'pcp.includes)
-          ans {'html #'pcp.includes/html, 'includes #'pcp.includes/includes, 'extract-namespace #'pcp.includes/extract-namespace}]
+          ans {'includes #'pcp.includes/includes, 'extract-namespace #'pcp.includes/extract-namespace}]
       (is (= ans result)))))

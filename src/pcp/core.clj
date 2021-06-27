@@ -4,6 +4,7 @@
     [sci.addons :as addons]
     [pcp.resp :as resp]
     [clojure.java.io :as io]
+    [clojure.edn :as edn]
     [clojure.string :as str]
     [pcp.scgi :as scgi]
     [pcp.includes :refer [includes]]
@@ -83,16 +84,19 @@
               (str/replace code (-> externals first first) included) 
               (rest externals))))))))
 
+(defn include [parent {:keys [namespace]}]
+  {:file namespace
+   :source (slurp (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))})
+     
 (defn process-script [full-source opts]
   (sci/eval-string full-source opts)) ;sci/eval-string* pass context
 
 (defn longer [str1 str2]
   (if (> (count str1) (count str2)) str1 str2))
 
-
 (defn get-secret [root env-var]
   (try
-    (let [project (-> (str root "/../.pcp/PCP_PROJECT") slurp str/trim)
+    (let [project (-> (str root "/../pcp.edn") slurp edn/read-string :project)
           keypath (str (keydb) "/" project ".db")
           secret (nippy/thaw-from-file 
                   (str root "/../.pcp/"  
@@ -101,33 +105,34 @@
       (if (= env-var (:name secret)) 
         (:value secret)
         nil))
-    (catch java.io.FileNotFoundException e  (println "No passphrase has been set for this project") (.printStackTrace e) nil)
+    (catch java.io.FileNotFoundException _  (println "No passphrase has been set for this project") nil)
     (catch Exception e (.printStackTrace e) nil)))
-
 
 (defn run-script [url-path &{:keys [root params]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
-        parent (longer root (-> ^File file (.getParentFile) str))]
+        parent (longer root (-> ^File file (.getParentFile) str))
+        response (atom nil)]
     (if (string? source)
       (let [opts  (-> { ;:env (get-environment root) ; the env caches thee namespaces too. oops.
-                        :namespaces (merge includes {'pcp { 'params (:body params)
+                        :load-fn #(include parent %)
+                        :namespaces (merge includes {'pcp { 'body (slurp (:body params))
                                                             'request params
-                                                            'response format-response
+                                                            'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
                                                             'html render-html
                                                             'render-html render-html
                                                             'secret #(get-secret root %)
-                                                            'now #(quot (System/currentTimeMillis) 1000)
-                                                            'use identity}})
-                        :bindings {'println println 'use identity  'include identity 'slurp #(slurp (str parent "/" %))}
+                                                            'echo pr-str
+                                                            'now #(quot (System/currentTimeMillis) 1000)}})
+                        :bindings {'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (addons/future))
             _ (parser/set-resource-path! root)                        
             full-source (process-includes source parent)
             result (process-script full-source opts)
             _ (selmer.parser/set-resource-path! nil)]
-        result)
+        (or @response result))
       nil)))
 
 (defn extract-multipart [req]

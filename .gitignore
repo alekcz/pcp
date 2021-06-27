@@ -21,3 +21,4 @@ examples
 **/DS_Store
 .DS_Store
 /tmp-*
+/test-resources/pcp.edn

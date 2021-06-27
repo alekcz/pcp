@@ -1,4 +1,4 @@
-<img src="assets/logo/logo@2x.png" width="200px">
+<img src="assets/logo/logo.svg" width="200px">
 
 ![master](https://github.com/alekcz/pcp/workflows/master/badge.svg) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
 

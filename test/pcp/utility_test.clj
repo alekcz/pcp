@@ -104,6 +104,7 @@
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
           _ (try (delete-recursively "./test-resources/.pcp") (catch Exception _ nil))
+          _ (try (delete-recursively "./test-resources/pcp.edn") (catch Exception _ nil))
           _ (with-in-str 
               (str (env :my-passphrase) "\n") 
               (utility/-main "passphrase" "test-resources"))

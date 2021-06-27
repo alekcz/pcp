@@ -32,8 +32,6 @@
                   [alekcz/storyblok-clj "1.2.0"]
                   [garden "1.3.10"]]
   :auto-clean false
-  :env {:my-passphrase "s3cr3t-p455ph4r3"
-        :pcp-template-path "resources/pcp-templates"}
   :plugins [[nrepl/lein-nrepl "0.3.2"]
             [lein-cloverage "1.2.0"]
             [lein-environ "1.1.0"]]
@@ -45,8 +43,12 @@
                             :aot [pcp.utility pcp.resp]
                             :jar-name "useless-pcp.jar"
                             :uberjar-name "pcp.jar"}
+              :test {:env {:my-passphrase "s3cr3t-p455ph4r3"
+                     :pcp-template-path "resources/pcp-templates"}}
               :dev {:dependencies [[org.martinklepsch/clj-http-lite "0.4.3"]]
-                    :plugins [[lein-shell "0.5.0"]]}}
+                    :plugins [[lein-shell "0.5.0"]]
+                    :env {:my-passphrase "s3cr3t-p455ph4r3"
+                    :pcp-template-path "resources/pcp-templates"}}}
   :aliases
   {"pcp" ["run" "-m" "pcp.utility"]
    "scgi" ["run" "-m" "pcp.core"]

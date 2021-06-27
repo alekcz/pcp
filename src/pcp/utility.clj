@@ -2,6 +2,7 @@
   (:require
     [pcp.resp :as resp]
     [clojure.java.io :as io]
+    [clojure.edn :as edn]
     [clojure.string :as str]
     [clojure.walk :as walk]
     [clojure.java.shell :as shell]
@@ -197,19 +198,21 @@ Options:
 
 (defn add-secret [options]
   (let [opts (merge {:root "."} (clean-opts options))
-        keypath (str (:root opts) "/" ".pcp/PCP_PROJECT")]
+        keypath (str (:root opts) "/pcp.edn")]
     (when-not (file-exists? keypath)
       (let [_ (println "To decrypt at runtime make sure your passphrase has been added on the server. 
                       \nPlease ensure you use the same passphrase for all your secrets in this project") 
-            project-name (do (print "Project name: ") (flush) (read-line))]
+            project-name (do (print "Project name: ") (flush) (str/trim (read-line)))]
         (io/make-parents keypath)
-        (spit keypath project-name)))
-    (let [_ (do 
+        (spit keypath (prn-str {:project project-name}))))
+    (let [project (-> keypath slurp edn/read-string)
+          _ (println project)
+          _ (do 
               (println "--------------------------------------------------")
-              (println "Set an encrypted secret variable for project:" (slurp keypath)) 
+              (println "Set an encrypted secret variable for project:" project) 
               (println "Please ensure you use the same passphrase for all your secrets in this project") 
               (println "and that you add your passphrase to your production server using:") 
-              (println (str "  pcp passphrase " (slurp keypath))) 
+              (println (str "  pcp passphrase "project)) 
               (println "--------------------------------------------------"))
           env-var (do (print "Secret name: ") (flush) (str/trim (read-line)))
           value (do (print "Secret value: ") (flush) (str/trim (read-line)))
@@ -238,10 +241,10 @@ Options:
 (defn new-project [path]
   (let [re-filename #"(.*)\\[^\\]*"
         project-name (or (second (re-find re-filename path)) path)]
-    (io/make-parents (str path "/.pcp/PCP_PROJECT"))
+    (io/make-parents (str path "/pcp.edn"))
     (io/make-parents (str path "/public/index.clj"))
     (io/make-parents (str path "/public/api.clj"))
-    (spit (str path "/.pcp/PCP_PROJECT") project-name)
+    (spit (str path "/pcp.edn") (pr-str {:project project-name}))
     (spit 
       (str path "/public/index.clj") 
       (slurp (str (template-path) "/index.clj")))

@@ -39,6 +39,11 @@
             util/*escape-strings?* @escape-strings?]
     (apply compiler/render-html contents)))
 
+(defn render-html-unescaped [& contents]
+  (binding [util/*html-mode* @html-mode
+            util/*escape-strings?* false]
+    (apply compiler/render-html contents)))
+
 (defn format-response [status body mime-type]
   (-> (resp/response body)    
       (resp/status status)
@@ -98,6 +103,8 @@
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
                                                             'html render-html
                                                             'render-html render-html
+                                                            'html-unescaped render-html-unescaped
+                                                            'render-html-unescaped render-html-unescaped
                                                             'secret #(get-secret root %)
                                                             'echo pr-str
                                                             'now #(quot (System/currentTimeMillis) 1000)}})

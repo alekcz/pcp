@@ -49,7 +49,8 @@ mv -f "$download_dir/pcp" "$PWD/pcp"
 
 mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
 
-mv -f "$download_dir/pcp-templates" "$PWD/pcp-templates"
+rm -rf "$PWD/pcp-templates"
+mv -f "$download_dir/pcp-templates" "$PWD"
 
 case "$(uname -s)" in
     Linux*)     

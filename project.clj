@@ -1,8 +1,8 @@
-(defproject pcp "0.0.1-beta.22"
+(defproject pcp "0.0.1-beta.23"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
-  :license {:name "EPL-2.0 OR GPL-2.0-or-later WITH Classpath-exception-2.0"
-            :url "https://www.eclipse.org/legal/epl-2.0/"}
+  :license {:name "The MIT License"
+            :url "http://opensource.org/licenses/MIT"}
 
   :dependencies [ ;core
                   [org.clojure/clojure "1.10.2-alpha1"]

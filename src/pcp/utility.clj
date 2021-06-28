@@ -19,7 +19,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.22")
+(def version "v0.0.1-beta.23")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -243,11 +243,15 @@ Options:
         project-name (or (second (re-find re-filename path)) path)]
     (io/make-parents (str path "/pcp.edn"))
     (io/make-parents (str path "/public/index.clj"))
+    (io/make-parents (str path "/README.md"))
     (io/make-parents (str path "/public/api/info.clj"))
     (spit (str path "/pcp.edn") (pr-str {:project project-name}))
     (spit 
       (str path "/public/index.clj") 
       (slurp (str (template-path) "/index.clj")))
+    (spit 
+      (str path "/README.md") 
+      (slurp (str (template-path) "/README.md")))
     (spit 
       (str path "/public/api/info.clj") 
       (slurp (str (template-path) "/api/info.clj")))

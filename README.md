@@ -39,9 +39,9 @@ Options:
 ```      
 The heavy lifting is done by an [SCGI](https://en.wikipedia.org/wiki/Simple_Common_Gateway_Interface) server. This server runs on port 9000 and receives requests from the local pcp server or from nginx. The SCGI server is an uber jar that runs as a daemon.
 
-### Talk
+### Demo site
 
-None yet.
+You can view a demo site built in PCP here: [https://pcp-demo.musketeers.io/](https://pcp-demo.musketeers.io/)
 
 ## Quick start
 Install pcp via the installer script:

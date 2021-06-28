@@ -23,11 +23,11 @@
         [:div 
               {:style "display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90vh;"
               :ondblclick "alert('Now we're cooking with gas')"}
-              [:img {:src "https://raw.githubusercontent.com/alekcz/pcp/master/assets/logo/logo.svg" :width "200px"}]
+              [:img {:src "https://raw.githubusercontent.com/alekcz/pcp/master/assets/logo/logo-alt.svg" :width "200px"}]
               [:h1 "Your PCP site is up and running."]
               [:p "Your json endpoint is here " [:a {:href "/api/info.clj"} "here"] 
                 [:br]
-                "Learn more about pcp at " [:a {:href a/repo} "here"]
+                "Learn more about pcp at " [:a {:href a/repo :target "_blank"} "here"]
                 [:br]
                 "Happy scripting!"]
               [:p.info

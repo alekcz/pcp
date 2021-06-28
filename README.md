@@ -30,7 +30,10 @@ PCP: Clojure Processor -- Like drugs but better
 Usage: pcp [option] [value]
 
 Options:
-  service [command]       Stop/start the SCGI server daemon or get it's status
+  new [project]           Create a new pcp project in the [project] directory
+  service [stop/start]    Stop/start the PCP SCGI server daemon
+  passphrase [project]    Set passphrase for [project]
+  secret [path]           Add and encrypt secrets at . or [path]
   secret [path]           Add and encrypt secrets at . or [path]
   -e, --evaluate [path]   Evaluate a clojure file using PCP
   -s, --serve [root]      Start a local server at . or [root]
@@ -53,13 +56,20 @@ Query the SCGI server status:
 ``` shellsession
 $ pcp service status
 ```
-You can find instructions on [replacing php here](./docs/replacing-php.md)
+
+Create a new project:
+``` shellsession
+$ pcp new project-name
+```
 
 For convenience the pcp utility comes with a local server. This local sever behaves as your pcp site would when deployed with nginx. 
 
 ``` shellsession
-$ pcp -s /path/to/server/root
+$ cd project-name
+$ pcp -s public/
 ```
+
+You can find instructions on [replacing php here](./docs/replacing-php.md)
 
 ## Guides
 
@@ -67,7 +77,7 @@ $ pcp -s /path/to/server/root
 2. [PCP environment](./docs/pcp-environment.md)
 3. [Environment variables and secrets](./docs/environment-variables-and-secrets.md)
 4. [Replacing php](./docs/replacing-php.md)
-5. Examples _(coming soon)_
+5. [PCP demo site](https://pcp-demo.musketeers.io/)
 
 ## Special thanks
 For the guidance and examples, special thanks to

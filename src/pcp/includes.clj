@@ -1,7 +1,8 @@
 (ns pcp.includes
   (:require
     ;included in environment
-    [clojure.string :as str]
+    [clojure.string]
+    [clojure.edn]
     [cheshire.core]
     [selmer.parser]
     [selmer.filters]
@@ -34,6 +35,7 @@
 (def includes
   { 
     'clojure.string (extract-namespace 'clojure.string)
+    'clojure.edn (extract-namespace 'clojure.edn)
     'cheshire.core (extract-namespace 'cheshire.core)
     'selmer.parser (extract-namespace 'selmer.parser)
     'selmer.filters (extract-namespace 'selmer.filters)

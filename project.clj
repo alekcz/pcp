@@ -1,4 +1,4 @@
-(defproject pcp "0.0.1-beta.23"
+(defproject pcp "0.0.1-beta.24"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"

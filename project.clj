@@ -5,7 +5,7 @@
             :url "http://opensource.org/licenses/MIT"}
 
   :dependencies [ ;core
-                  [org.clojure/clojure "1.10.2-alpha1"]
+                  [org.clojure/clojure "1.10.3"]
                   [org.clojure/tools.cli "1.0.194"]
                   [borkdude/sci "0.2.5"]
                   [byte-streams "0.2.4"]
@@ -31,8 +31,15 @@
                   [clj-http "3.10.1"]
                   [alekcz/storyblok-clj "1.2.0"]
                   [garden "1.3.10"]
-                  [io.replikativ/konserve "0.6.0-alpha3"]
-                  [alekcz/konserve-jdbc "0.1.0-20210521.205028-12"]]
+                  [io.replikativ/konserve "0.6.0-alpha3" 
+                      :exclusions  [org.clojure/clojure 
+                                    org.clojure/clojurescript]]
+                  [alekcz/konserve-jdbc "0.1.0-20210521.205028-12" 
+                    :exclusions  [org.clojure/clojure
+                                  org.clojure/clojurescript
+                                  com.h2database/h2 
+                                  org.apache.derby/derby
+                                  com.microsoft.sqlserver/mssql-jdbc]]]
   :auto-clean false
   :plugins [[nrepl/lein-nrepl "0.3.2"]
             [lein-cloverage "1.2.0"]

@@ -30,7 +30,9 @@
                   [tick "0.4.23-alpha"]
                   [clj-http "3.10.1"]
                   [alekcz/storyblok-clj "1.2.0"]
-                  [garden "1.3.10"]]
+                  [garden "1.3.10"]
+                  [io.replikativ/konserve "0.6.0-alpha3"]
+                  [alekcz/konserve-jdbc "0.1.0-20210521.205028-12"]]
   :auto-clean false
   :plugins [[nrepl/lein-nrepl "0.3.2"]
             [lein-cloverage "1.2.0"]

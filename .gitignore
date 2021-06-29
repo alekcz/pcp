@@ -22,3 +22,4 @@ examples
 .DS_Store
 /tmp-*
 /test-resources/pcp.edn
+/data

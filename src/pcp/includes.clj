@@ -23,7 +23,11 @@
     [buddy.hashers]
     [clj-http.client]
     [storyblok-clj.core]
-    [garden.core])
+    [garden.core]
+    [konserve.filestore]
+    [konserve.core]
+    [clojure.core.async]
+    [konserve-jdbc.core])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -56,4 +60,8 @@
     'buddy.auth.backends (extract-namespace 'buddy.auth.backends)
     'buddy.auth.middleware (extract-namespace 'buddy.auth.middleware)
     'buddy.hashers (extract-namespace 'buddy.hashers)
-    'garden.core (extract-namespace 'garden.core)})
+    'garden.core (extract-namespace 'garden.core)
+    'konserve.core (extract-namespace 'konserve.core)
+    'konserve.filestore (extract-namespace 'konserve.filestore)
+    'konserve-jdbc.core (extract-namespace 'konserve-jdbc.core)
+    'clojure.core.async (extract-namespace 'clojure.core.async)})

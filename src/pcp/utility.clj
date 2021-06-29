@@ -209,10 +209,10 @@ Options:
           _ (println project)
           _ (do 
               (println "--------------------------------------------------")
-              (println "Set an encrypted secret variable for project:" project) 
+              (println "Set an encrypted secret variable for project:" (:project project)) 
               (println "Please ensure you use the same passphrase for all your secrets in this project") 
               (println "and that you add your passphrase to your production server using:") 
-              (println (str "  pcp passphrase "project)) 
+              (println (str "  pcp passphrase " (:project project))) 
               (println "--------------------------------------------------"))
           env-var (do (print "Secret name: ") (flush) (str/trim (read-line)))
           value (do (print "Secret value: ") (flush) (str/trim (read-line)))

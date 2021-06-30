@@ -110,6 +110,7 @@
     (let [project "tmp-passphrase"
           root (str project "/public")
           _ (try (delete-recursively project) (catch Exception _ nil))
+          _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
           _ (utility/new-project project)
           _ (new-folder root)
           scgi-port 33333
@@ -148,6 +149,7 @@
           project "tmp-second"
           root (str project "/public")
           _ (try (delete-recursively project) (catch Exception _ nil))
+          _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
           _ (new-folder root)
           _ (utility/stop-scgi)
           scgi (core/-main)

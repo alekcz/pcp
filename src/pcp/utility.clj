@@ -19,7 +19,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.24")
+(def version "v0.0.1-beta.25")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -80,6 +80,9 @@ Options:
   -s, --serve [root]      Start a local server at . or [root]
   -v, --version           Print the version string and exit
   -h, --help              Print the command line help")
+
+(defn safe-trim [s]
+  (-> s str str/trim))
 
 (defn forward [scgi-req scgi-port]
   (let [socket (Socket. "127.0.0.1" ^Integer scgi-port)
@@ -202,11 +205,10 @@ Options:
     (when-not (file-exists? keypath)
       (let [_ (println "To decrypt at runtime make sure your passphrase has been added on the server. 
                       \nPlease ensure you use the same passphrase for all your secrets in this project") 
-            project-name (do (print "Project name: ") (flush) (str/trim (read-line)))]
+            project-name (do (print "Project name: ") (flush) (safe-trim (read-line)))]
         (io/make-parents keypath)
         (spit keypath (prn-str {:project project-name}))))
     (let [project (-> keypath slurp edn/read-string)
-          _ (println project)
           _ (do 
               (println "--------------------------------------------------")
               (println "Set an encrypted secret variable for project:" (:project project)) 
@@ -214,9 +216,9 @@ Options:
               (println "and that you add your passphrase to your production server using:") 
               (println (str "  pcp passphrase " (:project project))) 
               (println "--------------------------------------------------"))
-          env-var (do (print "Secret name: ") (flush) (str/trim (read-line)))
-          value (do (print "Secret value: ") (flush) (str/trim (read-line)))
-          password (do (print "Passphrase: ") (flush) (str/trim (read-line)))
+          env-var (do (print "Secret name: ") (flush) (safe-trim (read-line)))
+          value (do (print "Secret value: ") (flush) (safe-trim (read-line)))
+          password (do (print "Passphrase: ") (flush) (safe-trim (read-line)))
           path (str (:root opts) "/" ".pcp/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
     (println "encrypting...")
     (io/make-parents path)
@@ -230,7 +232,7 @@ Options:
             (println "This passphrase will be used for decrypting secrets at runtime.") 
             (println "--------------------------------------------------"))
         passphrase' (do (print "Passphrase: ") (flush) (read-line))
-        passphrase (str/trim passphrase')
+        passphrase (safe-trim passphrase')
         path (str (keydb) "/" project ".db")]
   (io/make-parents (keydb))
   (println "adding passphrase for project:" project)

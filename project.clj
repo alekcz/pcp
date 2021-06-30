@@ -1,4 +1,4 @@
-(defproject pcp "0.0.1-beta.24"
+(defproject pcp "0.0.1-beta.25"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
@@ -19,6 +19,8 @@
                   [com.taoensso/nippy "3.1.1"]
                   [environ "1.1.0"]
                   [hiccup "2.0.0-alpha2"]
+                  [io.replikativ/hasch "0.3.7"]
+                  [org.clojure/core.cache "1.0.207"]
                 
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
@@ -41,9 +43,15 @@
                                   org.apache.derby/derby
                                   com.microsoft.sqlserver/mssql-jdbc]]]
   :auto-clean false
+  :dev-dependencies [[eftest/eftest "0.5.9"]]
   :plugins [[nrepl/lein-nrepl "0.3.2"]
-            [lein-cloverage "1.2.0"]
-            [lein-environ "1.1.0"]]
+            [lein-cloverage "1.2.2"]
+            [lein-environ "1.1.0"]
+            [lein-eftest "0.5.9"]]
+  :cloverage {:runner :eftest
+              :runner-opts {:test-warn-time 500
+                           :fail-fast? false
+                           :multithread? :namespaces}}
   :profiles { :scgi { :aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"
@@ -53,8 +61,9 @@
                             :jar-name "useless-pcp.jar"
                             :uberjar-name "pcp.jar"}
               :test {:env {:my-passphrase "s3cr3t-p455ph4r3"
-                     :pcp-template-path "resources/pcp-templates"}}
-              :dev {:dependencies [[org.martinklepsch/clj-http-lite "0.4.3"]]
+                           :pcp-template-path "resources/pcp-templates"}}
+              :dev {:dependencies [[org.martinklepsch/clj-http-lite "0.4.3"]
+                                   [eftest/eftest "0.5.9"]]
                     :plugins [[lein-shell "0.5.0"]]
                     :env {:my-passphrase "s3cr3t-p455ph4r3"}}}
   :aliases

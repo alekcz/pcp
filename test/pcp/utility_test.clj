@@ -78,7 +78,7 @@
           handler #(core/scgi-handler %)
           scgi (scgi/serve handler scgi-port)
           _ (Thread/sleep 2000)
-          output (utility/run-file "test-resources/simple.clj" 22222)]
+          output (utility/run-file "test-resources/simple.clj" scgi-port)]
       (is (= "1275" output))
       (scgi))))
 
@@ -93,36 +93,49 @@
                (clojure.java.io/delete-file f))]
     (func func (clojure.java.io/file fname))))
 
+(defn new-folder [root]
+  (io/make-parents (str root "/new.clj") )
+  (spit (str root "/404.clj") (slurp "test-resources/site/404.clj"))
+  (spit (str root "/index.clj") (slurp "test-resources/site/index.clj"))
+  (spit (str root "/secret.clj") (slurp "test-resources/site/secret.clj"))
+  (spit (str root "/text.txt") (slurp "test-resources/site/text.txt")))
+
+(defn private-field [obj fn-name-string]
+  (let [m (.. obj getClass (getDeclaredField fn-name-string))]
+    (. m (setAccessible true))
+    (. m (get obj))))
+
 (deftest secrets-passphrase-test
   (testing "Test local server"
-    (let [scgi-port 33333
+    (let [project "tmp-passphrase"
+          root (str project "/public")
+          _ (try (delete-recursively project) (catch Exception _ nil))
+          _ (utility/new-project project)
+          _ (new-folder root)
+          scgi-port 33333
           handler #(core/scgi-handler %)
           scgi (scgi/serve handler scgi-port)
           port 44444
-          _ (Thread/sleep 3000)
-          _ (.mkdirs (java.io.File. "./test-resources/pcp-db"))
-          local (utility/start-local-server {:port 44444 :root "test-resources/site" :scgi-port scgi-port})
+          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
-          _ (try (delete-recursively "./test-resources/.pcp") (catch Exception _ nil))
-          _ (try (delete-recursively "./test-resources/pcp.edn") (catch Exception _ nil))
           _ (with-in-str 
               (str (env :my-passphrase) "\n") 
-              (utility/-main "passphrase" "test-resources"))
+              (utility/-main "passphrase" project))
+          _ (Thread/sleep 2000)    
           _ (with-in-str 
-              (str "test-resources\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
-              (utility/-main "secret" "test-resources"))
-          _ (Thread/sleep 3000)
+              (str env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
+              (utility/-main "secret" project))
+          _ (Thread/sleep 2000)
           resp-index (client/get (str "http://localhost:" port "/"))
           resp-text  (client/get (str "http://localhost:" port "/text.txt"))
-          resp-secret  (client/get (str "http://localhost:" port "/secret.clj"))]
+          resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
         (is (= "12345678" (:body resp-text)))
         (is (= env-var-value (:body resp-secret)))
         (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
         (local)
         (scgi))))
-
 
 (defn private-field [obj fn-name-string]
   (let [m (.. obj getClass (getDeclaredField fn-name-string))]
@@ -131,14 +144,17 @@
 
 (deftest server-2-test
   (testing "Test local server on default port"
-    (let [_ (utility/stop-scgi)
-          scgi-port 9000
-          handler #(core/scgi-handler %)
-          scgi (scgi/serve handler scgi-port)
-          local (utility/-main "-s" "test-resources/site")
+    (let [_ (Thread/sleep 5000)
+          project "tmp-second"
+          root (str project "/public")
+          _ (try (delete-recursively project) (catch Exception _ nil))
+          _ (new-folder root)
+          _ (utility/stop-scgi)
+          scgi (core/-main)
+          local (utility/-main "-s" root)
           _ (Thread/sleep 2000)
-          file-eval (json/decode (with-out-str (utility/-main "-e" "test-resources/site/index.clj")) true)
-          file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" "test-resources/site/index.clj")) true)
+          file-eval (json/decode (with-out-str (utility/-main "-e" (str root "/index.clj"))) true)
+          file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" (str root "/index.clj"))) true)
           file-eval-expected (json/decode "{\"num\":1275,\"name\":\"Test\",\"end\":null}" true)
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]
@@ -149,11 +165,11 @@
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (local)
       (while (.isAlive ^Thread (private-field (:server (meta local)) "serverThread")))
-      (Thread/sleep 1000)
-      (let [local2 (utility/-main "--serve")
+      (Thread/sleep 3000)
+      (let [local2 (utility/-main "--serve" "./")
             _ (Thread/sleep 1000)
-            resp-index-2 (client/get (str "http://localhost:3000/test-resources/site/index.clj"))
-            resp-text-2  (client/get (str "http://localhost:3000/test-resources/site/text.txt"))]
+            resp-index-2 (client/get (str "http://localhost:3000/" root "/index.clj"))
+            resp-text-2  (client/get (str "http://localhost:3000/" root "/text.txt"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index-2 :body (json/decode true))))
         (is (= "12345678" (:body resp-text-2)))
         (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))

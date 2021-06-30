@@ -1,7 +1,7 @@
 (ns pcp.core
   (:require
     [sci.core :as sci :refer [copy-var]] 
-    [sci.addons :as addons]
+    [sci.addons.future :as future]
     [pcp.resp :as resp]
     [clojure.java.io :as io]
     [clojure.edn :as edn]
@@ -17,7 +17,9 @@
     [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
     [ring.middleware.params :refer [params-request]]
-    [environ.core :refer [env]])
+    [environ.core :refer [env]]
+    [hasch.core :as h]
+    [clojure.core.cache.wrapped :as c])
   (:import [java.net URLDecoder]
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
@@ -33,6 +35,7 @@
 (def uns (sci/create-ns 'hiccup.util nil))
 (def html-mode (copy-var util/*html-mode* uns))
 (def escape-strings? (copy-var util/*escape-strings?* uns))
+(def environments (c/fifo-cache-factory {}))
 
 (defn render-html [& contents]
   (binding [util/*html-mode* @html-mode
@@ -76,6 +79,11 @@
 (defn longer [str1 str2]
   (if (> (count str1) (count str2)) str1 str2))
 
+
+(defn reset-environment [root']
+  (let [root (-> root' h/uuid keyword)]
+    (swap! environments assoc root (atom {}))))
+
 (defn get-secret [root env-var]
   (try
     (let [project (-> (str root "/../pcp.edn") slurp edn/read-string :project)
@@ -87,8 +95,8 @@
       (if (= env-var (:name secret)) 
         (:value secret)
         nil))
-    (catch java.io.FileNotFoundException _  (println "No passphrase has been set for this project") nil)
-    (catch Exception e (.printStackTrace e) nil)))
+    (catch java.io.FileNotFoundException e (println "No passphrase has been set for this project") (.printStackTrace e))
+    (catch Exception _ nil)))
 
 (defn run-script [url-path &{:keys [root params]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
@@ -97,7 +105,8 @@
         parent (longer root (-> ^File file (.getParentFile) str))
         response (atom nil)]
     (if (string? source)
-      (let [opts  (-> { :load-fn #(include parent %)
+      (let [opts  (-> { :env (c/lookup-or-miss environments (keyword root) (constantly (atom {})))
+                        :load-fn #(include parent %)
                         :namespaces (merge includes {'pcp { 'body (:body params)
                                                             'request params
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
@@ -105,12 +114,13 @@
                                                             'render-html render-html
                                                             'html-unescaped render-html-unescaped
                                                             'render-html-unescaped render-html-unescaped
-                                                            'secret #(get-secret root %)
+                                                            'secret #(when root (get-secret root %))
                                                             'echo pr-str
+                                                            'reset (fn [] (c/evict environments (keyword root)))
                                                             'now #(quot (System/currentTimeMillis) 1000)}})
                         :bindings {'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
-                        (addons/future))
+                        (future/install))
             _ (parser/set-resource-path! root)                        
             result (process-script source opts)
             _ (selmer.parser/set-resource-path! nil)]

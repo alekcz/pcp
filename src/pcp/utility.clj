@@ -19,7 +19,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.25")
+(def version "v0.0.1-beta.26")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -129,8 +129,7 @@ Options:
           not-found (str root "/404.clj")
           full (assoc request 
                     :document-root root 
-                    :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))
-        ]     
+                    :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))]     
         (cond 
           (and (str/ends-with? (:document-uri full) ".clj") exists)
             (-> full http-to-scgi (forward (:scgi-port opts)) create-resp)

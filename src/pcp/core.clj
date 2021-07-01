@@ -1,6 +1,6 @@
 (ns pcp.core
   (:require
-    [sci.core :as sci :refer [copy-var]] 
+    [sci.core :as sci ] 
     [sci.addons.future :as future]
     [pcp.resp :as resp]
     [clojure.java.io :as io]
@@ -33,9 +33,9 @@
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
 (def uns (sci/create-ns 'hiccup.util nil))
-(def html-mode (copy-var util/*html-mode* uns))
-(def escape-strings? (copy-var util/*escape-strings?* uns))
-(def environments (c/fifo-cache-factory {}))
+(def html-mode (sci/copy-var util/*html-mode* uns))
+(def escape-strings? (sci/copy-var util/*escape-strings?* uns))
+(def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
 
 (defn render-html [& contents]
   (binding [util/*html-mode* @html-mode
@@ -82,7 +82,7 @@
 
 (defn reset-environment [root']
   (let [root (-> root' h/uuid keyword)]
-    (swap! environments assoc root (atom {}))))
+    (swap! cache assoc root (atom {}))))
 
 (defn get-secret [root env-var]
   (try
@@ -98,17 +98,29 @@
     (catch java.io.FileNotFoundException e (println "No passphrase has been set for this project") (.printStackTrace e))
     (catch Exception _ nil)))
 
-(defn run-script [url-path &{:keys [root params]}]
+(def persist ^:sci/macro
+  (fn [_&form _&env k f & args]
+    `(let [r ($/retrieve ~k)]
+        (if (some? r)
+            r
+            (let [s (apply ~f ~args)]
+              ($/persist! ~k s)
+              s)))))
+
+(defn run-script [url-path &{:keys [root request]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
         parent (longer root (-> ^File file (.getParentFile) str))
-        response (atom nil)]
+        response (atom nil)
+        keygen (fn [path k] (keyword (str (h/uuid [path k]))))]     
     (if (string? source)
-      (let [opts  (-> { :env (c/lookup-or-miss environments (keyword root) (constantly (atom {})))
-                        :load-fn #(include parent %)
-                        :namespaces (merge includes {'pcp { 'body (:body params)
-                                                            'request params
+      (let [opts  (-> { :load-fn #(include parent %)
+                        :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen path k) (constantly v))))
+                                                            'retrieve (fn [k]   (c/lookup cache (keygen path k)))}
+                                                      'pcp {'persist persist
+                                                            'clear!   (fn [k]   (c/evict cache (keygen path k)))
+                                                            'request request
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
                                                             'html render-html
                                                             'render-html render-html
@@ -116,7 +128,6 @@
                                                             'render-html-unescaped render-html-unescaped
                                                             'secret #(when root (get-secret root %))
                                                             'echo pr-str
-                                                            'reset (fn [] (c/evict environments (keyword root)))
                                                             'now #(quot (System/currentTimeMillis) 1000)}})
                         :bindings {'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
@@ -183,7 +194,7 @@
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
-        r (try (run-script path :root root :params request) (catch Exception e  (.printStackTrace e) (format-response 500 (.getMessage e) nil)))]
+        r (try (run-script path :root root :request request) (catch Exception e  (.printStackTrace e) (format-response 500 (.getMessage e) nil)))]
     r))
 
 (defn -main 

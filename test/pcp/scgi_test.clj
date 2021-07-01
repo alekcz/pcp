@@ -13,7 +13,7 @@
           server (scgi/serve handler scgi-port)
           message (IOUtils/toByteArray (io/input-stream "test-resources/scgi.bin"))
           len (count message)]
-      (Thread/sleep 500)
+      (Thread/sleep 2000)
       (let [socket (Socket. (InetAddress/getByName "127.0.0.1") scgi-port)]
         (with-open [os (io/output-stream (.getOutputStream socket))]
           (.write os message 0 len)
@@ -23,7 +23,7 @@
             (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" ans))
             (is (true? (.isClosed socket)))
             (server)
-            (Thread/sleep 500)))))))
+            (Thread/sleep 2000)))))))
 
 (deftest serve-2-test
   (testing "Test SCGI server"

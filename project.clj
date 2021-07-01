@@ -1,4 +1,4 @@
-(defproject pcp "0.0.1-beta.25"
+(defproject pcp "0.0.1-beta.26"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
@@ -42,6 +42,7 @@
                                   com.h2database/h2 
                                   org.apache.derby/derby
                                   com.microsoft.sqlserver/mssql-jdbc]]]
+  :main ^:skit-aot pcp.core
   :auto-clean false
   :dev-dependencies [[eftest/eftest "0.5.9"]]
   :plugins [[nrepl/lein-nrepl "0.3.2"]

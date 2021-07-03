@@ -110,16 +110,15 @@
         ^ServerSocketChannel server (build-server port)]
     (future
       (while (some? @active)
-        (if (not= 0 (.select selector 50))
+        (when (not= 0 (.select selector 50))
             (let [keys (.selectedKeys selector)]      
               (doseq [^SelectionKey key keys]
                 (let [ops (.readyOps key)]
                   (cond
                     (= ops SelectionKey/OP_ACCEPT) (on-accept key)
                     (= ops SelectionKey/OP_READ)   (on-read key handler))))
-              (.clear keys))
-              nil)))
+              (.clear keys)))))
     (fn [] 
-      (.close server)
-      (reset! active false))))
+      (reset! active false)
+      (.close server))))
 

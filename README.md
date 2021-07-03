@@ -4,7 +4,7 @@
 
 **Welcome to PCP**
 
-> PCP: Clojure Processor -- _Clojure replacement for PHP_  
+> PCP: Clojure Processor -- _Like drugs but better_  
 
 ## Introduction
 

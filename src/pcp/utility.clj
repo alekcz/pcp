@@ -67,7 +67,7 @@
           (.toByteArray baos)))    
 
 (def help 
-"PCP: Clojure Processor -- A Clojure replacement for PHP
+"PCP: Clojure Processor -- Like drugs but better
 
 Usage: pcp [option] [value]
 

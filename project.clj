@@ -1,5 +1,5 @@
 (defproject pcp "0.0.1-beta.26"
-  :description "PCP: Clojure Processor - A Clojure replacement for PHP"
+  :description "PCP: Clojure Processor - Like drugs but better"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
             :url "http://opensource.org/licenses/MIT"}
@@ -21,6 +21,7 @@
                   [hiccup "2.0.0-alpha2"]
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
+                  [aleph "0.4.6"]
                 
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]

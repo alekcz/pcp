@@ -7,6 +7,7 @@
     [clojure.edn :as edn]
     [clojure.string :as str]
     [pcp.scgi :as scgi]
+    [pcp.scgi2 :as scgi2]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
     [hiccup.util :as util]       

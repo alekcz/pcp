@@ -1,5 +1,7 @@
 // requires k6.
-// install using: brew install k6
+// install using: 
+// $ brew install k6
+// $ k6 run loadtest.js
 
 
 import http from "k6/http";

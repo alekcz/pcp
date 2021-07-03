@@ -95,7 +95,7 @@
       (if (= env-var (:name secret)) 
         (:value secret)
         nil))
-    (catch java.io.FileNotFoundException e (println "No passphrase has been set for this project") (.printStackTrace e))
+    (catch java.io.FileNotFoundException _ (println "No passphrase has been set for this project") nil)
     (catch Exception _ nil)))
 
 (def persist ^:sci/macro
@@ -194,7 +194,7 @@
         root (:document-root request)
         doc (:document-uri request)
         path (str root doc)
-        r (try (run-script path :root root :request request) (catch Exception e  (.printStackTrace e) (format-response 500 (.getMessage e) nil)))]
+        r (try (run-script path :root root :request request) (catch Exception e (format-response 500 (.getMessage e) nil)))]
     r))
 
 (defn -main 

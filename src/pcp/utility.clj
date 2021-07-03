@@ -19,7 +19,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.1-beta.26")
+(def version "v0.0.1-beta.27")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -67,7 +67,7 @@
           (.toByteArray baos)))    
 
 (def help 
-"PCP: Clojure Processor -- A Clojure replacement for PHP
+"PCP: Clojure Processor -- Like drugs but better
 
 Usage: pcp [option] [value]
 

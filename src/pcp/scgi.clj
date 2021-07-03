@@ -95,7 +95,7 @@
                 (.write socket-channel resp)
                 (.close socket-channel)
                 (.cancel key))))
-      (catch Exception e (.close socket-channel) (.cancel key) (.printStackTrace e)))))
+      (catch Exception _ (.close socket-channel) (.cancel key)))))
 
 (defn build-server [port]
   (let [^ServerSocketChannel serverChannel (ServerSocketChannel/open)

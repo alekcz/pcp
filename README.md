@@ -87,7 +87,7 @@ Given a project like this:
 ```bash
 .    
 ├── .pcp      
-│   └── a24d...cfdcb8.npy  ; encrypted secret; touch this and bad things will happen    
+│   └── a24d...cfdcb8.npy  ; encrypted secret, touch this and bad things will happen    
 ├── public                 ; project root    
 │   ├── index.clj          
 │   └── login.clj    
@@ -98,7 +98,7 @@ Given a project like this:
 │       └── stock.clj    
 │       └── users.clj    
 ├── pcp.edn                ; pcp configuration file    
-└── README.md              ; surely you don't need a comment to tell you what this is.    
+└── README.md              ; surely you don\'t need a comment to tell you what this is.    
 ```    
    
 Your dashboard could require business logic as follows

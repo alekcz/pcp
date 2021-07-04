@@ -79,6 +79,67 @@ You can find instructions on [replacing php here](./docs/replacing-php.md)
 4. [Replacing php](./docs/replacing-php.md)
 5. [PCP demo site](https://pcp-demo.musketeers.io/)
 
+## Project structure and requiring files
+
+Requiring files in works in PCP as it does in Clojure.
+
+
+## Core PCP functions
+
+The following function are part of the core PCP namespace and are made available for convenience. 
+
+### `pcp/persist`
+
+#### `pcp/clear` 
+
+#### `pcp/request`
+
+#### `pcp/response`
+
+#### `pcp/render-html`
+
+#### `pcp/render-html-unescaped render-html-unescaped`
+
+#### `pcp/secret` 
+
+#### `pcp/now`
+
+## Additional Namespaces
+
+In addition to the core clojure namespace made available by [sci](https://github.com/borkdude/sci). The following namespaces may also be included.
+
+  - `clojure.string`
+  - `clojure.core.async` 
+  - `clojure.edn`
+  - `cheshire.core`
+  - `selmer.parser`
+  - `selmer.filters`
+  - `org.httpkit.client`
+  - `org.httpkit.sni-client`
+  - `clj-http.client`
+  - `next.jdbc`
+  - `honeysql.core`
+  - `honeysql.helpers`
+  - `postal.core`
+  - `tick.alpha.api`
+  - `buddy.sign.jwt` 
+  - `buddy.sign.jwe`
+  - `buddy.core.hash`
+  - `buddy.core.codecs`
+  - `buddy.core.keys` 
+  - `buddy.auth.backends`
+  - `buddy.auth.middleware`
+  - `buddy.hashers` 
+  - `garden.core` 
+  - `garden.stylesheet`
+  - `garden.units` 
+  - `konserve.core`
+  - `konserve.filestore`
+  - `konserve-jdbc.core` 
+    
+
+
+
 ## Special thanks
 For the guidance and examples, special thanks to
 

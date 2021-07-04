@@ -119,7 +119,7 @@
                         :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen path k) (constantly v))))
                                                             'retrieve (fn [k]   (c/lookup cache (keygen path k)))}
                                                       'pcp {'persist persist
-                                                            'clear!   (fn [k]   (c/evict cache (keygen path k)))
+                                                            'clear   (fn [k]   (c/evict cache (keygen path k)))
                                                             'request request
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
                                                             'html render-html
@@ -128,7 +128,7 @@
                                                             'render-html-unescaped render-html-unescaped
                                                             'secret #(when root (get-secret root %))
                                                             'echo pr-str
-                                                            'now #(quot (System/currentTimeMillis) 1000)}})
+                                                            'now #(System/currentTimeMillis)}})
                         :bindings {'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (future/install))

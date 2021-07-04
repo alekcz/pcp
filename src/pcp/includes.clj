@@ -29,7 +29,8 @@
     [konserve.filestore]
     [konserve.core]
     [clojure.core.async]
-    [konserve-jdbc.core])
+    [konserve-jdbc.core]
+    [clj-uuid])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -68,4 +69,5 @@
     'konserve.core (extract-namespace 'konserve.core)
     'konserve.filestore (extract-namespace 'konserve.filestore)
     'konserve-jdbc.core (extract-namespace 'konserve-jdbc.core)
-    'clojure.core.async (extract-namespace 'clojure.core.async)})
+    'clojure.core.async (extract-namespace 'clojure.core.async)
+    'clj-uuid (extract-namespace 'clj-uuid)})

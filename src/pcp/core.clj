@@ -116,10 +116,10 @@
         keygen (fn [path k] (keyword (str (h/uuid [path k]))))]     
     (if (string? source)
       (let [opts  (-> { :load-fn #(include parent %)
-                        :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen path k) (constantly v))))
-                                                            'retrieve (fn [k]   (c/lookup cache (keygen path k)))}
+                        :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen root k) (constantly v))))
+                                                            'retrieve (fn [k]   (c/lookup cache (keygen root k)))}
                                                       'pcp {'persist persist
-                                                            'clear!   (fn [k]   (c/evict cache (keygen path k)))
+                                                            'clear   (fn [k]   (c/evict cache (keygen root k)))
                                                             'request request
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
                                                             'html render-html
@@ -127,8 +127,7 @@
                                                             'html-unescaped render-html-unescaped
                                                             'render-html-unescaped render-html-unescaped
                                                             'secret #(when root (get-secret root %))
-                                                            'echo pr-str
-                                                            'now #(quot (System/currentTimeMillis) 1000)}})
+                                                            'now #(System/currentTimeMillis)}})
                         :bindings {'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (future/install))

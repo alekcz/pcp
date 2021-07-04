@@ -261,7 +261,7 @@ Going above 400 req/s generally results in bad things happening. You can test yo
 
 ## Release 0.1.0
 - [ ] Store passphrases with [konserve](https://github.com/replikativ/konserve)
-- [ ] Add ponsorship button
+- [ ] Add sponsorship button
 - [ ] Deploy without logging in to VPS
 - [ ] Switch to [malli-cli](https://github.com/piotr-yuxuan/malli-cli)
 - [ ] Automate deployment from repo

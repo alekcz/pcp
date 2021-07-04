@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Too long have we hustled to deploy Clojure website. Too long have we spun up one instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
+Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
 
 ### Status
 Active development. Stabilizing.    
@@ -101,7 +101,7 @@ PCP is designed to work on Linux and OSX. It requires the following to work:
 Requiring files in PCP mostly works as it does in Clojure, the primary exception being that a project cannot require a file outside of it's root. 
 Given a project like this:    
 
-```shellsession
+```
 .    
 ├── .pcp      
 │   └── a24d...cfdcb8.npy  # encrypted secret, touch this and bad things will happen    
@@ -189,7 +189,7 @@ Renders html from Clojure data strucutures using [hiccup](https://github.com/wea
 #### pcp/secret
 `(pcp/secret "SECRET_NAME")`    
 Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
-See []
+See [Environment variables and secrets](#environment-variables-and-secrets) for more info.
 
 
 #### pcp/now

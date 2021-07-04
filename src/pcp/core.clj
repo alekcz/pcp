@@ -127,7 +127,6 @@
                                                             'html-unescaped render-html-unescaped
                                                             'render-html-unescaped render-html-unescaped
                                                             'secret #(when root (get-secret root %))
-                                                            'echo pr-str
                                                             'now #(System/currentTimeMillis)}})
                         :bindings {'slurp #(slurp (str parent "/" %))}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}

@@ -36,6 +36,7 @@ You can view a demo site built in PCP here: [https://clojure-pulse.musketeers.io
 1. [Core PCP namespace](#core-pcp-namespace)
 1. [Other built into PCP](#other-built-in-namespaces)
 1. [Performance](#performance)
+1. [Roadmap](#performance)
 1. [Deploying PCP](./docs/replacing-php.md)
 
 ## Quick start
@@ -242,6 +243,33 @@ You can see the spike in CPU and bandwidth on the droplet, but the CPU never sat
 
 These are by no means comprehensive benchmarks but give you a sense of what a PCP server can withstand for simple use case.
 Going above 400 req/s generally results in bad things happening. You can test your own site using [k6](https://k6.io/) with the instructions in [loadtest.js](./loadtest.js)
+
+# Roadmap
+
+## Release 0.0.1
+- [x] Run arbitrary scripts
+- [x] Generate HTML with hiccup
+- [x] Invoke scripts from Nginx
+- [x] Emulate of Nginx environment locally
+- [x] Store secrets in projects
+- [x] Cache expensive operations
+- [x] Expose request data to scripts
+- [x] Require external namespaces as in Clojure
+- [x] Generate new project from CLI
+- [x] Document PCP
+- [x] Load test a production deployment
+
+## Release 0.1.0
+- [ ] Store passphrases with [konserve](https://github.com/replikativ/konserve)
+- [ ] Add ponsorship button
+- [ ] Deploy without logging in to VPS
+- [ ] Switch to [malli-cli](https://github.com/piotr-yuxuan/malli-cli)
+- [ ] Automate deployment from repo
+
+## Release 0.2.0
+- [ ] Add PEDL (PCP, Nginx, Datahike Server, and Linux) stack template on Digital Ocean. 
+- [ ] Other things that even the wisest cannont tell; things that were, things that are, and some things... that have not yet come to pass. 
+
 
 ## Special thanks
 For the guidance and examples, special thanks to

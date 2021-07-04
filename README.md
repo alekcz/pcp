@@ -67,6 +67,7 @@ You can find instructions on [replacing php and deploying to production here](./
 
 ## How PCP works
 PCP has two parts the utility is simple binary, built with GraalVM, that allows you work effectively with pcp. 
+
 ```
 PCP: Clojure Processor -- Like drugs but better
 
@@ -100,7 +101,7 @@ PCP is designed to work on Linux and OSX. It requires the following to work:
 Requiring files in PCP mostly works as it does in Clojure, the primary exception being that a project cannot require a file outside of it's root. 
 Given a project like this:    
 
-```bash
+```shellsession
 .    
 ├── .pcp      
 │   └── a24d...cfdcb8.npy  # encrypted secret, touch this and bad things will happen    
@@ -146,8 +147,8 @@ done.
 ```
 
 Symmetric encryption is used, so the passphrase needs to be added to the server too.    
-```
-$ 
+```shellsession
+$ pcp passphrase pcp-demo
 --------------------------------------------------
 Set passphrase for project: pcp-demo
 This passphrase will be used for decrypting secrets at runtime.

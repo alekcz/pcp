@@ -20,13 +20,13 @@ Active development. Stabilizing.
 
 ### Non-goals
 
-* Performance.  _PCP should be sufficient for prototypes and small websites  (<= 400 req/s)_
+* Performance.  _PCP should be sufficient for prototypes and small websites  (< 400 req/s)_
 
 ### Demo site
 
 You can view a demo site built in PCP here: [https://clojure-pulse.musketeers.io](https://clojure-pulse.musketeers.io/)
 
-## Guides
+## Overview
 
 1. [Quick start](#quick-start)
 1. [How PCP works](#how-pcp-works)

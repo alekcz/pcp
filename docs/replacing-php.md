@@ -42,30 +42,4 @@ And now we can restart nginx with our new configuration.
 $ service nginx restart
 ```
 
-Now that we've switched to `pcp` lets generate a ton of requests using [artillery](https://artillery.io/).
-
-```bash
-$  artillery quick -d 60 -r 200 http://pcp.musketeers.io/
-
-...some output ommitted...
-
-All virtual users finished
-Summary report @ 08:16:45(+0200) 2020-04-12
-  Scenarios launched:  12000
-  Scenarios completed: 12000
-  Requests completed:  12000
-  Mean response/sec: 198.22
-  Response time (msec):
-    min: 451.5
-    max: 705.3
-    median: 472.2
-    p95: 561.3
-    p99: 623
-  Scenario counts:
-    0: 12000 (100%)
-  Codes:
-    200: 12000
-
-```
-
-And would you look at that. You're running clojure and your server didn't even flinch. 
+Would you look at that. You're running clojure and your server didn't even flinch. 

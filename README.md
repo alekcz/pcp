@@ -88,21 +88,29 @@ Requiring files in works in PCP as it does in Clojure.
 
 The following function are part of the core PCP namespace and are made available for convenience. 
 
-### `pcp/persist`
+##### pcp/persist
+type: macro
 
-#### `pcp/clear` 
+##### pcp/clear
+type: function
 
-#### `pcp/request`
+##### pcp/request
+type: function
 
-#### `pcp/response`
+##### pcp/response
+type: function
 
-#### `pcp/render-html`
+##### pcp/render-html
+type: function
 
-#### `pcp/render-html-unescaped render-html-unescaped`
+##### pcp/render-html-unescaped
+type: function
 
-#### `pcp/secret` 
+##### pcp/secret
+type: function
 
-#### `pcp/now`
+##### pcp/now
+type: function
 
 ## Additional Namespaces
 

@@ -1,6 +1,6 @@
 <img src="assets/logo/logo-alt.svg" width="200px">
 
-![master](https://github.com/alekcz/pcp/workflows/master/badge.svg) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp) ![downloads](https://github.com/alekcz/pcp/workflows/master/badge.svg)  
+![master](https://github.com/alekcz/pcp/workflows/master/badge.svg) ![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg) ![downloads](https://img.shields.io/github/downloads/alekcz/pcp/total)  
 
 **Welcome to PCP**
 

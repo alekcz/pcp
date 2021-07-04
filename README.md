@@ -83,6 +83,8 @@ You can find instructions on [replacing php here](./docs/replacing-php.md)
 
 Requiring files in PCP mostly works as it does in Clojure, the primary exception being that a project cannot require a file outside of it's root. 
 Given a project like this:    
+
+```bash
 .    
 ├── .pcp      
 │   └── a24d...cfdcb8.npy  ; encrypted secret; touch this and bad things will happen    
@@ -97,7 +99,7 @@ Given a project like this:
 │       └── users.clj    
 ├── pcp.edn                ; pcp configuration file    
 └── README.md              ; surely you don't need a comment to tell you what this is.    
-    
+```    
    
 Your dashboard could require business logic as follows
 ```clojure

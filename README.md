@@ -81,18 +81,43 @@ You can find instructions on [replacing php here](./docs/replacing-php.md)
 
 ## Project structure and requiring files
 
-Requiring files in works in PCP as it does in Clojure.
+Requiring files in PCP mostly works as it does in Clojure, the primary exception being that a project cannot require a file outside of it's root. 
+Given a project like this:
+.
+├── .pcp      
+│   └── a24d...cfdcb8.npy  ; encrypted secret; touch this and bad things will happen
+├── public                 ; project root
+│   ├── index.clj          
+│   └── login.clj
+│   └── dashboard.clj
+│   └── logic
+│       └── orders.clj
+│       └── payments.clj
+│       └── stock.clj
+│       └── users.clj
+├── pcp.edn                ; pcp configuration file
+└── README.md              ; surely you don't need a comment to tell you what this is.
+    
+   
+Your dashboard could require business logic as follows
+```clojure
+(ns dashboard
+  (:require '[logic.users :as lu]
+            '[logic.orders :as lo]
+            '[logic.stock :as ls]
+            '[logic.payments :as lp]))
+```
 
 
 ## Core PCP functions
 
-The following function are part of the core PCP namespace and are made available for convenience. 
+The following functions are part of the core PCP namespace and are made available for convenience. 
 
 #### pcp/persist
 `(pcp/persist :cache-key  f-on-miss)`    
 This macro allows expensive operations to only be recomputed if they are not in the cache.   
-On a cache miss the `f-on-miss` is called, stored in the cache and returned. Caches are isolated
-across project. Pages in the same project share a cache. The cache is derived from `org.clojure/core.cache` and uses TTL (30 min) as the cache-invalidation strategy. 
+On a cache miss the `f-on-miss` is computed, its value stored in the cache and returned. Caches are isolated
+across projects. Pages in the same project share a cache keys. The cache uses TTL (30 min) as its invalidation strategy. 
 
 #### pcp/clear
 `(pcp/clear :cache-key)`    
@@ -119,8 +144,9 @@ Renders html from Clojure data strucutures using [hiccup](https://github.com/wea
 Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
 
 To secure allow API keys and the like to be stored and retrieve securely. Secrets are created using the PCP CLI and store in the project.
-They are encrypted using the passphrase selected. 
-```
+They are encrypted using the passphrase selected.  
+
+```shellsession
 $ pcp secret
 --------------------------------------------------
 Set an encrypted secret variable for project: pcp-demo

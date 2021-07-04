@@ -1,6 +1,6 @@
 <img src="assets/logo/logo-alt.svg" width="200px">
 
-![master](https://github.com/alekcz/pcp/workflows/master/badge.svg) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp)
+![master](https://github.com/alekcz/pcp/workflows/master/badge.svg) [![codecov](https://codecov.io/gh/alekcz/pcp/branch/master/graph/badge.svg)](https://codecov.io/gh/alekcz/pcp) ![downloads](https://github.com/alekcz/pcp/workflows/master/badge.svg)  
 
 **Welcome to PCP**
 
@@ -8,19 +8,19 @@
 
 ## Introduction
 
-Too long have we hustled to deploy clojure website. Too long have we spun up one instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
+Too long have we hustled to deploy Clojure website. Too long have we spun up one instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
 
 ### Status
-Experimental. Active development. Stabilizing.    
+Active development. Stabilizing.    
 
 ### Goals
 
-* Any easy to use, drop-in replacement for php scripts
+* Any easy to use, drop-in Clojure replacement for php scripts
 * Allow multiple website to be hosted on single $5 VPS
 
 ### Non-goals
 
-* Performance.  _PCP should be sufficient for prototypes and small websites  (<= 40 req/s)_
+* Performance.  _PCP should be sufficient for prototypes and small websites  (<= 400 req/s)_
 
 ### How PCP works
 PCP has two parts the utility is simple binary, built with GraalVM, that allows you work effectively with pcp. 
@@ -74,10 +74,10 @@ You can find instructions on [replacing php here](./docs/replacing-php.md)
 ## Guides
 
 1. [Installation](./docs/installation.md)
-2. [PCP environment](./docs/pcp-environment.md)
-3. [Environment variables and secrets](./docs/environment-variables-and-secrets.md)
-4. [Replacing php](./docs/replacing-php.md)
-5. [PCP demo site](https://pcp-demo.musketeers.io/)
+2. [Environment variables and secrets](#pcpsecret)
+3. [Replacing php](./docs/replacing-php.md)
+4. [Libraries included in PCP](#additional-namespaces)
+5. [PCP demo site: Clojure Pulse](https://clojure-pulse.musketeers.io/)
 
 ## Project structure and requiring files
 
@@ -89,32 +89,59 @@ Requiring files in works in PCP as it does in Clojure.
 The following function are part of the core PCP namespace and are made available for convenience. 
 
 #### pcp/persist
-type: macro
+`(pcp/persist :cache-key  f-on-miss)`
+This macro allows expensive operations to only be recomputed if they are not in the cache.   
+On a cache miss the `f-on-miss` is called, stored in the cache and returned. Caches are isolated
+across project. Pages in the same project share a cache. The cache is derived from `org.clojure/core.cache` and uses TTL (30 min) as the cache-invalidation strategy. 
 
 #### pcp/clear
-type: function
+`(pcp/clear :cache-key)`   
+Removes key from the cache
 
 #### pcp/request
-type: function
+`(pcp/request)`   
+Returns the request map. The request map conforms to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC). 
 
 #### pcp/response
-type: function
+`(pcp/response [status body mime-type])`    
+A convenience function for generating a response map. Responses are simply Clojure maps that confirm to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC) and can be written by hand too. 
 
 #### pcp/render-html
-type: function
+`(pcp/render-html options & content)`
+Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup)
 
 #### pcp/render-html-unescaped
-type: function
+`(pcp/render-html & args)`
+Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup). Does not escape html tags strings. Use with care.  
 
 #### pcp/secret
-type: function
+`(pcp/secret "SECRET_NAME")`
+Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
+
+To secure allow API keys and the like to be stored and retrieve securely. Secrets are created using the PCP CLI and store in the project.
+They are encrypted using the passphrase selected. 
+```
+$ pcp secret
+--------------------------------------------------
+Set an encrypted secret variable for project: pcp-demo
+Please ensure you use the same passphrase for all your secrets in this project
+and that you add your passphrase to your production server using:
+  pcp passphrase pcp-demo
+--------------------------------------------------
+Secret name: GITHUB_PERSONAL_ACCESS_TOKEN
+Secret value: ghp_eR17e5vHq0Sdmj22oracJd0Y7je1IM3g7oPV7yT7sq31
+Passphrase: my-super-secure-passphrase-that-i-will-also-store-on-the-server    
+encrypting...
+done.
+```
 
 #### pcp/now
-type: function
+`(pcp/now)`
+Returns the current time in milliseconds (according to your server).
 
 ## Additional Namespaces
 
-In addition to the core clojure namespace made available by [sci](https://github.com/borkdude/sci). The following namespaces may also be included.
+In addition to the core clojure namespaces available in [sci](https://github.com/borkdude/sci), the following namespaces are also available.
 
   - `clojure.string`
   - `clojure.core.async` 

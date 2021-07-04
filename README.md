@@ -89,33 +89,33 @@ Requiring files in works in PCP as it does in Clojure.
 The following function are part of the core PCP namespace and are made available for convenience. 
 
 #### pcp/persist
-`(pcp/persist :cache-key  f-on-miss)`
+`(pcp/persist :cache-key  f-on-miss)`    
 This macro allows expensive operations to only be recomputed if they are not in the cache.   
 On a cache miss the `f-on-miss` is called, stored in the cache and returned. Caches are isolated
 across project. Pages in the same project share a cache. The cache is derived from `org.clojure/core.cache` and uses TTL (30 min) as the cache-invalidation strategy. 
 
 #### pcp/clear
-`(pcp/clear :cache-key)`   
+`(pcp/clear :cache-key)`    
 Removes key from the cache
 
 #### pcp/request
-`(pcp/request)`   
+`(pcp/request)`    
 Returns the request map. The request map conforms to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC). 
 
 #### pcp/response
-`(pcp/response [status body mime-type])`    
+`(pcp/response [status body mime-type])`        
 A convenience function for generating a response map. Responses are simply Clojure maps that confirm to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC) and can be written by hand too. 
 
 #### pcp/render-html
-`(pcp/render-html options & content)`
+`(pcp/render-html options & content)`    
 Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup)
 
 #### pcp/render-html-unescaped
-`(pcp/render-html & args)`
+`(pcp/render-html & args)`    
 Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup). Does not escape html tags strings. Use with care.  
 
 #### pcp/secret
-`(pcp/secret "SECRET_NAME")`
+`(pcp/secret "SECRET_NAME")`    
 Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
 
 To secure allow API keys and the like to be stored and retrieve securely. Secrets are created using the PCP CLI and store in the project.
@@ -136,7 +136,7 @@ done.
 ```
 
 #### pcp/now
-`(pcp/now)`
+`(pcp/now)`    
 Returns the current time in milliseconds (according to your server).
 
 ## Additional Namespaces

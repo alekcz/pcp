@@ -61,10 +61,10 @@ jobs:
         uses: actions/cache@v1
         id: cache-graalvm
         with:
-          path: ~/graalvm-ce-java8-21.0.0
-          key: ${{ runner.os }}-graalvm-21.0.0
+          path: ~/graalvm-ce-java8-21.0.0.2
+          key: ${{ runner.os }}-graalvm-21.0.0.2
           restore-keys: |
-                ${{ runner.os }}-graalvm-21.0.0
+                ${{ runner.os }}-graalvm-21.0.0.2
                 
       - name: Set version
         id: pcp-version
@@ -75,17 +75,17 @@ jobs:
       - name: Download GraalVM
         run: |
           cd ~
-          if ! [ -d graalvm-ce-java8-21.0.0 ]; then
-            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-21.0.0/graalvm-ce-java8-linux-amd64-21.0.0.tar.gz
-            tar xzf graalvm-ce-java8-linux-amd64-21.0.0.tar.gz
+          if ! [ -d graalvm-ce-java8-21.0.0.2 ]; then
+            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-21.0.0.2/graalvm-ce-java8-linux-amd64-21.0.0.2.tar.gz
+            tar xzf graalvm-ce-java8-linux-amd64-21.0.0.2.tar.gz
           fi 
 
       - name: Build Linux native image
         env:
           _JAVA_OPTIONS: -Xmx5g
         run: |
-          export GRAALVM_HOME=~/graalvm-ce-java8-21.0.0
-          export JAVA_HOME=~/graalvm-ce-java8-21.0.0/Contents/Home
+          export GRAALVM_HOME=~/graalvm-ce-java8-21.0.0.2
+          export JAVA_HOME=~/graalvm-ce-java8-21.0.0.2/Contents/Home
           export PATH=$JAVA_HOME/bin:$PATH
           export PATH=$GRAALVM_HOME/bin:$PATH
           java -version
@@ -119,17 +119,17 @@ jobs:
         uses: actions/cache@v1
         id: cache-graalvm
         with:
-          path: ~/graalvm-ce-java8-21.0.0
-          key: ${{ runner.os }}-graalvm-21.0.0
+          path: ~/graalvm-ce-java8-21.0.0.2
+          key: ${{ runner.os }}-graalvm-21.0.0.2
           restore-keys: |
-                ${{ runner.os }}-graalvm-21.0.0
+                ${{ runner.os }}-graalvm-21.0.0.2
 
       - name: Download GraalVM
         run: |
           cd ~
-          if ! [ -d graalvm-ce-java8-21.0.0 ]; then
-            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-21.0.0/graalvm-ce-java8-darwin-amd64-21.0.0.tar.gz
-            tar xzf graalvm-ce-java8-darwin-amd64-21.0.0.tar.gz
+          if ! [ -d graalvm-ce-java8-21.0.0.2 ]; then
+            curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-21.0.0.2/graalvm-ce-java8-darwin-amd64-21.0.0.2.tar.gz
+            tar xzf graalvm-ce-java8-darwin-amd64-21.0.0.2.tar.gz
           fi
 
       - name: Set version
@@ -142,8 +142,8 @@ jobs:
         env:
           _JAVA_OPTIONS: -Xmx5g
         run: |
-          export GRAALVM_HOME=~/graalvm-ce-java8-21.0.0
-          export JAVA_HOME=~/graalvm-ce-java8-21.0.0/Contents/Home
+          export GRAALVM_HOME=~/graalvm-ce-java8-21.0.0.2
+          export JAVA_HOME=~/graalvm-ce-java8-21.0.0.2/Contents/Home
           export PATH=$JAVA_HOME/bin:$PATH
           export PATH=$GRAALVM_HOME/bin:$PATH
           java -version

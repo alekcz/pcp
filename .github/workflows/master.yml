@@ -115,14 +115,14 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
 
-      # - name: Cache GraalVM
-      #   uses: actions/cache@v1
-      #   id: cache-graalvm
-      #   with:
-      #     path: ~/graalvm-ce-java8-21.0.0.2
-      #     key: ${{ runner.os }}-graalvm-21.0.0.2
-      #     restore-keys: |
-      #           ${{ runner.os }}-graalvm-21.0.0.2
+      - name: Cache GraalVM
+        uses: actions/cache@v1
+        id: cache-graalvm
+        with:
+          path: ~/graalvm-ce-java8-21.0.0.2
+          key: ${{ runner.os }}-graalvm-21.0.0.2
+          restore-keys: |
+                ${{ runner.os }}-graalvm-21.0.0.2
 
       - name: Download GraalVM
         run: |
@@ -139,10 +139,6 @@ jobs:
             PCP_VERSION=$(cat resources/PCP_VERSION)
             echo "##[set-output name=version;]${PCP_VERSION}"
   
-          # export GRAAL_HOME=~/graalvm-ce-java8-21.0.0.2
-          # export GRAALVM_HOME=~/graalvm-ce-java8-21.0.0.2
-          # export PATH=$GRAALVM_HOME/bin:$PATH
-          
       - name: Build Mac native image
         env:
           _JAVA_OPTIONS: -Xmx5g

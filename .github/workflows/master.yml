@@ -143,6 +143,7 @@ jobs:
         env:
           _JAVA_OPTIONS: -Xmx5g
         run: |
+          export GRAAL_HOME=~/graalvm-ce-java8-21.0.0.2
           export GRAALVM_HOME=~/graalvm-ce-java8-21.0.0.2
           export JAVA_HOME=~/graalvm-ce-java8-21.0.0.2/Contents/Home
           export PATH=$JAVA_HOME/bin:$PATH

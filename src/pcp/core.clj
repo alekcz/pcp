@@ -29,22 +29,17 @@
 
 (set! *warn-on-reflection* 1)
 
+(def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
+
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
-(def uns (sci/create-ns 'hiccup.util nil))
-(def html-mode (sci/copy-var util/*html-mode* uns))
-(def escape-strings? (sci/copy-var util/*escape-strings?* uns))
-(def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
-
 (defn render-html [& contents]
-  (binding [util/*html-mode* @html-mode
-            util/*escape-strings?* @escape-strings?]
+  (binding [util/*escape-strings?* true]
     (apply compiler/render-html contents)))
 
 (defn render-html-unescaped [& contents]
-  (binding [util/*html-mode* @html-mode
-            util/*escape-strings?* false]
+  (binding [util/*escape-strings?* false]
     (apply compiler/render-html contents)))
 
 (defn format-response [status body mime-type]
@@ -78,10 +73,6 @@
 
 (defn longer [str1 str2]
   (if (> (count str1) (count str2)) str1 str2))
-
-(defn reset-environment [root']
-  (let [root (-> root' h/uuid keyword)]
-    (swap! cache assoc root (atom {}))))
 
 (defn get-secret [root env-var]
   (try
@@ -180,7 +171,7 @@
       (assoc req :body form)))
 
 (defn make-map [thing]
-  (if (map? thing) thing {}))
+  (into {} thing))
 
 (defn body-handler [req]
   (let [type (:content-type req)]

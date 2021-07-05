@@ -11,7 +11,8 @@
 Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
 
 ### Status
-Active development. Stabilizing.    
+Active development. Stabilizing.     
+Latest version: `v0.0.1`
 
 ### Goals
 

@@ -3,4 +3,7 @@
 (pcp/html [:div "pcp"])
 (pcp/render-html [:div "pcp"])
 (pcp/render-html-unescaped [:div "<p>pcp</p>"])
-(pcp/response 200 (apply + (range 51)) "text/plain")
+(pcp/secret "HAHA")
+(pcp/clear :test)
+(pcp/persist :test (fn [] (range 51)))
+(pcp/response 200 (apply + (pcp/persist :test (fn [] nil))) "text/plain")

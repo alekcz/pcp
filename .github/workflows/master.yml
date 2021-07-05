@@ -115,14 +115,14 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
 
-      - name: Cache GraalVM
-        uses: actions/cache@v1
-        id: cache-graalvm
-        with:
-          path: ~/graalvm-ce-java8-21.0.0.2
-          key: ${{ runner.os }}-graalvm-21.0.0.2
-          restore-keys: |
-                ${{ runner.os }}-graalvm-21.0.0.2
+      # - name: Cache GraalVM
+      #   uses: actions/cache@v1
+      #   id: cache-graalvm
+      #   with:
+      #     path: ~/graalvm-ce-java8-21.0.0.2
+      #     key: ${{ runner.os }}-graalvm-21.0.0.2
+      #     restore-keys: |
+      #           ${{ runner.os }}-graalvm-21.0.0.2
 
       - name: Download GraalVM
         run: |
@@ -130,6 +130,7 @@ jobs:
           if ! [ -d graalvm-ce-java8-21.0.0.2 ]; then
             curl -O -sL https://github.com/graalvm/graalvm-ce-builds/releases/download/vm-21.0.0.2/graalvm-ce-java8-darwin-amd64-21.0.0.2.tar.gz
             tar xzf graalvm-ce-java8-darwin-amd64-21.0.0.2.tar.gz
+            sudo xattr -r -d com.apple.quarantine ~/graalvm-ce-java8-21.0.0.2/
           fi
 
       - name: Set version

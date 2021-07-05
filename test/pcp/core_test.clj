@@ -17,7 +17,7 @@
 
 (deftest build-path-test
   (testing "Test building path for includes"
-    (is (= "/root/file/path" (core/build-path "file/path" "/root" )))))
+    (is (= "/root/file/path" (core/build-path "/root" "file/path")))))
 
 (deftest format-response-test
   (testing "Test formatting response"
@@ -83,19 +83,7 @@
           ans  (core/-main (str root uri))]
     (is (= expected ans)))))  
 
-;; (deftest core-6-test
-;;   (testing "Test default connection"
-;;     (let [err-connection (try (Socket. (InetAddress/getByName "127.0.0.1") 9000) (catch ConnectException _ "failed"))
-;;           server (core/-main)
-;;           _ (Thread/sleep 2000)
-;;           socket (Socket. (InetAddress/getByName "127.0.0.1") 9000)
-;;           connected (.isConnected socket)
-;;           _ (do (server) (Thread/sleep 1000))]
-;;     (is (= true connected))
-;;     (is (= "failed" err-connection))
-;;     (.close socket))))
-
-(deftest core-7-test
+(deftest core-6-test
   (testing "Test requiring file"
     (let [root "test-resources"
           uri "/process-includes.clj"
@@ -105,7 +93,7 @@
     (is (= (:ans ans) 5678))
     (is (true? (:working ans))))))
 
-(deftest core-8-test
+(deftest core-7-test
   (testing "Test requiring file that doesn't exist"
     (let [root "test-resources"
           uri "/process-includes2.clj"

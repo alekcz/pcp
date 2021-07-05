@@ -64,13 +64,13 @@
     (str (slurp path))
     (catch java.io.FileNotFoundException _ nil)))
 
-(defn build-path [path root]
+(defn build-path [root path]
   (str root "/" path))
 
 (defn include [parent {:keys [namespace]}]
   (try
     {:file namespace
-    :source (slurp (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))}
+     :source (slurp (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))}
     (catch java.io.FileNotFoundException _ nil)))
      
 (defn process-script [full-source opts]
@@ -78,7 +78,6 @@
 
 (defn longer [str1 str2]
   (if (> (count str1) (count str2)) str1 str2))
-
 
 (defn reset-environment [root']
   (let [root (-> root' h/uuid keyword)]
@@ -98,6 +97,11 @@
     (catch java.io.FileNotFoundException _ (println "No passphrase has been set for this project") nil)
     (catch Exception _ nil)))
 
+(defn valid-path? [parent target]
+  (let [parent-path (-> parent io/file (.getParentFile) (.getCanonicalPath))
+        target-path (-> target io/file (.getCanonicalPath))]
+    (str/starts-with? target-path parent-path)))
+
 (def persist ^:sci/macro
   (fn [_&form _&env k f & args]
     `(let [r ($/retrieve ~k)]
@@ -111,11 +115,12 @@
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
         file (io/file path)
-        parent (longer root (-> ^File file (.getParentFile) str))
+        root (or root (-> file (.getParentFile) (.getCanonicalPath)))
+        parent (longer root (-> file (.getParentFile) (.getCanonicalPath)))
         response (atom nil)
         keygen (fn [path k] (keyword (str (h/uuid [path k]))))]     
     (if (string? source)
-      (let [opts  (-> { :load-fn #(include parent %)
+      (let [opts  (-> { :load-fn #(include root %)
                         :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen root k) (constantly v))))
                                                             'retrieve (fn [k]   (c/lookup cache (keygen root k)))}
                                                       'pcp {'persist persist
@@ -127,8 +132,10 @@
                                                             'html-unescaped render-html-unescaped
                                                             'render-html-unescaped render-html-unescaped
                                                             'secret #(when root (get-secret root %))
-                                                            'now #(System/currentTimeMillis)}})
-                        :bindings {'slurp #(slurp (str parent "/" %))}
+                                                            'now #(System/currentTimeMillis)
+                                                            'slurp (fn [f] (when (valid-path? root (build-path parent f))  (slurp (build-path parent f))))
+                                                            'spit  (fn [f content] (when (valid-path? root (build-path parent f))  (spit (build-path parent f) content)))}})
+                        :bindings {}
                         :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
                         (future/install))
             _ (parser/set-resource-path! root)                        

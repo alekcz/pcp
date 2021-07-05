@@ -10,7 +10,7 @@
                   [borkdude/sci "0.2.5"]
                   [byte-streams "0.2.4"]
                   [http-kit "2.5.0-RC1"]
-                  [ring "1.8.0"]
+                  [ring "1.9.3"]
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]
                   [commons-io/commons-io "2.6"]
@@ -30,7 +30,6 @@
                   [com.draines/postal "2.0.3"]
                   [buddy "2.0.0"]
                   [tick "0.4.23-alpha"]
-                  [clj-http "3.10.1"]
                   [alekcz/storyblok-clj "1.2.0"]
                   [garden "1.3.10"]
                   [io.replikativ/konserve "0.6.0-alpha3" 

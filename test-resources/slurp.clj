@@ -1,1 +1,3 @@
-(slurp "slurp.txt")
+(require '[pcp :as pcp])
+
+(pcp/slurp "slurp.txt")

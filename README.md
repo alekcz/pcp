@@ -103,10 +103,10 @@ Requiring files in PCP mostly works as it does in Clojure, the primary exception
 Given a project like this:    
 
 ```
-.    
+.                           # project root    
 ├── .pcp      
 │   └── a24d...cfdcb8.npy  # encrypted secret, touch this and bad things will happen    
-├── public                 # project root    
+├── public                 # server root    
 │   ├── index.clj          
 │   └── login.clj    
 │   └── dashboard.clj    
@@ -192,10 +192,18 @@ Renders html from Clojure data strucutures using [hiccup](https://github.com/wea
 Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
 See [Environment variables and secrets](#environment-variables-and-secrets) for more info.
 
-
 #### pcp/now
 `(pcp/now)`    
 Returns the current time in milliseconds (according to your server).
+
+#### pcp/slurp
+`(pcp/slurp "../file-name")`    
+Opens a reader on f and reads all its contents, returning a string. Cannot access files higher up that project root (i.e. server root -1). Does not currently accept any optional arguments.
+
+#### pcp/spit
+`(pcp/spit "../file-name" "like drugs but better")`    
+Opposite of slurp. Opens f with writer, writes content, then closes f. Cannot access files higher up that project root (i.e. server root -1). Does not currently accept any optional arguments.
+
 
 ## Other built-in namespaces
 
@@ -209,7 +217,6 @@ In addition to the core clojure namespaces available in [sci](https://github.com
   - `selmer.filters`
   - `org.httpkit.client`
   - `org.httpkit.sni-client`
-  - `clj-http.client`
   - `next.jdbc`
   - `honeysql.core`
   - `honeysql.helpers`
@@ -252,6 +259,7 @@ Going above 400 req/s generally results in bad things happening. You can test yo
 - [x] Invoke scripts from Nginx
 - [x] Emulate of Nginx environment locally
 - [x] Store secrets in projects
+- [x] Restrict `slurp` and `spit` to project root
 - [x] Cache expensive operations
 - [x] Expose request data to scripts
 - [x] Require external namespaces as in Clojure

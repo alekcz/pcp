@@ -21,7 +21,6 @@
     [buddy.auth.backends]
     [buddy.auth.middleware]
     [buddy.hashers]
-    [clj-http.client]
     [storyblok-clj.core]
     [garden.core]
     [garden.stylesheet]
@@ -48,7 +47,6 @@
     'selmer.filters (extract-namespace 'selmer.filters)
     'org.httpkit.client (extract-namespace 'org.httpkit.client)
     'org.httpkit.sni-client (extract-namespace 'org.httpkit.sni-client)
-    'clj-http.client (extract-namespace 'clj-http.client)
     'storyblok-clj.core (extract-namespace 'storyblok-clj.core)
     'next.jdbc (extract-namespace 'next.jdbc)
     'honeysql.core (extract-namespace 'honeysql.core)

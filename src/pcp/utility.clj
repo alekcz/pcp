@@ -8,7 +8,9 @@
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
-    [environ.core :refer [env]])
+    [environ.core :refer [env]]
+    [clj-file-zip.core :as zip]
+    [me.raynes.fs :as fs])
   (:import  [java.net Socket]
             [java.io File ByteArrayOutputStream InputStream BufferedWriter]
             [org.apache.commons.io IOUtils]
@@ -253,10 +255,17 @@ Options:
     (spit 
       (str path "/README.md") 
       (slurp (str (template-path) "/README.md")))
+    (spit (str path "/.gitignore") "/tmp\n")      
     (spit 
       (str path "/public/api/info.clj") 
       (slurp (str (template-path) "/api/info.clj")))
     (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath ^File (io/file path)))))
+
+(defn deploy [target-server]
+  (fs/copy-dir "./" "./tmp/deploy")
+  (fs/delete-dir "./tmp/deploy/tmp")
+  (zip/zip "./tmp/deploy" "./tmp/deploy.zip")
+  (fs/delete-dir "./tmp/deploy"))
 
 (defn -main 
   ([]
@@ -271,6 +280,7 @@ Options:
       "--version" (println "pcp" version)
       "-e" (println (run-file value 9000))
       "--evaluate" (println (run-file value 9000))
+      "deploy" (deploy value)
       "new" (new-project value)
       "passphrase" (add-passphrase value)
       "secret" (add-secret {:root value})

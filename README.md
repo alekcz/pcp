@@ -173,8 +173,8 @@ across projects. Pages in the same project share a cache keys. The cache uses TT
 Removes key from the cache
 
 #### pcp/request
-`(pcp/request)`    
-Returns the request map. The request map conforms to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC). 
+`pcp/request`    
+The request map. The request map conforms to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC). 
 
 #### pcp/response
 `(pcp/response [status body mime-type])`        

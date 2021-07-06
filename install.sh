@@ -12,27 +12,28 @@ print_help() {
 
 default_install_dir="/usr/local/bin"
 install_dir=$default_install_dir
-install_dir_opt=${1:-}
-if [ "$install_dir_opt" ]; then
-    install_dir="$install_dir_opt"
-fi
+# install_dir_opt=${1:-}
+# if [ "$install_dir_opt" ]; then
+#     install_dir="$install_dir_opt"
+# fi
 
 download_dir=/tmp
 
 latest_release="$(curl -sL https://raw.githubusercontent.com/alekcz/pcp/master/resources/PCP_RELEASED_VERSION)"
+target_release="${1-$latest_release}"
 
 case "$(uname -s)" in
     Linux*)     platform=linux;;
     Darwin*)    platform=macos;;
 esac
 
-download_url="https://github.com/alekcz/pcp/releases/download/$latest_release/pcp-$latest_release-$platform-amd64.zip"
+download_url="https://github.com/alekcz/pcp/releases/download/$target_release/pcp-$target_release-$platform-amd64.zip"
 
 cd "$download_dir"
 echo -e "Downloading $download_url."
-curl -o "pcp-$latest_release-$platform-amd64.zip" -sL "https://github.com/alekcz/pcp/releases/download/$latest_release/pcp-$latest_release-$platform-amd64.zip"
-unzip -qqo "pcp-$latest_release-$platform-amd64.zip"
-rm "pcp-$latest_release-$platform-amd64.zip"
+curl -o "pcp-$target_release-$platform-amd64.zip" -sL "https://github.com/alekcz/pcp/releases/download/$target_release/pcp-$target_release-$platform-amd64.zip"
+unzip -qqo "pcp-$target_release-$platform-amd64.zip"
+rm "pcp-$target_release-$platform-amd64.zip"
 mkdir -p "/usr/local/etc/pcp-db"
 mkdir -p "$install_dir/pcp-templates"
 

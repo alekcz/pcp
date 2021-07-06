@@ -10,7 +10,7 @@
     [taoensso.nippy :as nippy]
     [environ.core :refer [env]])
   (:import  [java.net Socket]
-            [java.io File ByteArrayOutputStream InputStream]
+            [java.io File ByteArrayOutputStream InputStream BufferedWriter]
             [org.apache.commons.io IOUtils]
             [org.apache.commons.codec.digest DigestUtils]) 
   (:gen-class))
@@ -19,7 +19,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.2-beta.1")
+(def version "v0.0.2-beta.2")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -97,8 +97,8 @@ Options:
       (resp/status status)
       (resp/content-type mime-type))) 
 
-(defn file-response [path ^File file]
-  (let [code (if (.exists file) 200 404)
+(defn file-response [path file]
+  (let [code (if (.exists ^File file) 200 404)
         mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
     (-> (resp/response file)    
         (resp/status code)
@@ -115,14 +115,14 @@ Options:
     {:status status :body body :headers headers}))
 
 (defn file-exists? [path]
-  (-> path io/file .exists))
+  (-> path ^File io/file .exists))
   
 (defn serve-file [path]
   (file-response path (io/file path)))
 
 (defn local-handler [opts]
   (fn [request]
-    (let [root (.getCanonicalPath (io/file (:root opts)))
+    (let [root (.getCanonicalPath ^File (io/file (:root opts)))
           path (str root (:uri request))
           slashpath (str path "index.clj")
           exists (or (file-exists? path) (file-exists? slashpath))
@@ -141,7 +141,7 @@ Options:
 
 (defn run-file [path port]
   (let [path (str/replace (str "/" path) "//" "/")
-        root (.getCanonicalPath (io/file "./"))
+        root (.getCanonicalPath ^File (io/file "./"))
         scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") (str port) "9000"))
         request {:document-root root :document-uri path :request-method :get}]
     (-> request http-to-scgi (forward scgi-port) create-resp :body)))
@@ -235,7 +235,7 @@ Options:
         path (str (keydb) "/" project ".db")]
   (io/make-parents (keydb))
   (println "adding passphrase for project:" project)
-  (with-open [w (io/writer path)]
+  (with-open [^BufferedWriter w (io/writer path)]
     (.write w ^String passphrase))
   (println "done.")))  
 
@@ -256,7 +256,7 @@ Options:
     (spit 
       (str path "/public/api/info.clj") 
       (slurp (str (template-path) "/api/info.clj")))
-    (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath (io/file path)))))
+    (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath ^File (io/file path)))))
 
 (defn -main 
   ([]

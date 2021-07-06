@@ -252,7 +252,7 @@ You can see the spike in CPU and bandwidth on the droplet, but the CPU never sat
 These are by no means comprehensive benchmarks but give you a sense of what a PCP server can withstand for simple use case.
 Going above 400 req/s generally results in bad things happening. You can test your own site using [k6](https://k6.io/) with the instructions in [loadtest.js](./loadtest.js)
 
-# Roadmap
+# Roadmap & releases
 
 ## Release 0.0.1
 - [x] Run arbitrary scripts
@@ -267,6 +267,10 @@ Going above 400 req/s generally results in bad things happening. You can test yo
 - [x] Generate new project from CLI
 - [x] Document PCP
 - [x] Load test a production deployment
+
+## Release 0.0.2
+- [ ] Perfomance improvements
+- [ ] Cluster mode
 
 ## Release 0.1.0
 - [ ] Store passphrases with [konserve](https://github.com/replikativ/konserve)
@@ -285,6 +289,7 @@ For the guidance and examples, special thanks to
 
 - [@BrunoBonacci](https://github.com/BrunoBonacci) 
 - [@borkdude](https://github.com/borkdude) 
+- [@Baeldung](https://twitter.com/Baeldung)
 
 ## License
 

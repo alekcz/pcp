@@ -4,8 +4,7 @@
             [pcp.resp :as resp]
             [pcp.core :as core]
             [clojure.string :as str])
-  (:import  [java.io File]
-            [java.net Socket InetAddress ConnectException]))
+  (:import  [java.io File]))
 
 (deftest read-source-test
   (testing "Test reading source"
@@ -101,4 +100,3 @@
           _ (core/scgi-handler scgi-request)
           ans  (try (core/run-script (str root uri)) (catch Exception _ "error"))]
     (is (str/includes? ans "error")))))
-    

@@ -53,6 +53,10 @@ mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
 rm -rf "$PWD/pcp-templates"
 mv -f "$download_dir/pcp-templates" "$PWD"
 
+if [ ! -e "$PWD/pcp.conf" ] ; then
+    echo "PCP_CLUSTER=-c" > "$PWD/pcp.conf"
+fi
+
 case "$(uname -s)" in
     Linux*)     
         mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"

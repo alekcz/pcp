@@ -89,8 +89,8 @@
     (catch Exception _ nil)))
 
 (defn valid-path? [parent target]
-  (let [parent-path (-> parent io/file (.getParentFile) (.getCanonicalPath))
-        target-path (-> target io/file (.getCanonicalPath))]
+  (let [parent-path (-> parent ^File io/file (.getParentFile) (.getCanonicalPath))
+        target-path (-> target ^File io/file (.getCanonicalPath))]
     (str/starts-with? target-path parent-path)))
 
 (def persist ^:sci/macro
@@ -105,9 +105,9 @@
 (defn run-script [url-path &{:keys [root request]}]
   (let [path (URLDecoder/decode url-path "UTF-8")
         source (read-source path)
-        file (io/file path)
-        root (or root (-> file (.getParentFile) (.getCanonicalPath)))
-        parent (longer root (-> file (.getParentFile) (.getCanonicalPath)))
+        ^File file (io/file path)
+        root (or root (-> ^File file (.getParentFile) (.getCanonicalPath)))
+        parent (longer root (-> ^File file (.getParentFile) (.getCanonicalPath)))
         response (atom nil)
         keygen (fn [path k] (keyword (str (h/uuid [path k]))))]     
     (if (string? source)
@@ -200,7 +200,16 @@
   ([path]       
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
-        "" (scgi/serve scgi-handler scgi-port)
+        "" 
+          (scgi/serve scgi-handler scgi-port)
+        
+        "-c"  
+          (do 
+            (scgi/serve scgi-handler scgi-port)
+            (scgi/serve scgi-handler 9007)
+            (scgi/serve scgi-handler 9014)
+            (scgi/serve scgi-handler 9021))              
+        
         (run-script path)))))
 
       

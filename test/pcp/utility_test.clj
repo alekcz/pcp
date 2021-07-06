@@ -152,7 +152,7 @@
           _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
           _ (new-folder root)
           _ (utility/stop-scgi)
-          scgi (core/-main)
+          scgi (core/-main "-c")
           local (utility/-main "-s" root)
           _ (Thread/sleep 2000)
           file-eval (json/decode (with-out-str (utility/-main "-e" (str root "/index.clj"))) true)

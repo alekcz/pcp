@@ -2,7 +2,8 @@
 Description= pcp scgi server
 
 [Service]
-ExecStart=/usr/bin/java -jar /usr/local/bin/pcp-server.jar
+EnvironmentFile=/usr/local/bin/pcp.conf
+ExecStart=/usr/bin/java -jar /usr/local/bin/pcp-server.jar $PCP_CLUSTER
 Restart=always
 
 [Install]

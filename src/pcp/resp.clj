@@ -51,6 +51,7 @@
     :.bmp "image/bmp"
     :.bz "application/x-bzip"
     :.bz2 "application/x-bzip2"
+    :.cljs "application/x-scittle"
     :.csh "application/x-csh"
     :.css "text/css"
     :.csv "text/csv"

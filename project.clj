@@ -1,4 +1,4 @@
-(defproject pcp "0.0.2-beta.1"
+(defproject pcp "0.0.2-beta.2"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
@@ -7,6 +7,7 @@
   :dependencies [ ;core
                   [org.clojure/clojure "1.10.3"]
                   [org.clojure/tools.cli "1.0.194"]
+                  [org.clojure/core.async "1.3.618"]
                   [borkdude/sci "0.2.5"]
                   [byte-streams "0.2.4"]
                   [http-kit "2.5.0-RC1"]

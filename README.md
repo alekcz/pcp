@@ -270,7 +270,6 @@ Going above 400 req/s generally results in bad things happening. You can test yo
 
 ## Release 0.0.2
 - [ ] Perfomance improvements
-- [ ] Cluster mode
 
 ## Release 0.1.0
 - [ ] Store passphrases with [konserve](https://github.com/replikativ/konserve)

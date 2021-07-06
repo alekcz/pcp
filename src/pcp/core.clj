@@ -201,7 +201,6 @@
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
         ""   (scgi/serve scgi-handler scgi-port)
-        "-c" (scgi/serve scgi-handler scgi-port :cluster true)              
         (run-script path)))))
 
       

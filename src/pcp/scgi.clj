@@ -1,6 +1,5 @@
 (ns pcp.scgi
-  (:require [clojure.string :as str]
-            [clojure.core.async :as async])
+  (:require [clojure.string :as str])
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]
@@ -103,38 +102,24 @@
       serverChannel))
 
 (defn run-selection [active handler ^Selector selector]
-  (async/thread
-    (while (some? @active)
-      (if (not= 0 (.select selector 50))
-          (let [keys (.selectedKeys selector)]      
-            (doseq [^SelectionKey key keys]
-              (let [ops (.readyOps key)]
-                (cond
-                  (= ops SelectionKey/OP_ACCEPT) (on-accept selector key)
-                  (= ops SelectionKey/OP_READ)   (on-read key handler))))
-            (.clear keys))
-            nil))))
+  (while (some? @active)
+    (if (not= 0 (.select selector 50))
+        (let [keys (.selectedKeys selector)]      
+          (doseq [^SelectionKey key keys]
+            (let [ops (.readyOps key)]
+              (cond
+                (= ops SelectionKey/OP_ACCEPT) (on-accept selector key)
+                (= ops SelectionKey/OP_READ)   (on-read key handler))))
+          (.clear keys))
+          nil)))
 
-(defn serve [handler port &{:keys [cluster]}]
+(defn serve [handler port]
   (let [active (atom true)
         ^Selector selector  (Selector/open)
-        ^Selector selector2 (when cluster (Selector/open))
-        ^Selector selector3 (when cluster (Selector/open))
-        ^Selector selector4 (when cluster (Selector/open))
-        ^ServerSocketChannel server  (build-server port selector)
-        ^ServerSocketChannel server2 (when cluster (build-server 9007 selector2))
-        ^ServerSocketChannel server3 (when cluster (build-server 9014 selector3))
-        ^ServerSocketChannel server4 (when cluster (build-server 9021 selector4))]
-    (run-selection active handler selector)        
-    (when cluster 
-      (run-selection active handler selector2)        
-      (run-selection active handler selector3)        
-      (run-selection active handler selector4))
-    (future (while (some? @active) nil))
+        ^ServerSocketChannel server  (build-server port selector)]
+    (future 
+      (run-selection active handler selector))        
     (fn [] 
       (.close server)
-      (when cluster (.close server2))
-      (when cluster (.close server3))
-      (when cluster (.close server4))
       (reset! active false))))
 

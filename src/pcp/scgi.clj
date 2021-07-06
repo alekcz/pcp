@@ -14,9 +14,7 @@
   (-> text (.getBytes "UTF-8") ByteBuffer/wrap))
 
 (defn extract-headers [req]
-  (let [header-clean (:header req)
-        header (str/replace header-clean  "\0" "\n")
-        data (str/split header #"\n")
+  (let [data (str/split (:header req) #"\u0000")
         keys (map #(-> % (str/replace "_" "-") str/lower-case keyword) (take-nth 2 data))
         values (take-nth 2 (rest data))
         h (zipmap keys values)]
@@ -25,7 +23,7 @@
       (update :server-port #(Integer/parseInt (if (str/blank? %) "0" %)))
       (update :content-length #(Integer/parseInt (if (str/blank? %) "0" %)))
       (update :request-method #(-> % str str/lower-case keyword))
-      (assoc :headers { "sec-fetch-site" (-> h :http-sec-fetch-site)   
+      (assoc  :headers { "sec-fetch-site" (-> h :http-sec-fetch-site)   
                         "host" (-> h :http-host)   
                         "user-agent" (-> h :http-user-agent)     
                         "cookie" (-> h :http-cookie)   

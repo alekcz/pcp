@@ -1,5 +1,6 @@
 (ns pcp.scgi
-  (:require [clojure.string :as str])
+  (:require [clojure.string :as str]
+            [clojure.core.async :as async])
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]
@@ -7,8 +8,6 @@
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
-
-(def ^Selector selector (Selector/open))
 
 (defn to-byte-array [^String text]
   (-> text (.getBytes "UTF-8") ByteBuffer/wrap))
@@ -41,7 +40,7 @@
       (assoc! :body (:body req))
       (persistent!))))
 
-(defn on-accept [^SelectionKey key]
+(defn on-accept [selector ^SelectionKey key]
   (let [^ServerSocketChannel channel     (.channel key)
         ^SocketChannel socketChannel   (.accept channel)]
     (.configureBlocking socketChannel false)
@@ -95,7 +94,7 @@
                 (.cancel key))))
       (catch Exception _ (.close socket-channel) (.cancel key)))))
 
-(defn build-server [port]
+(defn build-server [port selector]
   (let [^ServerSocketChannel serverChannel (ServerSocketChannel/open)
         portAddr (InetSocketAddress. ^InetAddress (InetAddress/getByName "127.0.0.1") ^Integer port)]
       (.configureBlocking serverChannel false)
@@ -103,21 +102,39 @@
       (.register serverChannel selector SelectionKey/OP_ACCEPT)
       serverChannel))
 
-(defn serve [handler port]
+(defn run-selection [active handler ^Selector selector]
+  (async/thread
+    (while (some? @active)
+      (if (not= 0 (.select selector 50))
+          (let [keys (.selectedKeys selector)]      
+            (doseq [^SelectionKey key keys]
+              (let [ops (.readyOps key)]
+                (cond
+                  (= ops SelectionKey/OP_ACCEPT) (on-accept selector key)
+                  (= ops SelectionKey/OP_READ)   (on-read key handler))))
+            (.clear keys))
+            nil))))
+
+(defn serve [handler port &{:keys [cluster]}]
   (let [active (atom true)
-        ^ServerSocketChannel server (build-server port)]
-    (future
-      (while (some? @active)
-        (if (not= 0 (.select selector 50))
-            (let [keys (.selectedKeys selector)]      
-              (doseq [^SelectionKey key keys]
-                (let [ops (.readyOps key)]
-                  (cond
-                    (= ops SelectionKey/OP_ACCEPT) (on-accept key)
-                    (= ops SelectionKey/OP_READ)   (on-read key handler))))
-              (.clear keys))
-              nil)))
+        ^Selector selector  (Selector/open)
+        ^Selector selector2 (when cluster (Selector/open))
+        ^Selector selector3 (when cluster (Selector/open))
+        ^Selector selector4 (when cluster (Selector/open))
+        ^ServerSocketChannel server  (build-server port selector)
+        ^ServerSocketChannel server2 (when cluster (build-server 9007 selector2))
+        ^ServerSocketChannel server3 (when cluster (build-server 9014 selector3))
+        ^ServerSocketChannel server4 (when cluster (build-server 9021 selector4))]
+    (run-selection active handler selector)        
+    (when cluster 
+      (run-selection active handler selector2)        
+      (run-selection active handler selector3)        
+      (run-selection active handler selector4))
+    (future (while (some? @active) nil))
     (fn [] 
       (.close server)
+      (when cluster (.close server2))
+      (when cluster (.close server3))
+      (when cluster (.close server4))
       (reset! active false))))
 

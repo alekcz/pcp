@@ -63,6 +63,10 @@ $ cd project-name
 $ pcp -s public/
 ```
 
+Navigate to [http://localhost:3000/](http://localhost:3000/) and volià.
+
+<img src="assets/screenshots/preview.png" width="800px">
+
 When navigating to your site if you see `Connection refused (Connection refused)` it means the SCGI server not running. It could still be booting or be down. 
 
 You can find instructions on [replacing php and deploying to production here](./docs/replacing-php.md)

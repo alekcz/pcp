@@ -56,7 +56,7 @@ Create a new project:
 $ pcp new project-name
 ```
 
-For convenience the pcp utility comes with a local server. This local sever behaves as your pcp site would when deployed with nginx. 
+When you create a new project some example code is generated as well which, for convenience, you can view using the local server built in to the pcp utility. This local sever behaves as your pcp site would when deployed with nginx. 
 
 ``` shellsession
 $ cd project-name
@@ -66,6 +66,59 @@ $ pcp -s public/
 Navigate to [http://localhost:3000/](http://localhost:3000/) and volià.
 
 <img src="assets/screenshots/preview.png" width="800px">
+
+This is the corresponding code. 
+
+```clojure
+(ns index
+  (:require [pcp :as pcp] ;this is the core namespace with various useful functions
+            [api.info :as a] ;this is another name space in the same project. 
+            [garden.core :refer [css]])) ;this is a namespace from the hosted environment
+
+(def resp 
+  (pcp/html
+    [:html {:style "font-family: 'Source Sans Pro', Arial, Helvetica, sans-serif;text-align: center;"
+            :lang "en"}
+      [:head 
+        [:title "PCP website"]
+        [:style 
+          (css [:p.info { :background-color "#EEE" 
+                          :font-size "13px"
+                          :margin-top "40px"
+                          :padding "10px" 
+                          :text-align "left" 
+                          :width "300px"}])
+          (css [:strong { :font-size "13px"}])
+          (css [:code   { :font-size "12px" 
+                          :font-weight "normal"}])]]
+      [:body 
+        [:div 
+              {:style "display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 90vh;"
+              :ondblclick "alert('Now we're cooking with gas')"}
+              [:img {:src "https://raw.githubusercontent.com/alekcz/pcp/master/assets/logo/logo-alt.svg" :width "200px"}]
+              [:h1 "Your PCP site is up and running."]
+              [:p "Your json endpoint is here " [:a {:href "/api/info.clj"} "here"] 
+                [:br]
+                "Learn more about pcp at " [:a {:href a/repo :target "_blank"} "here"]
+                [:br]
+                "Happy scripting!"]
+              [:p.info
+                [:strong "Request uri "] [:span (str (-> pcp/request :request-uri))]
+                [:br] 
+                [:strong "Request method "] [:span (str (-> pcp/request :request-method))]
+                [:br] 
+                [:strong "Request scheme "] [:span (str (-> pcp/request :request-scheme))]
+                [:br] 
+                [:strong "User agent "]
+                [:br] 
+                [:code (str (-> pcp/request :http-user-agent))]
+                [:br]]]]]))
+
+(pcp/response 200 resp "text/html")            
+
+
+```
+
 
 When navigating to your site if you see `Connection refused (Connection refused)` it means the SCGI server not running. It could still be booting or be down. 
 

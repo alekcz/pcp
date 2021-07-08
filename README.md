@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
+Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have we reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
 
 ### Status
 Active development. Stabilizing.     
@@ -16,8 +16,8 @@ Latest version: `v0.0.1`
 
 ### Goals
 
-* Any easy to use, drop-in Clojure replacement for php scripts
-* Allow multiple website to be hosted on single $5 VPS
+* An easy to use, drop-in Clojure replacement for php scripts
+* Allow multiple websites to be hosted on a single $5 VPS
 
 ### Non-goals
 
@@ -56,14 +56,14 @@ Create a new project:
 $ pcp new project-name
 ```
 
-When you create a new project some example code is generated as well which, for convenience, you can view using the local server built in to the pcp utility. This local sever behaves as your pcp site would when deployed with nginx. 
+When you create a new project some example code is generated as well which, for convenience, you can view using the local server built in to the pcp utility. This local server behaves as your pcp site would when deployed with nginx.
 
 ``` shellsession
 $ cd project-name
 $ pcp -s public/
 ```
 
-Navigate to [http://localhost:3000/](http://localhost:3000/) and volià.
+Navigate to [http://localhost:3000/](http://localhost:3000/) and voilà.
 
 <img src="assets/screenshots/preview.png" width="800px">
 
@@ -125,12 +125,12 @@ This is the corresponding code.
 ```
 
 
-When navigating to your site if you see `Connection refused (Connection refused)` it means the SCGI server not running. It could still be booting or be down. 
+When navigating to your site, if you see `Connection refused (Connection refused)` it means the SCGI server not running. It could still be booting or be down. 
 
 You can find instructions on [replacing php and deploying to production here](./docs/replacing-php.md)
 
 ## How PCP works
-PCP has two parts the utility is simple binary, built with GraalVM, that allows you work effectively with pcp. 
+PCP has two parts. The utility is a simple binary, built with GraalVM, that allows you to work effectively with pcp. 
 
 ```
 PCP: Clojure Processor -- Like drugs but better
@@ -162,8 +162,8 @@ PCP is designed to work on Linux and OSX. It requires the following to work:
 
 ## Project structure and requiring files
 
-Requiring files in PCP mostly works as it does in Clojure, the primary exception being that a project cannot require a file outside of it's root. 
-Given a project like this:    
+Requiring files in PCP mostly works as it does in Clojure, the primary exception being that a project cannot require a file outside of its root. 
+Given a project like this:
 
 ```
 .                           # project root    
@@ -193,7 +193,7 @@ Your dashboard could require business logic as follows
 
 ## Environment variables and secrets
 
-To allow API keys, tokens and the like to be stored and retrieved securely, PCP encrypts them and stores them in the project. Secrets are created using the PCP CLI. They are encrypted using the passphrase selected. Here is an example of the process. 
+To allow API keys, tokens, and the like to be stored and retrieved securely, PCP encrypts them and stores them in the project. Secrets are created using the PCP CLI. They are encrypted using the passphrase selected. Here is an example of the process. 
 
 ```shellsession
 $ pcp secret
@@ -227,12 +227,12 @@ The following functions are part of the core PCP namespace and are made availabl
 #### pcp/persist
 `(pcp/persist :cache-key  f-on-miss)`    
 This macro allows expensive operations to only be recomputed if they are not in the cache.   
-On a cache miss the `f-on-miss` is computed, its value stored in the cache and returned. Caches are isolated
-across projects. Pages in the same project share a cache keys. The cache uses TTL (30 min) as its invalidation strategy. 
+On a cache miss, the `f-on-miss` is computed, its value stored in the cache and returned. Caches are isolated
+across projects. Pages in the same project share cache keys. The cache uses a TTL (30 min) as its invalidation strategy. 
 
 #### pcp/clear
 `(pcp/clear :cache-key)`    
-Removes key from the cache
+Removes a key from the cache
 
 #### pcp/request
 `pcp/request`    
@@ -240,19 +240,19 @@ The request map. The request map conforms to the [ring spec](https://github.com/
 
 #### pcp/response
 `(pcp/response [status body mime-type])`        
-A convenience function for generating a response map. Responses are simply Clojure maps that confirm to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC) and can be written by hand too. 
+A convenience function for generating a response map. Responses are simply Clojure maps that conform to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC) and can be written by hand too.
 
 #### pcp/render-html
 `(pcp/render-html options & content)`    
-Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup)
+Renders html from Clojure data structures using [hiccup](https://github.com/weavejester/hiccup)
 
 #### pcp/render-html-unescaped
 `(pcp/render-html & args)`    
-Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup). Does not escape html tags strings. Use with care.  
+Renders html from Clojure data structures using [hiccup](https://github.com/weavejester/hiccup). Does not escape html tag strings. Use with care.
 
 #### pcp/secret
 `(pcp/secret "SECRET_NAME")`    
-Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
+Retrieves a secret from the project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
 See [Environment variables and secrets](#environment-variables-and-secrets) for more info.
 
 #### pcp/now
@@ -261,16 +261,16 @@ Returns the current time in milliseconds (according to your server).
 
 #### pcp/slurp
 `(pcp/slurp "../file-name")`    
-Opens a reader on f and reads all its contents, returning a string. Cannot access files higher up that project root (i.e. server root -1). Does not currently accept any optional arguments.
+Opens a reader on f and reads all its contents, returning a string. Cannot access files higher than project root (i.e. server root -1). Does not currently accept any optional arguments.
 
 #### pcp/spit
 `(pcp/spit "../file-name" "like drugs but better")`    
-Opposite of slurp. Opens f with writer, writes content, then closes f. Cannot access files higher up that project root (i.e. server root -1). Does not currently accept any optional arguments.
+Opposite of slurp. Opens f with writer, writes content, then closes f. Cannot access files higher than project root (i.e. server root -1). Does not currently accept any optional arguments.
 
 
 ## Other built-in namespaces
 
-In addition to the core clojure namespaces available in [sci](https://github.com/borkdude/sci), the following namespaces are also available.
+In addition to the core clojure namespaces in [sci](https://github.com/borkdude/sci), the following namespaces are also available.
 
   - `clojure.string`
   - `clojure.core.async` 
@@ -302,7 +302,7 @@ In addition to the core clojure namespaces available in [sci](https://github.com
     
 
 ## Performance
-A modest PCP website can handle it's own pretty well.     
+A modest PCP website can handle its own pretty well.     
 This test was run for 80 minutes with 400 VUs and 400 req/s. Of the 1.9M requests generated, only 26 failed. 
 
 <img src="assets/performance/k6.png" width="800px">
@@ -311,7 +311,7 @@ You can see the spike in CPU and bandwidth on the droplet, but the CPU never sat
 
 <img src="assets/performance/do.png" width="800px">
 
-These are by no means comprehensive benchmarks but give you a sense of what a PCP server can withstand for simple use case.
+These are by no means comprehensive benchmarks but give you a sense of what a PCP server can withstand for a simple use case.
 Going above 400 req/s generally results in bad things happening. You can test your own site using [k6](https://k6.io/) with the instructions in [loadtest.js](./loadtest.js)
 
 # Roadmap & releases
@@ -320,7 +320,7 @@ Going above 400 req/s generally results in bad things happening. You can test yo
 - [x] Run arbitrary scripts
 - [x] Generate HTML with hiccup
 - [x] Invoke scripts from Nginx
-- [x] Emulate of Nginx environment locally
+- [x] Emulate Nginx environment locally
 - [x] Store secrets in projects
 - [x] Restrict `slurp` and `spit` to project root
 - [x] Cache expensive operations

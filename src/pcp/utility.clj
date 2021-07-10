@@ -8,6 +8,7 @@
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
+    ;; [clojure.tools.cli :refer [parse-opts]]
     [environ.core :refer [env]])
   (:import  [java.net Socket]
             [java.io File ByteArrayOutputStream InputStream BufferedWriter]
@@ -257,6 +258,21 @@ Options:
       (str path "/public/api/info.clj") 
       (slurp (str (template-path) "/api/info.clj")))
     (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath ^File (io/file path)))))
+
+;; (def cli-options
+;;   ;; An option with a required argument
+;;   [["-s" "--serve PATH" "Server root"
+;;     :default "./public"
+;;     :parse-fn #(Integer/parseInt %)
+;;     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+;;    ["-t" nil "SCGI server port"
+;;     :default 9000
+;;     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
+;;    ["-v" "--version"]
+;;    ["-h" "--help"]])
+
+;; (defn -main [& args]
+;;   (println (parse-opts args cli-options)))
 
 (defn -main 
   ([]

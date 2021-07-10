@@ -16,7 +16,6 @@ pom.xml.asc
 .secrets
 .pcp
 /tmp
-examples
 /.DS_Store
 **/DS_Store
 .DS_Store

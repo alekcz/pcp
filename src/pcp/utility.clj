@@ -20,7 +20,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.2-beta.3")
+(def version "v0.0.2-beta.4")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))

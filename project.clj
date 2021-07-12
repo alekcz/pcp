@@ -22,7 +22,8 @@
                   [hiccup "2.0.0-alpha2"]
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
-                
+                  [com.climate/claypoole "1.1.4"]
+                  
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
                   [seancorfield/next.jdbc "1.1.582"]

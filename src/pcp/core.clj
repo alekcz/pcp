@@ -7,6 +7,7 @@
     [clojure.edn :as edn]
     [clojure.string :as str]
     [pcp.scgi :as scgi]
+    ;; [pcp.server :as server]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
     [hiccup.util :as util]       
@@ -194,13 +195,18 @@
         r (try (run-script path :root root :request request) (catch Exception e (format-response 500 (.getMessage e) nil)))]
     r))
 
+(defn handler [req]
+  {:status 200
+   :headers {"content-type" "text/plain"}
+   :body "hello!"})
+
 (defn -main 
   ([]
     (-main ""))
   ([path]       
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
-        ""   (scgi/serve scgi-handler scgi-port)
+        ""  (scgi/serve scgi-handler scgi-port);(server/start-server handler {:port scgi-port});
         (run-script path)))))
 
       

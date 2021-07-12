@@ -1,9 +1,11 @@
 (ns pcp.scgi
-  (:require [clojure.string :as str])
+  (:require [clojure.string :as str]
+            [com.climate.claypoole :as cp])
   (:import [java.nio.channels ServerSocketChannel SocketChannel Selector SelectionKey]
            [java.nio ByteBuffer]
            [java.net InetSocketAddress InetAddress]
-           [java.io ByteArrayInputStream ByteArrayOutputStream])
+           [java.io ByteArrayInputStream ByteArrayOutputStream]
+           [java.util Set])
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -39,18 +41,19 @@
       (assoc! :body (:body req))
       (persistent!))))
 
-(defn on-accept [selector ^SelectionKey key]
+(defn on-accept [selector ^SelectionKey key ^Set keys]
   (let [^ServerSocketChannel channel     (.channel key)
         ^SocketChannel socketChannel   (.accept channel)]
     (.configureBlocking socketChannel false)
-    (.register socketChannel selector SelectionKey/OP_READ)))
+    (.register socketChannel selector SelectionKey/OP_READ)
+    (.remove keys key)))
 
 (defn create-scgi-string [resp]
   (let [nl "\r\n"
         response (str (:status resp) nl (apply str (for [[k v] (:headers resp)] (str k ": " v nl))) nl (:body resp))]
     response))
 
-(defn on-read [^SelectionKey key handler]
+(defn on-read [^SelectionKey key handler ^Set keys]
   (let [^SocketChannel socket-channel (.channel key)]
     (try
       (let [buf (ByteBuffer/allocate 1)
@@ -90,8 +93,9 @@
               (let [^ByteBuffer resp (-> {:header header :body (ByteArrayInputStream. (.toByteArray body-out))} extract-headers handler create-scgi-string to-byte-array)]
                 (.write socket-channel resp)
                 (.close socket-channel)
-                (.cancel key))))
-      (catch Exception _ (.close socket-channel) (.cancel key)))))
+                (.cancel key)
+                (.remove keys key))))
+      (catch Exception e (println e) (.close socket-channel) (.cancel key) (.remove keys key)))))
 
 (defn build-server [port selector]
   (let [^ServerSocketChannel serverChannel (ServerSocketChannel/open)
@@ -101,25 +105,27 @@
       (.register serverChannel selector SelectionKey/OP_ACCEPT)
       serverChannel))
 
-(defn run-selection [active handler ^Selector selector]
+(defn run-selection [active handler ^Selector selector pool]
+  (println "running...")
   (while (some? @active)
-    (if (not= 0 (.select selector 50))
-        (let [keys (.selectedKeys selector)]      
-          (doseq [^SelectionKey key keys]
-            (let [ops (.readyOps key)]
-              (cond
-                (= ops SelectionKey/OP_ACCEPT) (on-accept selector key)
-                (= ops SelectionKey/OP_READ)   (on-read key handler))))
-          (.clear keys))
-          nil)))
+    (when (not= 0 (.select selector))
+      (let [keys (.selectedKeys selector)
+            process (fn [^SelectionKey key]
+                        (let [ops (.readyOps key)]
+                          (cond
+                            (= ops SelectionKey/OP_ACCEPT) (on-accept selector key keys)
+                            (= ops SelectionKey/OP_READ)   (on-read key handler keys))))]      
+        (dorun (cp/upmap pool process keys))))))
 
 (defn serve [handler port]
   (let [active (atom true)
         ^Selector selector  (Selector/open)
-        ^ServerSocketChannel server  (build-server port selector)]
+        ^ServerSocketChannel server  (build-server port selector)
+        pool (cp/threadpool 512)]
     (future 
-      (run-selection active handler selector))        
+      (run-selection active handler selector pool))        
     (fn [] 
       (.close server)
-      (reset! active false))))
+      (reset! active false)
+      (cp/shutdown pool))))
 

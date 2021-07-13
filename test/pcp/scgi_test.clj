@@ -6,6 +6,8 @@
   (:import  [java.net Socket InetAddress]
             [org.apache.commons.io IOUtils]))
 
+(def boot-time 5000)
+
 (deftest serve-test
   (testing "Test SCGI server"
     (let [handler #(core/scgi-handler %)
@@ -13,7 +15,7 @@
           server (scgi/serve handler scgi-port)
           message (IOUtils/toByteArray (io/input-stream "test-resources/scgi.bin"))
           len (count message)]
-      (Thread/sleep 2000)
+      (Thread/sleep boot-time)
       (let [socket (Socket. (InetAddress/getByName "127.0.0.1") scgi-port)]
         (with-open [os (io/output-stream (.getOutputStream socket))]
           (.write os message 0 len)
@@ -32,7 +34,7 @@
           server (scgi/serve handler scgi-port)
           message (IOUtils/toByteArray (io/input-stream "test-resources/multipart.bin"))
           len (count message)]
-      (Thread/sleep 2000)
+      (Thread/sleep boot-time)
       (let [socket (Socket. (InetAddress/getByName "127.0.0.1") scgi-port)]
         (with-open [os (io/output-stream (.getOutputStream socket))]
           (.write os message 0 len)
@@ -52,7 +54,7 @@
           server (scgi/serve handler scgi-port)
           message (IOUtils/toByteArray (io/input-stream "test-resources/json.bin"))
           len (count message)]
-      (Thread/sleep 2000)
+      (Thread/sleep boot-time)
       (let [socket (Socket. (InetAddress/getByName "127.0.0.1") scgi-port)]
         (with-open [os (io/output-stream (.getOutputStream socket))]
           (.write os message 0 len)

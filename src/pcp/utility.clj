@@ -20,7 +20,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.2-beta.4")
+(def version "v0.0.2-beta.5")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -86,7 +86,7 @@ Options:
   (-> s str str/trim))
 
 (defn forward [scgi-req scgi-port]
-  (let [socket (Socket. "127.0.0.1" ^Integer scgi-port)
+  (with-open [socket (Socket. "127.0.0.1" ^Integer scgi-port)
         os (.getOutputStream socket)
         is (.getInputStream socket)]
       (.write os scgi-req 0 (count scgi-req))
@@ -160,7 +160,7 @@ Options:
                :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
               (clean-opts options))
         server (server/run-server (local-handler opts)
-                {:ip "127.0.0.1" :port (:port opts)})]
+                {:ip "127.0.0.1" :port (:port opts) :max-body (* 100 1024 1024)})]
     (println "Targeting SCGI server on port" (:scgi-port opts))
     (println (str "Local server started on http://127.0.0.1:" (:port opts)))
     (println "Serving" (:root opts))

@@ -7,7 +7,6 @@
     [clojure.edn :as edn]
     [clojure.string :as str]
     [pcp.scgi :as scgi]
-    ;; [pcp.server :as server]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
     [hiccup.util :as util]       
@@ -194,11 +193,6 @@
         path (str root doc)
         r (try (run-script path :root root :request request) (catch Exception e (format-response 500 (.getMessage e) nil)))]
     r))
-
-(defn handler [req]
-  {:status 200
-   :headers {"content-type" "text/plain"}
-   :body "hello!"})
 
 (defn -main 
   ([]

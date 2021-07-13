@@ -12,6 +12,8 @@
   (:import  [java.io File]
             [org.httpkit.server HttpServer]))
 
+(def boot-time 5000)
+
 (deftest version-test
   (testing "Test version flags"
     (let [output (str/trim (with-out-str (utility/-main "-v")))
@@ -77,7 +79,7 @@
     (let [scgi-port 22222
           handler #(core/scgi-handler %)
           scgi (scgi/serve handler scgi-port)
-          _ (Thread/sleep 2000)
+          _ (Thread/sleep boot-time)
           output (utility/run-file "test-resources/simple.clj" scgi-port)]
       (is (= "1275" output))
       (scgi))))

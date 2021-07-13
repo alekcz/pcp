@@ -11,7 +11,7 @@ export let options = {
     { duration: '10s', target: 200 }, 
     { duration: '05s', target: 300 },
     { duration: '05s', target: 400 },
-    { duration: '05m', target: 400 }, 
+    { duration: '01m', target: 400 }, 
     { duration: '05s', target: 400 },
     { duration: '05s', target: 300 }, 
     { duration: '10s', target: 200 },

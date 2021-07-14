@@ -9,8 +9,7 @@
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
             [environ.core :refer [env]])
-  (:import  [java.io File]
-            [org.httpkit.server HttpServer]))
+  (:import  [java.io File]))
 
 (def boot-time 5000)
 
@@ -147,16 +146,15 @@
 
 (deftest server-2-test
   (testing "Test local server on default port"
-    (let [_ (Thread/sleep 5000)
-          project "tmp-second"
+    (let [project "tmp-second"
           root (str project "/public")
           _ (try (delete-recursively project) (catch Exception _ nil))
           _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
           _ (new-folder root)
           _ (utility/stop-scgi)
           scgi (core/-main)
+          _ (Thread/sleep boot-time)
           local (utility/-main "-s" root)
-          _ (Thread/sleep 2000)
           file-eval (json/decode (with-out-str (utility/-main "-e" (str root "/index.clj"))) true)
           file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" (str root "/index.clj"))) true)
           file-eval-expected (json/decode "{\"num\":1275,\"name\":\"Test\",\"end\":null}" true)

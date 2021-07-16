@@ -175,6 +175,7 @@
 
 (defn body-handler [req]
   (let [type (:content-type req)]
+    ;; (print "\n\n\n" (slurp (:body req)) "\n\n\n")
     (if (nil? type)
       req
       (cond 
@@ -200,7 +201,7 @@
   ([path]       
     (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
       (case path
-        ""  (scgi/serve scgi-handler scgi-port);(server/start-server handler {:port scgi-port});
+        ""  (scgi/serve scgi-handler scgi-port)
         (run-script path)))))
 
       

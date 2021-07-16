@@ -106,14 +106,18 @@ Options:
         (resp/content-type mime))))
 
 (defn create-resp [scgi-response]
-  (let [resp-array (str/split scgi-response #"\r\n")
-        resp-status (first resp-array)
-        end  (+ 4 (str/index-of scgi-response "\r\n\r\n"))
-        status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
-        body (subs scgi-response end)
-        header-vals (re-seq #"(.*?): (.*?)\r\n" (subs scgi-response 0 end))
-        headers (apply merge (for [h header-vals] {(nth h 1) (nth h 2)}))]
-    {:status status :body body :headers headers}))
+  (when-not (str/blank? scgi-response)
+    (let [resp-array (str/split scgi-response #"\r\n")
+          resp-status (first resp-array)
+          status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
+          body (last resp-array )
+          header-vals'  (-> scgi-response 
+                          (str/replace (first resp-array) "") 
+                          (str/replace (last resp-array) "")
+                          (str/trim))
+          header-vals  (re-seq #"(.*?): (.*?)\r\n" header-vals')
+          headers (apply merge (for [h header-vals] {(nth h 1) (nth h 2)}))]
+      {:status status :body body :headers headers})))
 
 (defn file-exists? [path]
   (-> path ^File io/file .exists))
@@ -140,10 +144,9 @@ Options:
             (-> (assoc full :document-uri "/404.clj") http-to-scgi (forward (:scgi-port opts)) create-resp)
           :else (format-response 404 nil nil)))))
 
-(defn run-file [path port]
+(defn run-file [path scgi-port]
   (let [path (str/replace (str "/" path) "//" "/")
         root (.getCanonicalPath ^File (io/file "./"))
-        scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") (str port) "9000"))
         request {:document-root root :document-uri path :request-method :get}]
     (-> request http-to-scgi (forward scgi-port) create-resp :body)))
 
@@ -259,21 +262,6 @@ Options:
       (slurp (str (template-path) "/api/info.clj")))
     (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath ^File (io/file path)))))
 
-;; (def cli-options
-;;   ;; An option with a required argument
-;;   [["-s" "--serve PATH" "Server root"
-;;     :default "./public"
-;;     :parse-fn #(Integer/parseInt %)
-;;     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
-;;    ["-t" nil "SCGI server port"
-;;     :default 9000
-;;     :validate [#(< 0 % 0x10000) "Must be a number between 0 and 65536"]]
-;;    ["-v" "--version"]
-;;    ["-h" "--help"]])
-
-;; (defn -main [& args]
-;;   (println (parse-opts args cli-options)))
-
 (defn -main 
   ([]
     (-main "" ""))
@@ -285,8 +273,8 @@ Options:
       "--serve" (start-local-server {:root value})
       "-v" (println "pcp" version)
       "--version" (println "pcp" version)
-      "-e" (println (run-file value 9000))
-      "--evaluate" (println (run-file value 9000))
+      "-e" (println (run-file value (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))))
+      "--evaluate" (println (run-file value (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))))
       "new" (new-project value)
       "passphrase" (add-passphrase value)
       "secret" (add-secret {:root value})

@@ -14,8 +14,8 @@
 (defn to-byte-array [^String text]
   (-> text (.getBytes "UTF-8") ByteBuffer/wrap))
 
-(defn to-string [bytes]
-  (bs/to-string bytes))
+(defn to-string [str-as-bytes]
+  (bs/to-string str-as-bytes))
 
 (defn extract-headers [header]
   (let [data (str/split header #"\u0000")
@@ -57,17 +57,17 @@
 
 
 (defn size [bts]
-  (let [seg (bs/to-string (byte-array (take 50 bts)))
+  (let [seg (to-string (byte-array (vec (take 50 bts))))
         header-len (str/replace seg #":.*" "")
         len (count header-len)
-        header-int (Integer/parseInt header-len)
+        header-int (Integer/parseInt (if-not (str/blank? header-len) header-len "0" ))
         body (re-find #"(\d+)" (subs seg (inc len)))
-        body-int (Integer/parseInt (second body))]
+        body-int (Integer/parseInt (if-not (str/blank? (second body)) (second body) "0"))]
     {:drop (inc len)
      :header header-int
      :body body-int
-     :end (+ len header-int 1)
-     :total (+ body-int header-int (inc len) 1)}))
+     :end (+ len header-int 1 1)
+     :total (+ body-int header-int len 1 1)}))
 
 (defn str+bin [string binary]
   (str string (bs/to-string binary)))
@@ -81,7 +81,6 @@
         (d/chain
           (fn [msg]
             (let [meta (size msg) 
-                  len (count msg)
                   dmsg (d/deferred)
                   total (:total meta)] 
               (d/success! dmsg msg)
@@ -93,8 +92,6 @@
                     [meta (mapcat seq (conj bin @m))]
                     (d/recur (s/take! s null) (conj bin @m) progress))))))
           (fn [res]
-            ;; (with-open [w (clojure.java.io/output-stream "test-resources/multipart.bin")]
-            ;;   (.write w (byte-array (second res))))
             (let [meta (first res)
                   msg (second res)
                   main (drop (:drop meta) msg)

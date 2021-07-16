@@ -155,8 +155,8 @@
           scgi (core/-main)
           _ (Thread/sleep boot-time)
           local (utility/-main "-s" root)
-          file-eval (json/decode (with-out-str (utility/-main "-e" (str root "/index.clj"))) true)
-          file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" (str root "/index.clj"))) true)
+          file-eval (json/decode (with-out-str (utility/-main "-e" "./test-resources/site/index.clj")) true)
+          file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" "./test-resources/site/index.clj")) true)
           file-eval-expected (json/decode "{\"num\":1275,\"name\":\"Test\",\"end\":null}" true)
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]

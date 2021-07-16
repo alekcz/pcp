@@ -11,7 +11,7 @@
             [environ.core :refer [env]])
   (:import  [java.io File]))
 
-(def boot-time 5000)
+(def boot-time 300)
 
 (deftest version-test
   (testing "Test version flags"
@@ -124,11 +124,11 @@
           _ (with-in-str 
               (str (env :my-passphrase) "\n") 
               (utility/-main "passphrase" project))
-          _ (Thread/sleep 2000)    
+          _ (Thread/sleep boot-time)    
           _ (with-in-str 
               (str env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" project))
-          _ (Thread/sleep 2000)
+          _ (Thread/sleep boot-time)
           resp-index (client/get (str "http://localhost:" port "/"))
           resp-text  (client/get (str "http://localhost:" port "/text.txt"))
           resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]
@@ -167,9 +167,9 @@
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (local)
       (while (.isAlive ^Thread (private-field (:server (meta local)) "serverThread")))
-      (Thread/sleep 3000)
+      (Thread/sleep boot-time)
       (let [local2 (utility/-main "--serve" "./")
-            _ (Thread/sleep 1000)
+            _ (Thread/sleep boot-time)
             resp-index-2 (client/get (str "http://localhost:3000/" root "/index.clj"))
             resp-text-2  (client/get (str "http://localhost:3000/" root "/text.txt"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index-2 :body (json/decode true))))

@@ -7,7 +7,7 @@
   (:import  [java.net Socket InetAddress]
             [org.apache.commons.io IOUtils]))
 
-(def boot-time 5000)
+(def boot-time 300)
 
 (deftest serve-test
   (testing "Test SCGI server"
@@ -25,8 +25,7 @@
                 _ (.close socket)]
             (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" ans))
             (is (true? (.isClosed socket)))
-            (server)
-            (Thread/sleep 2000)))))))
+            (server)))))))
 
 (deftest serve-2-test
   (testing "Test SCGI server"
@@ -42,11 +41,10 @@
           (.flush os)
           (let [ans (bs/to-string (.getInputStream socket))]
             (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" ans))
-            (Thread/sleep 2000)
+            (Thread/sleep boot-time)
             (.close socket)
             (is (true? (.isClosed socket)))
-            (server)
-            (Thread/sleep 500)))))))
+            (server)))))))
 
 (deftest serve-3-test
   (testing "Test SCGI server"
@@ -64,5 +62,4 @@
                 _ (.close socket)]
             (is (= "200\r\nContent-Type: text/plain\r\n\r\n1275" ans))
             (is (true? (.isClosed socket)))
-            (server)
-            (Thread/sleep 2000)))))))            
+            (server)))))))            

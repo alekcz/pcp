@@ -23,7 +23,6 @@
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
                   [aleph "0.4.6"]
-                  [com.taoensso/timbre "5.1.2"]
                   
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
@@ -54,7 +53,7 @@
   :cloverage {:runner :eftest
               :runner-opts {:test-warn-time 500
                            :fail-fast? false
-                           :multithread? :namespaces}}
+                           :multithread? :vars}}
   :profiles { :scgi { :aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"

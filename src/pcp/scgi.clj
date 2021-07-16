@@ -4,8 +4,7 @@
               [manifold.deferred :as d]
               [manifold.stream :as s]
               [byte-streams :as bs]
-              [aleph.flow :as flow]
-              [taoensso.timbre :as timbre])
+              [aleph.flow :as flow])
     (:import  [java.nio ByteBuffer]
               [java.util.concurrent ExecutorService]
               [java.io ByteArrayInputStream])            
@@ -103,15 +102,14 @@
               (s/put! s msg'))))
         (d/catch
           (fn [ex]
-            (s/put! s (str "ERROR: " ex))
-            (timbre/error ex)))
+            (s/put! s (str "ERROR: " ex))))
         (d/finally
           (fn []
             (s/close! s)))))))
 
 (defn serve [handler port]
   (let [executor (flow/utilization-executor 0.9)
-        server (tcp/start-server (processor handler executor) {:port port})]
+        server  (tcp/start-server (processor handler executor) {:port port})]
     (println "running...")
     (fn [] 
       (.close server)

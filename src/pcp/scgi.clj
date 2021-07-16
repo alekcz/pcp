@@ -4,7 +4,8 @@
               [manifold.deferred :as d]
               [manifold.stream :as s]
               [byte-streams :as bs]
-              [aleph.flow :as flow])
+              [aleph.flow :as flow]
+              [taoensso.timbre :as timbre])
     (:import  [java.nio ByteBuffer]
               [java.util.concurrent ExecutorService]
               [java.io ByteArrayInputStream])            
@@ -60,7 +61,7 @@
   (let [seg (to-string (byte-array (vec (take 50 bts))))
         header-len (str/replace seg #":.*" "")
         len (count header-len)
-        header-int (Integer/parseInt (if-not (str/blank? header-len) header-len "0" ))
+        header-int (Integer/parseInt header-len)
         body (re-find #"(\d+)" (subs seg (inc len)))
         body-int (Integer/parseInt (if-not (str/blank? (second body)) (second body) "0"))]
     {:drop (inc len)
@@ -68,9 +69,6 @@
      :body body-int
      :end (+ len header-int 1 1)
      :total (+ body-int header-int len 1 1)}))
-
-(defn str+bin [string binary]
-  (str string (bs/to-string binary)))
 
 (defn processor [handler executor]
   (fn [s _]
@@ -105,8 +103,8 @@
               (s/put! s msg'))))
         (d/catch
           (fn [ex]
-            (println (str "ERROR: " ex))
-            (println ex)))
+            (s/put! s (str "ERROR: " ex))
+            (timbre/error ex)))
         (d/finally
           (fn []
             (s/close! s)))))))

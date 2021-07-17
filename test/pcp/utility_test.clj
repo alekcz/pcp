@@ -1,5 +1,5 @@
 (ns pcp.utility-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [pcp.scgi :as scgi]
             [pcp.core :as core]
             [pcp.resp :as resp]
@@ -9,8 +9,7 @@
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
             [environ.core :refer [env]])
-  (:import  [java.io File]
-            [org.httpkit.server HttpServer]))
+  (:import  [java.io File]))
 
 (def wait-time 500)
 
@@ -139,12 +138,7 @@
         (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
         (local)
         (scgi))))
-
-(defn private-field [obj fn-name-string]
-  (let [m (.. obj getClass (getDeclaredField fn-name-string))]
-    (. m (setAccessible true))
-    (. m (get obj))))
-
+        
 (deftest server-2-test
   (testing "Test local server on default port"
     (let [project "tmp-second"

@@ -1,5 +1,5 @@
 (ns pcp.scgi-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [pcp.scgi :as scgi]
             [pcp.core :as core]
             [clojure.java.io :as io])

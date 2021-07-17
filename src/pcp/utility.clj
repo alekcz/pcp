@@ -159,7 +159,7 @@ Options:
                :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
               (clean-opts options))
         server (server/run-server (local-handler opts)
-                {:ip "127.0.0.1" :port (:port opts)})]
+                {:ip "127.0.0.1" :port (:port opts) :max-body (* 100 1024 1024)})]
     (println "Targeting SCGI server on port" (:scgi-port opts))
     (println (str "Local server started on http://127.0.0.1:" (:port opts)))
     (println "Serving" (:root opts))

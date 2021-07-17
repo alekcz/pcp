@@ -35,11 +35,11 @@
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
 (defn render-html [& contents]
-  (binding [util/*escape-strings?* true]
+  (binding []
     (apply compiler/render-html contents)))
 
 (defn render-html-unescaped [& contents]
-  (binding [util/*escape-strings?* false]
+  (binding []
     (apply compiler/render-html contents)))
 
 (defn format-response [status body mime-type]

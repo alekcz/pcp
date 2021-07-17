@@ -184,10 +184,6 @@ A convenience function for generating a response map. Responses are simply Cloju
 `(pcp/render-html options & content)`    
 Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup)
 
-#### pcp/render-html-unescaped
-`(pcp/render-html & args)`    
-Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup). Does not escape html tags strings. Use with care.  
-
 #### pcp/secret
 `(pcp/secret "SECRET_NAME")`    
 Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 

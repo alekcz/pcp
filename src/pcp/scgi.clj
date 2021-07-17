@@ -9,6 +9,7 @@
 (set! *warn-on-reflection* 1)
 
 (def ^Selector selector (Selector/open))
+(defonce buffer-size 4096)
 
 (defn to-byte-array [^String text]
   (-> text (.getBytes "UTF-8") ByteBuffer/wrap))
@@ -58,7 +59,7 @@
   (let [^SocketChannel socket-channel (.channel key)]
     (try
       (let [buf (ByteBuffer/allocate 1)
-            real-buf (ByteBuffer/allocate 16384)
+            real-buf (ByteBuffer/allocate buffer-size)
             len-out (ByteArrayOutputStream.)
             header-out (ByteArrayOutputStream.)
             body-out (ByteArrayOutputStream.)]

@@ -9,7 +9,6 @@
     [pcp.scgi :as scgi]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
-    [hiccup.util :as util]       
     [selmer.parser :as parser]
     [cheshire.core :as json]
     [clj-uuid :as uuid]
@@ -35,12 +34,7 @@
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
 (defn render-html [& contents]
-  (binding [util/*escape-strings?* true]
-    (apply compiler/render-html contents)))
-
-(defn render-html-unescaped [& contents]
-  (binding [util/*escape-strings?* false]
-    (apply compiler/render-html contents)))
+  (apply compiler/render-html contents))
 
 (defn format-response [status body mime-type]
   (-> (resp/response body)    
@@ -120,8 +114,8 @@
                                                             'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
                                                             'html render-html
                                                             'render-html render-html
-                                                            'html-unescaped render-html-unescaped
-                                                            'render-html-unescaped render-html-unescaped
+                                                            'html-unescaped render-html
+                                                            'render-html-unescaped render-html
                                                             'secret #(when root (get-secret root %))
                                                             'now #(System/currentTimeMillis)
                                                             'slurp (fn [f] (when (valid-path? root (build-path parent f))  (slurp (build-path parent f))))

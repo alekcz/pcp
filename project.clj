@@ -18,7 +18,7 @@
                   [com.google.guava/guava "28.2-jre"]
                   [com.taoensso/nippy "3.1.1"]
                   [environ "1.1.0"]
-                  [hiccup "2.0.0-alpha2"]
+                  [hiccup "1.0.5"]
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
                 

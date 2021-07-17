@@ -51,7 +51,7 @@
   :cloverage {:runner :eftest
               :runner-opts {:test-warn-time 500
                            :fail-fast? false
-                           :multithread? :namespaces}}
+                           :multithread? :vars}}
   :profiles { :scgi { :aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"

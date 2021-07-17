@@ -12,6 +12,8 @@
   (:import  [java.io File]
             [org.httpkit.server HttpServer]))
 
+(def wait-time 500)
+
 (deftest version-test
   (testing "Test version flags"
     (let [output (str/trim (with-out-str (utility/-main "-v")))
@@ -77,7 +79,7 @@
     (let [scgi-port 22222
           handler #(core/scgi-handler %)
           scgi (scgi/serve handler scgi-port)
-          _ (Thread/sleep 2000)
+          _ (Thread/sleep wait-time)
           output (utility/run-file "test-resources/simple.clj" scgi-port)]
       (is (= "1275" output))
       (scgi))))
@@ -123,11 +125,11 @@
           _ (with-in-str 
               (str (env :my-passphrase) "\n") 
               (utility/-main "passphrase" project))
-          _ (Thread/sleep 2000)    
+          _ (Thread/sleep wait-time)    
           _ (with-in-str 
               (str env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" project))
-          _ (Thread/sleep 2000)
+          _ (Thread/sleep wait-time)
           resp-index (client/get (str "http://localhost:" port "/"))
           resp-text  (client/get (str "http://localhost:" port "/text.txt"))
           resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]
@@ -145,8 +147,7 @@
 
 (deftest server-2-test
   (testing "Test local server on default port"
-    (let [_ (Thread/sleep 5000)
-          project "tmp-second"
+    (let [project "tmp-second"
           root (str project "/public")
           _ (try (delete-recursively project) (catch Exception _ nil))
           _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
@@ -154,7 +155,7 @@
           _ (utility/stop-scgi)
           scgi (core/-main)
           local (utility/-main "-s" root)
-          _ (Thread/sleep 2000)
+          _ (Thread/sleep wait-time)
           file-eval (json/decode (with-out-str (utility/-main "-e" (str root "/index.clj"))) true)
           file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" (str root "/index.clj"))) true)
           file-eval-expected (json/decode "{\"num\":1275,\"name\":\"Test\",\"end\":null}" true)
@@ -167,9 +168,9 @@
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (local)
       (while (.isAlive ^Thread (private-field (:server (meta local)) "serverThread")))
-      (Thread/sleep 3000)
+      (Thread/sleep wait-time)
       (let [local2 (utility/-main "--serve" "./")
-            _ (Thread/sleep 1000)
+            _ (Thread/sleep wait-time)
             resp-index-2 (client/get (str "http://localhost:3000/" root "/index.clj"))
             resp-text-2  (client/get (str "http://localhost:3000/" root "/text.txt"))]
         (is (= {:name "Test" :num 1275 :end nil} (-> resp-index-2 :body (json/decode true))))

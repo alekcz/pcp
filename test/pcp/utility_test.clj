@@ -161,8 +161,7 @@
       (is (= file-eval-expected file-eval2))
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (local)
-      (while (.isAlive ^Thread (private-field (:server (meta local)) "serverThread")))
-      (Thread/sleep boot-time)
+      (Thread/sleep (* 5 boot-time))
       (let [local2 (utility/-main "--serve" "./")
             _ (Thread/sleep boot-time)
             resp-index-2 (client/get (str "http://localhost:3000/" root "/index.clj"))
@@ -178,18 +177,35 @@
     (let [project "tmp-third"
           root (str project "/public")
           _ (try (delete-recursively project) (catch Exception _ nil))
-          _ (new-folder root)
+          _ (io/make-parents (str root "/echo.clj"))
+          _ (io/make-parents (str root "/../tmp/keep.txt") )
           port 9998
           scgi-port 9999
           scgi (core/serve core/handler scgi-port)
           local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
-          _ (spit (str root "/echo.clj") "(def data (-> pcp/request pr-str)) (pcp/response 200 data \"text/plain\")")
-          _ (spit (str root "/random.txt") (str (rand-int 100000)))
+          randy (str (rand-int 100000))
+          tempfile (str "../tmp/pcp-test-temp-" randy ".txt")
+          _ (Thread/sleep boot-time)
+          _ (spit (str root "/random.txt") randy)
+          _ (spit (str root "/echo.clj") "(pcp/response 200 (-> pcp/request :params :sangoku :tempfile pcp/slurp-upload str) \"text/plain\")")
+          _ (spit (str root "/temp.clj") (str "(pcp/spit \"" tempfile "\" \"123456\")" 
+                                              "(pcp/response 200 (pcp/slurp \"" tempfile "\") \"text/plain\")"))
+          _ (spit (str root "/404.clj") "(pcp/response 200 \"404page\" \"text/plain\")")
+          _ (spit (str root "/error.clj") "(require '[asdad.sad :as fake])")
+          _ (spit (str root "/500.clj") "(pcp/response 200 \"500page\" \"text/plain\")")
           _ (Thread/sleep boot-time)
           res (:body @(http/request {:url (str "http://localhost:" port "/echo.clj")
-                              :method :post
-                              :multipart [{:name "sangoku" :content (clojure.java.io/file (str root "/random.txt" )) :filename "random.txt"}]}))
-          _ (println "RES:" res)]
+                                     :method :post
+                                     :multipart [{:name "sangoku" :content (clojure.java.io/file (str root "/random.txt" )) :filename "random.txt"}]}))
+          res2 @(http/get (str "http://localhost:" port "/does-not-exist"))
+          res3 @(http/get (str "http://localhost:" port "/error.clj"))
+          res4 @(http/get (str "http://localhost:" port "/temp.clj"))]
+      (is (= randy res))
+      (is (= 404 (:status res2)))
+      (is (= "404page" (:body res2)))
+      (is (= 500 (:status res3)))
+      (is (= "500page" (:body res3)))
+      (is (= "123456" (:body res4)))
       (local)
       (scgi))))
 

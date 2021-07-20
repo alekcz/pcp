@@ -19,7 +19,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.2-beta.5")
+(def version "v0.0.2-beta.6")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -67,20 +67,6 @@ Options:
         (resp/status code)
         (resp/content-type mime))))
 
-(defn create-resp [scgi-response]
-  (when-not (str/blank? scgi-response)
-    (let [resp-array (str/split scgi-response #"\r\n")
-          resp-status (first resp-array)
-          status (Integer/parseInt (if (empty? resp-status) "404" resp-status))
-          body (last resp-array )
-          header-vals'  (-> scgi-response 
-                          (str/replace (first resp-array) "") 
-                          (str/replace (last resp-array) "")
-                          (str/trim))
-          header-vals  (re-seq #"(.*?): (.*?)\r\n" header-vals')
-          headers (apply merge (for [h header-vals] {(nth h 1) (nth h 2)}))]
-      {:status status :body body :headers headers})))
-
 (defn file-exists? [path]
   (-> path ^File io/file .exists))
   
@@ -91,7 +77,7 @@ Options:
   (fn [request]
     (let [root (.getCanonicalPath ^File (io/file (:root opts)))
           path (str root (:uri request))
-          slashpath (str path "index.clj")
+          slashpath (str path "/index.clj")
           exists (or (file-exists? path) (file-exists? slashpath))
           new-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request))
           full (-> request 
@@ -131,7 +117,7 @@ Options:
     (println "Targeting SCGI server on port" (:scgi-port opts))
     (println (str "Local server started on http://127.0.0.1:" (:port opts)))
     (println "Serving" (:root opts))
-    server))
+    (fn [] (server))))
 
 (def linux? 
   (-> "os.name" System/getProperty str/lower-case (str/includes? "linux")))

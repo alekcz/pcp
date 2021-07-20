@@ -1,4 +1,4 @@
-(defproject pcp "0.0.2-beta.5"
+(defproject pcp "0.0.2-beta.6"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
@@ -10,7 +10,7 @@
                   [org.clojure/core.async "1.3.618"]
                   [borkdude/sci "0.2.5"]
                   [byte-streams "0.2.4"]
-                  [http-kit "2.5.0-RC1"]
+                  [http-kit "2.5.3"]
                   [ring "1.9.3"]
                   [cheshire "5.9.0"]
                   [danlentz/clj-uuid "0.1.9"]
@@ -23,7 +23,7 @@
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
                   [org.martinklepsch/clj-http-lite "0.4.3"]
-                  [metosin/pohjavirta "0.0.1-alpha7"]
+                  ;; [metosin/pohjavirta "0.0.1-alpha7"]
                   
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]

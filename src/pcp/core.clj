@@ -6,16 +6,13 @@
     [clojure.java.io :as io]
     [clojure.edn :as edn]
     [clojure.string :as str]
-    [pohjavirta.server :as pohjavirta]
+    ;; [pohjavirta.server :as pohjavirta]
     [org.httpkit.server :as server]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
     [hiccup.util :as util]       
     [selmer.parser :as parser]
-    [cheshire.core :as json]
-    [clj-uuid :as uuid]
     [clojure.walk :as walk]
-    [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
     [ring.middleware.params :refer [wrap-params]]
     [ring.middleware.multipart-params :refer [wrap-multipart-params]]
@@ -24,11 +21,8 @@
     [hasch.core :as h]
     [clojure.core.cache.wrapped :as c])
   (:import [java.net URLDecoder]
-           [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
-           [org.apache.commons.io IOUtils]
-           [com.google.common.primitives Bytes]
-           [org.apache.commons.codec.digest DigestUtils]
-           [org.httpkit.server HttpServer]) 
+           [java.io File]
+           [org.apache.commons.codec.digest DigestUtils]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
@@ -112,18 +106,14 @@
 (defn valid-path? [parent target]
   (when target
     (let [parent-path (-> parent ^File io/as-file (.getParentFile) (.getCanonicalPath))
-          target-path (-> target ^File io/as-file (.getCanonicalPath))
-          temp-path (System/getProperty "java.io.tmpdir")]
-      (or (str/starts-with? target-path "/tmp")
-          (str/starts-with? target-path temp-path)
-          (str/starts-with? target-path parent-path)))))
+          target-path (-> target ^File io/as-file (.getCanonicalPath))]
+      (str/starts-with? target-path parent-path))))
 
 (defn temporary? [^File target]
   (when target
     (let [target-path (.getAbsolutePath target)
           temp-path (System/getProperty "java.io.tmpdir")]
-      (or (str/starts-with? target-path "/tmp")
-          (str/starts-with? target-path temp-path)))))
+      (str/starts-with? target-path temp-path))))
 
 (def persist ^:sci/macro
   (fn [_&form _&env k f & args]
@@ -134,11 +124,13 @@
               ($/persist! ~k s)
               s)))))
 
-(defn run-script [url-path &{:keys [root request]}]
-  (let [path' (URLDecoder/decode url-path "UTF-8")
+(defn run-script [url-path &{:keys [root request status]}]
+  (let [status (atom status)
+        path' (URLDecoder/decode url-path "UTF-8")
         path  (if (-> path' (io/file) (.exists))
                   path' 
-                  (when (-> path' (str root "/404.clj") (io/file) (.exists))
+                  (when (-> (str root "/404.clj") (io/file) (.exists))
+                    (reset! status 404)
                     (str root "/404.clj")))]
     (if (nil? path)   
       (format-response 404 "" nil)
@@ -170,94 +162,47 @@
                             (future/install))
                 _ (parser/set-resource-path! root)                        
                 result (process-script source opts)
-                _ (selmer.parser/set-resource-path! nil)]
-            (if (nil? @response) result @response))
+                _ (selmer.parser/set-resource-path! nil)
+                final-result (if (nil? @response) result @response)]
+            (if @status (assoc final-result :status @status) final-result))
           (format-response 404 "" nil))))))
 
-(defn extract-multipart [req]
-  (let [bytes (IOUtils/toByteArray ^ByteArrayInputStream  (:body req))
-        len (count bytes)
-        body (IOUtils/toString ^"[B" bytes "UTF-8")
-        content-type-string (:content-type req)
-        boundary (str "--" (second (re-find #"boundary=(.*)$" content-type-string)))
-        boundary-byte (IOUtils/toByteArray ^String boundary)
-        real-body (str/replace body (re-pattern (str boundary "--.*")) "")
-        parts (filter #(seq %) (str/split real-body (re-pattern boundary)))
-        form  (apply merge
-                (for [part parts]
-                  (if (str/includes? part "filename=\"")
-                    {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"" part)))
-                      (let [filename (second (re-find #"form-data\u003B.*filename=\"(.*?)\"\r\n" part))
-                            filetype-result (re-find #"Content-Type: (.*)\r\n\r\n" part)
-                            mark (first (re-find #"(?sm)(.*?)\r\n\r\n" part))
-                            realmark (IOUtils/toByteArray ^String mark)
-                            start (+ (Bytes/indexOf ^"[B" bytes ^"[B" realmark) (count realmark))
-                            end (let [baos (ByteArrayOutputStream.)]
-                                  (.write baos bytes start (- len start))
-                                  (+ start (Bytes/indexOf ^"[B" (.toByteArray baos) ^"[B" boundary-byte)))
-                            tempfilename (str "/tmp/pcp-temp/" (uuid/v1) "-" filename)
-                            _ (let [_ (io/make-parents tempfilename)
-                                    f (FileOutputStream. ^String tempfilename)]
-                                (.write f bytes start (- end start))
-                                (.close f))
-                            file (io/file tempfilename)]
-                      { :filename filename
-                        :type (second filetype-result)
-                        :tempfile file
-                        :size (.length ^File file)})}
-                    {(keyword (second (re-find #"form-data\u003B name=\"(.*?)\"\r\n" part)))
-                      (second (re-find #"\r\n\r\n(.*)$" part))})))]       
-      (assoc req :body form)))
-
-(defn make-map [thing]
-  (into {} thing))
-
-(defn body-handler [req]
-  (let [type (:content-type req)]
-    (if (nil? type)
-      req
-      (cond 
-        (str/includes? type "application/x-www-form-urlencoded")
-          (update req :body #(-> % slurp codec/form-decode make-map walk/keywordize-keys))
-        (str/includes? type "application/json")
-          (update req :body #(-> % slurp (json/decode true)))
-        (str/includes? type "multipart/form-data")
-            (extract-multipart req)
-        :else req))))
-
-(defn e500 [root path req message]
-  (let [error-page  (str root "/500.clj")]
+(defn e500 [root req message]
+  (let [uri "/500.clj"
+        error-page  (str root uri)]
     (if (-> error-page (io/file) (.exists))
         (try 
-          (run-script path :root root :request (assoc req :error message)) 
-          (catch Exception e (.printStackTrace e) (format-response 500 (.getMessage e) nil)))
+          (run-script error-page :root root :request (assoc req :error message :uri uri) :status 500) 
+          (catch Exception e (format-response 500 (.getMessage e) nil)))
         (format-response 500 message nil))))
 
-(defn handler [request]
+(defn actual-handler [request]
   (let [headers (-> request :headers walk/keywordize-keys)
         root (:document-root headers)
         doc (:uri request)
         path (str root doc)
-        r (try (run-script path :root root :request request) (catch Exception e (.printStackTrace e) (e500 root path request (.getMessage e))))]
+        r (try (run-script path :root root :request request) (catch Exception e (e500 root request (.getMessage e))))]
     r))
 
-(defn pohjavirta [handler port]
-  (let [s (pohjavirta/create handler {:port port})]
-    (pohjavirta/start s)
-    (fn [] 
-      (pohjavirta/stop s))))
+(def handler 
+   (-> #'actual-handler 
+        wrap-keyword-params
+        wrap-params 
+        wrap-multipart-params ))
+
+;; (defn pohjavirta [handler port]
+;;   (let [s (pohjavirta/create handler {:port port})]
+;;     (pohjavirta/start s)
+;;     (fn [] 
+;;       (pohjavirta/stop s))))
 
 (defn serve [handler port]
   (let [s (server/run-server handler {:port port})]
-    (println "running...")
     (fn [] 
-      (server/server-stop! s))))
+      (s))))
 
 (defn -main []
   (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
-    (serve (-> #'handler 
-                wrap-keyword-params
-                wrap-params 
-                wrap-multipart-params ) scgi-port)))
+    (serve handler scgi-port)))
 
       

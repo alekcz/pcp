@@ -46,7 +46,7 @@ Install pcp via the installer script:
 $ bash -c "$(curl -sSL https://raw.githubusercontent.com/alekcz/pcp/master/install.sh)"
 ```
 
-Query the SCGI server status:
+Query the PCP service status:
 ``` shellsession
 $ pcp service status
 ```
@@ -125,7 +125,7 @@ This is the corresponding code.
 ```
 
 
-When navigating to your site if you see `Connection refused (Connection refused)` it means the SCGI server not running. It could still be booting or be down. 
+When navigating to your site if you see `Connection refused (Connection refused)` it means the PCP service not running. It could still be booting or be down. 
 
 You can find instructions on [replacing php and deploying to production here](./docs/replacing-php.md)
 
@@ -139,7 +139,7 @@ Usage: pcp [option] [value]
 
 Options:
   new [project]           Create a new pcp project in the [project] directory
-  service [stop/start]    Stop/start the PCP SCGI server daemon
+  service [stop/start]    Stop/start the PCP server daemon
   passphrase [project]    Set passphrase for [project]
   secret [path]           Add and encrypt secrets at . or [path]
   secret [path]           Add and encrypt secrets at . or [path]
@@ -148,7 +148,7 @@ Options:
   -v, --version           Print the version string and exit
   -h, --help              Print the command line help
 ```      
-The heavy lifting is done by an [SCGI](https://en.wikipedia.org/wiki/Simple_Common_Gateway_Interface) server. This server runs on port 9000 and receives requests from the local pcp server or from nginx. The SCGI server is an uber jar that runs as a daemon.
+The heavy lifting is done by an PCP service. This server runs on port 9000 and receives requests from the local pcp server or from nginx. The PCP service is a uberjar that runs as a daemon.
 
 ## System requirements
 PCP is designed to work on Linux and OSX. It requires the following to work:  

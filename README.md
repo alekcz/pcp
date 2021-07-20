@@ -139,7 +139,7 @@ Usage: pcp [option] [value]
 
 Options:
   new [project]           Create a new pcp project in the [project] directory
-  service [stop/start]    Stop/start the PCP server daemon
+  service [stop/start]    Stop/start the PCP service
   passphrase [project]    Set passphrase for [project]
   secret [path]           Add and encrypt secrets at . or [path]
   secret [path]           Add and encrypt secrets at . or [path]
@@ -156,6 +156,7 @@ PCP is designed to work on Linux and OSX. It requires the following to work:
 - bash
 - java 8+
 - systemd / launchd
+- unzip
 - persitent disk space
 - nginx (for production deployment)
 

@@ -1,6 +1,5 @@
 (ns pcp.utility-test
   (:require [clojure.test :refer :all]
-            [pcp.scgi :as scgi]
             [pcp.core :as core]
             [pcp.resp :as resp]
             [pcp.utility :as utility]
@@ -8,6 +7,7 @@
             [clojure.java.io :as io]
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
+            [org.httpkit.client :as http]
             [environ.core :refer [env]])
   (:import  [java.io File]))
 
@@ -76,8 +76,8 @@
 (deftest run-file-test
   (testing "Run a file"
     (let [scgi-port 22222
-          handler #(core/scgi-handler %)
-          scgi (scgi/serve handler scgi-port)
+          handler #(core/handler %)
+          scgi (core/serve handler scgi-port)
           _ (Thread/sleep boot-time)
           output (utility/run-file "test-resources/simple.clj" scgi-port)]
       (is (= "1275" output))
@@ -115,8 +115,8 @@
           _ (utility/new-project project)
           _ (new-folder root)
           scgi-port 33333
-          handler #(core/scgi-handler %)
-          scgi (scgi/serve handler scgi-port)
+          handler #(core/handler %)
+          scgi (core/serve handler scgi-port)
           port 44444
           local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
           env-var "SUPER_SECRET_API"
@@ -138,11 +138,6 @@
         (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
         (local)
         (scgi))))
-
-(defn private-field [obj fn-name-string]
-  (let [m (.. obj getClass (getDeclaredField fn-name-string))]
-    (. m (setAccessible true))
-    (. m (get obj))))
 
 (deftest server-2-test
   (testing "Test local server on default port"
@@ -178,6 +173,26 @@
         (local2)
         (scgi)))))
 
+(deftest server-3-test
+  (testing "Test local server on default port"
+    (let [project "tmp-third"
+          root (str project "/public")
+          _ (try (delete-recursively project) (catch Exception _ nil))
+          _ (new-folder root)
+          port 9998
+          scgi-port 9999
+          scgi (core/serve core/handler scgi-port)
+          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          _ (spit (str root "/echo.clj") "(def data (-> pcp/request pr-str)) (pcp/response 200 data \"text/plain\")")
+          _ (spit (str root "/random.txt") (str (rand-int 100000)))
+          _ (Thread/sleep boot-time)
+          res (:body @(http/request {:url (str "http://localhost:" port "/echo.clj")
+                              :method :post
+                              :multipart [{:name "sangoku" :content (clojure.java.io/file (str root "/random.txt" )) :filename "random.txt"}]}))
+          _ (println "RES:" res)]
+      (local)
+      (scgi))))
+
 (deftest keydb-test
   (testing "Test that server and utility using the same db"
     (is core/keydb utility/keydb)))
@@ -188,3 +203,4 @@
       (is (= (slurp "tmp/public/api/info.clj") (slurp "resources/pcp-templates/api/info.clj")))
       (is (= (slurp "tmp/README.md") (slurp "resources/pcp-templates/README.md")))
       (is (= (slurp "tmp/public/index.clj") (slurp "resources/pcp-templates/index.clj"))))))
+      

@@ -4,15 +4,14 @@
     [clojure.java.io :as io]
     [clojure.edn :as edn]
     [clojure.string :as str]
-    [clojure.walk :as walk]
     [clojure.java.shell :as shell]
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
+    [clj-http.lite.client :as http]
+    [byte-streams :as bs]
     ;; [clojure.tools.cli :refer [parse-opts]]
     [environ.core :refer [env]])
-  (:import  [java.net Socket]
-            [java.io File ByteArrayOutputStream InputStream BufferedWriter]
-            [org.apache.commons.io IOUtils]
+  (:import  [java.io File BufferedWriter]
             [org.apache.commons.codec.digest DigestUtils]) 
   (:gen-class))
 
@@ -26,46 +25,7 @@
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
 (defn template-path []
-  (or (env :pcp-template-path) "/usr/local/bin/pcp-templates"))
-
-(defn http-to-scgi [req]
-  (let [header (walk/keywordize-keys (or (:headers req) {"Content-type" "text/plain"}))
-        body-len (:content-length req)
-        partial  (str
-                        "CONTENT_LENGTH\0" body-len "\0"
-                        "REQUEST_METHOD\0" (-> req :request-method name str/upper-case) "\0"
-                        "REQUEST_URI\0" (-> req :uri) "\0"
-                        "QUERY_STRING\0" (-> req :query-string) "\0"
-                        "CONTENT_TYPE\0" (-> req :content-type) "\0"
-                        "DOCUMENT_URI\0" (-> req :document-uri) "\0"
-                        "DOCUMENT_ROOT\0" (-> req :document-root) "\0"
-                        "SCGI\0" 1 "\0"
-                        "SERVER_PROTOCOL\0" (-> req :protocol) "\0"
-                        "REQUEST_SCHEME\0" (-> req :scheme) "\0"
-                        "HTTPS\0" (-> req :name) "\0"
-                        "REMOTE_ADDR\0" (-> req :remote-addr) "\0"
-                        "REMOTE_PORT\0" (-> req :name) "\0"
-                        "SERVER_PORT\0" (-> req :server-port) "\0"
-                        "SERVER_NAME\0" (-> req :server-name) "\0"
-                        "HTTP_CONNECTION\0" (-> header :connection) "\0"
-                        "HTTP_CACHE_CONTROL\0" (-> header :cache-control) "\0"
-                        "HTTP_UPGRADE_INSECURE_REQUESTS\0" (-> header :upgrade-insecure-requests) "\0"
-                        "HTTP_USER_AGENT\0" (-> header :user-agent) "\0"
-                        "HTTP_SEC_FETCH_DEST\0" (-> header :sec-fetch-dest) "\0"
-                        "HTTP_ACCEPT\0" (-> header :cookie) "\0"
-                        "HTTP_SEC_FETCH_SITE\0" (-> header :sec-fetch-site) "\0"
-                        "HTTP_SEC_FETCH_MODE\0" (-> header :sec-fetch-mode) "\0"
-                        "HTTP_SEC_FETCH_USER\0" (-> header :sec-fetch-user) "\0"
-                        "HTTP_ACCEPT_ENCODING\0" (-> header :accept-encoding) "\0"
-                        "HTTP_ACCEPT_LANGUAGE\0" (-> header :accept-language) "\0"
-                        "HTTP_COOKIE\0" (-> header :cookie) "\0")
-          scgi-header (str (count partial) ":" partial ",")
-          scgi-bytes (.getBytes ^String scgi-header)
-          body-bytes (if (nil? (:body req)) (byte-array 0) (IOUtils/toByteArray ^InputStream (:body req)))
-          baos (ByteArrayOutputStream.)]
-          (.write ^ByteArrayOutputStream baos scgi-bytes 0 (count scgi-bytes))
-          (.write ^ByteArrayOutputStream baos body-bytes 0 (count body-bytes))  
-          (.toByteArray baos)))    
+  (or (env :pcp-template-path) "/usr/local/bin/pcp-templates")) 
 
 (def help 
 "PCP: Clojure Processor -- Like drugs but better
@@ -85,13 +45,15 @@ Options:
 (defn safe-trim [s]
   (-> s str str/trim))
 
-(defn forward [scgi-req scgi-port]
-  (with-open [socket (Socket. "127.0.0.1" ^Integer scgi-port)
-        os (.getOutputStream socket)
-        is (.getInputStream socket)]
-      (.write os scgi-req 0 (count scgi-req))
-      (.flush os)
-      (IOUtils/toString is)))
+(defn forward [{:keys [request-method uri headers body] :as req} port]
+  (let [request  {:method  request-method
+                  :url     (str "http://127.0.0.1:" port uri)
+                  :headers (dissoc headers "content-length")
+                  :body    body
+                  :throw-exceptions false
+                  :as      :stream}
+        response (http/request request)]
+    (select-keys response [:status :headers :body])))
 
 (defn format-response [status body mime-type]
   (-> (resp/response body)    
@@ -131,24 +93,26 @@ Options:
           path (str root (:uri request))
           slashpath (str path "index.clj")
           exists (or (file-exists? path) (file-exists? slashpath))
-          not-found (str root "/404.clj")
-          full (assoc request 
-                    :document-root root 
-                    :document-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request)))]     
+          new-uri (if (str/ends-with? (:uri request) "/") (str (:uri request) "index.clj") (:uri request))
+          full (-> request 
+                   (assoc-in [:headers "document-root"] root)
+                   (assoc :uri new-uri))]     
         (cond 
-          (and (str/ends-with? (:document-uri full) ".clj") exists)
-            (-> full http-to-scgi (forward (:scgi-port opts)) create-resp)
+          (and (str/ends-with? (:uri full) ".clj") exists)
+            (-> full (forward (:scgi-port opts)))
           exists 
             (serve-file path)
-          (file-exists? not-found)
-            (-> (assoc full :document-uri "/404.clj") http-to-scgi (forward (:scgi-port opts)) create-resp)
-          :else (format-response 404 nil nil)))))
+          :else (forward full (:scgi-port opts))))))
 
 (defn run-file [path scgi-port]
-  (let [path (str/replace (str "/" path) "//" "/")
-        root (.getCanonicalPath ^File (io/file "./"))
-        request {:document-root root :document-uri path :request-method :get}]
-    (-> request http-to-scgi (forward scgi-port) create-resp :body)))
+  (let [path' (-> path io/file (.getCanonicalPath))
+        root (-> path' io/file (.getParentFile) (.getCanonicalPath))
+        final-path (-> path' (str/replace root "/") (str/replace "//" "/"))
+        request {:headers {"document-root" root} :uri final-path :request-method :get :body ""}
+        resp (forward request scgi-port)]
+    (if (some? (:body resp))
+      (slurp (:body resp))
+      (:body resp))))
 
 (defn clean-opts [opts]
   (apply 

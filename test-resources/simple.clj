@@ -6,4 +6,4 @@
 (pcp/secret "HAHA")
 (pcp/clear :test)
 (pcp/persist :test (fn [] (range 51)))
-(pcp/response 200 (apply + (pcp/persist :test (fn [] nil))) "text/plain")
+(pcp/response 200 (str (apply + (pcp/persist :test (fn [] nil)))) "text/plain")

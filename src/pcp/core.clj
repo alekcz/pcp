@@ -6,7 +6,8 @@
     [clojure.java.io :as io]
     [clojure.edn :as edn]
     [clojure.string :as str]
-    [pcp.scgi :as scgi]
+    [pohjavirta.server :as pohjavirta]
+    [org.httpkit.server :as server]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
     [hiccup.util :as util]       
@@ -16,7 +17,9 @@
     [clojure.walk :as walk]
     [ring.util.codec :as codec]
     [taoensso.nippy :as nippy]
-    [ring.middleware.params :refer [params-request]]
+    [ring.middleware.params :refer [wrap-params]]
+    [ring.middleware.multipart-params :refer [wrap-multipart-params]]
+    [ring.middleware.keyword-params :refer [wrap-keyword-params]]
     [environ.core :refer [env]]
     [hasch.core :as h]
     [clojure.core.cache.wrapped :as c])
@@ -24,12 +27,14 @@
            [java.io File FileOutputStream ByteArrayOutputStream ByteArrayInputStream]
            [org.apache.commons.io IOUtils]
            [com.google.common.primitives Bytes]
-           [org.apache.commons.codec.digest DigestUtils]) 
+           [org.apache.commons.codec.digest DigestUtils]
+           [org.httpkit.server HttpServer]) 
   (:gen-class))
 
 (set! *warn-on-reflection* 1)
 
 (def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
+(def source-cache (c/lru-cache-factory {} :threshold 1024))
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -54,10 +59,26 @@
         (resp/status code)
         (resp/content-type mime))))
 
+(defn ->keyword [any] 
+  (keyword (str (h/uuid any))))
+
 (defn read-source [path]
-  (try
-    (str (slurp path))
-    (catch java.io.FileNotFoundException _ nil)))
+  {:modified (.lastModified (io/file path))
+   :contents (slurp path)})
+
+(defn get-source [path]
+  (let [sk (->keyword path)
+        last-modified (.lastModified (io/file path))
+        cached-source (c/lookup source-cache sk)
+        s (when (or (nil? cached-source) 
+                    (> last-modified (:modified cached-source))) 
+                (read-source path))
+        source  (if (nil? s) 
+                  cached-source
+                  (do 
+                    (c/through-cache source-cache sk (constantly s))
+                    s) )]
+    (:contents source)))
 
 (defn build-path [root path]
   (str root "/" path))
@@ -65,7 +86,7 @@
 (defn include [parent {:keys [namespace]}]
   (try
     {:file namespace
-     :source (slurp (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))}
+     :source (get-source (str parent "/" (-> namespace (str/replace "." "/") (str/replace "-" "_")) ".clj"))}
     (catch java.io.FileNotFoundException _ nil)))
      
 (defn process-script [full-source opts]
@@ -89,9 +110,20 @@
     (catch Exception _ nil)))
 
 (defn valid-path? [parent target]
-  (let [parent-path (-> parent ^File io/file (.getParentFile) (.getCanonicalPath))
-        target-path (-> target ^File io/file (.getCanonicalPath))]
-    (str/starts-with? target-path parent-path)))
+  (when target
+    (let [parent-path (-> parent ^File io/as-file (.getParentFile) (.getCanonicalPath))
+          target-path (-> target ^File io/as-file (.getCanonicalPath))
+          temp-path (System/getProperty "java.io.tmpdir")]
+      (or (str/starts-with? target-path "/tmp")
+          (str/starts-with? target-path temp-path)
+          (str/starts-with? target-path parent-path)))))
+
+(defn temporary? [^File target]
+  (when target
+    (let [target-path (.getAbsolutePath target)
+          temp-path (System/getProperty "java.io.tmpdir")]
+      (or (str/starts-with? target-path "/tmp")
+          (str/starts-with? target-path temp-path)))))
 
 (def persist ^:sci/macro
   (fn [_&form _&env k f & args]
@@ -103,37 +135,44 @@
               s)))))
 
 (defn run-script [url-path &{:keys [root request]}]
-  (let [path (URLDecoder/decode url-path "UTF-8")
-        source (read-source path)
-        ^File file (io/file path)
-        root (or root (-> ^File file (.getParentFile) (.getCanonicalPath)))
-        parent (longer root (-> ^File file (.getParentFile) (.getCanonicalPath)))
-        response (atom nil)
-        keygen (fn [path k] (keyword (str (h/uuid [path k]))))]     
-    (if (string? source)
-      (let [opts  (-> { :load-fn #(include root %)
-                        :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen root k) (constantly v))))
-                                                            'retrieve (fn [k]   (c/lookup cache (keygen root k)))}
-                                                      'pcp {'persist persist
-                                                            'clear   (fn [k]   (c/evict cache (keygen root k)))
-                                                            'request request
-                                                            'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
-                                                            'html render-html
-                                                            'render-html render-html
-                                                            'html-unescaped render-html-unescaped
-                                                            'render-html-unescaped render-html-unescaped
-                                                            'secret #(when root (get-secret root %))
-                                                            'now #(System/currentTimeMillis)
-                                                            'slurp (fn [f] (when (valid-path? root (build-path parent f))  (slurp (build-path parent f))))
-                                                            'spit  (fn [f content] (when (valid-path? root (build-path parent f))  (spit (build-path parent f) content)))}})
-                        :bindings {}
-                        :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
-                        (future/install))
-            _ (parser/set-resource-path! root)                        
-            result (process-script source opts)
-            _ (selmer.parser/set-resource-path! nil)]
-        (if (nil? @response) result @response))
-      nil)))
+  (let [path' (URLDecoder/decode url-path "UTF-8")
+        path  (if (-> path' (io/file) (.exists))
+                  path' 
+                  (when (-> path' (str root "/404.clj") (io/file) (.exists))
+                    (str root "/404.clj")))]
+    (if (nil? path)   
+      (format-response 404 "" nil)
+      (let [^File file (io/file path)
+            source (get-source path)
+            root (or root (-> ^File file (.getParentFile) (.getCanonicalPath)))
+            parent (longer root (-> ^File file (.getParentFile) (.getCanonicalPath)))
+            response (atom nil)
+            keygen (fn [path k] (keyword (str (h/uuid [path k]))))]     
+        (if (string? source)
+          (let [opts  (-> { :load-fn #(include root %)
+                            :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen root k) (constantly v))))
+                                                                'retrieve (fn [k]   (c/lookup cache (keygen root k)))}
+                                                          'pcp {'persist persist
+                                                                'clear   (fn [k]   (c/evict cache (keygen root k)))
+                                                                'request request
+                                                                'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
+                                                                'html render-html
+                                                                'render-html render-html
+                                                                'html-unescaped render-html-unescaped
+                                                                'render-html-unescaped render-html-unescaped
+                                                                'secret #(when root (get-secret root %))
+                                                                'now #(System/currentTimeMillis)
+                                                                'slurp-upload (fn [^File f] (when (temporary? f) (slurp f)))
+                                                                'slurp (fn [f] (when (valid-path? root (build-path parent f))  (slurp (build-path parent f))))
+                                                                'spit  (fn [f content] (when (valid-path? root (build-path parent f))  (spit (build-path parent f) content)))}})
+                            :bindings {}
+                            :classes {'org.postgresql.jdbc.PgConnection org.postgresql.jdbc.PgConnection}}
+                            (future/install))
+                _ (parser/set-resource-path! root)                        
+                result (process-script source opts)
+                _ (selmer.parser/set-resource-path! nil)]
+            (if (nil? @response) result @response))
+          (format-response 404 "" nil))))))
 
 (defn extract-multipart [req]
   (let [bytes (IOUtils/toByteArray ^ByteArrayInputStream  (:body req))
@@ -186,21 +225,39 @@
             (extract-multipart req)
         :else req))))
 
-(defn scgi-handler [req]
-  (let [request (-> req body-handler params-request walk/keywordize-keys)
-        root (:document-root request)
-        doc (:document-uri request)
+(defn e500 [root path req message]
+  (let [error-page  (str root "/500.clj")]
+    (if (-> error-page (io/file) (.exists))
+        (try 
+          (run-script path :root root :request (assoc req :error message)) 
+          (catch Exception e (.printStackTrace e) (format-response 500 (.getMessage e) nil)))
+        (format-response 500 message nil))))
+
+(defn handler [request]
+  (let [headers (-> request :headers walk/keywordize-keys)
+        root (:document-root headers)
+        doc (:uri request)
         path (str root doc)
-        r (try (run-script path :root root :request request) (catch Exception e (format-response 500 (.getMessage e) nil)))]
+        r (try (run-script path :root root :request request) (catch Exception e (.printStackTrace e) (e500 root path request (.getMessage e))))]
     r))
 
-(defn -main 
-  ([]
-    (-main ""))
-  ([path]       
-    (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
-      (case path
-        ""  (time (scgi/serve scgi-handler scgi-port))
-        (run-script path)))))
+(defn pohjavirta [handler port]
+  (let [s (pohjavirta/create handler {:port port})]
+    (pohjavirta/start s)
+    (fn [] 
+      (pohjavirta/stop s))))
+
+(defn serve [handler port]
+  (let [s (server/run-server handler {:port port})]
+    (println "running...")
+    (fn [] 
+      (server/server-stop! s))))
+
+(defn -main []
+  (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
+    (serve (-> #'handler 
+                wrap-keyword-params
+                wrap-params 
+                wrap-multipart-params ) scgi-port)))
 
       

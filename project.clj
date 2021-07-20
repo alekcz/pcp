@@ -22,7 +22,8 @@
                   [hiccup "2.0.0-alpha2"]
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
-                  [aleph "0.4.6"]
+                  [org.martinklepsch/clj-http-lite "0.4.3"]
+                  [metosin/pohjavirta "0.0.1-alpha7"]
                   
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
@@ -64,8 +65,7 @@
                             :uberjar-name "pcp.jar"}
               :test {:env {:my-passphrase "s3cr3t-p455ph4r3"
                            :pcp-template-path "resources/pcp-templates"}}
-              :dev {:dependencies [[org.martinklepsch/clj-http-lite "0.4.3"]
-                                   [eftest/eftest "0.5.9"]]
+              :dev {:dependencies [[eftest/eftest "0.5.9"]]
                     :plugins [[lein-shell "0.5.0"]]
                     :env {:my-passphrase "s3cr3t-p455ph4r3"}}}
   :aliases

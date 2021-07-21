@@ -151,7 +151,7 @@
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
           _ (with-in-str 
-              (str "./" project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
+              (str project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" project))
           _ (Thread/sleep boot-time)
           resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]

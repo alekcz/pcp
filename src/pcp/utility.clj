@@ -176,6 +176,7 @@ Options:
           value (do (print "Secret value: ") (flush) (safe-trim (read-line)))
           password (do (print "Passphrase: ") (flush) (safe-trim (read-line)))
           path (str (:root opts) "/" ".pcp/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
+    (println keypath project env-var value password)
     (println "encrypting...")
     (io/make-parents path)
     (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})

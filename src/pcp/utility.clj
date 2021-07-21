@@ -153,6 +153,7 @@ Options:
 (defn add-secret [options]
   (let [opts (merge {:root "."} (clean-opts options))
         keypath (str (:root opts) "/pcp.edn")]
+    (println keypath)
     (when-not (file-exists? keypath)
       (let [_ (do (println "--------------------------------------------------")
                   (println "To decrypt at runtime make sure your passphrase has been added on the server.") 

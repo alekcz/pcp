@@ -101,11 +101,6 @@
   (spit (str root "/secret.clj") (slurp "test-resources/site/secret.clj"))
   (spit (str root "/text.txt") (slurp "test-resources/site/text.txt")))
 
-(defn private-field [obj fn-name-string]
-  (let [m (.. obj getClass (getDeclaredField fn-name-string))]
-    (. m (setAccessible true))
-    (. m (get obj))))
-
 (deftest secrets-passphrase-test
   (testing "Test secret and passphrase"
     (let [project "tmp-passphrase"
@@ -139,30 +134,33 @@
         (local)
         (scgi))))
 
-;; (deftest secrets-passphrase-2-test
-;;   (testing "Test secret and passphrase when no project name available"
-;;     (let [project "tmp-passphrase2"
-;;           root (str project "/public")
-;;           _ (try (delete-recursively project) (catch Exception _ nil))
-;;           _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
-;;           _ (utility/new-project project)
-;;           _ (new-folder root)
-;;           scgi-port 23333
-;;           handler #(core/handler %)
-;;           scgi (core/serve handler scgi-port)
-;;           port 24444
-;;           local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
-;;           _ (clojure.java.io/delete-file (io/file (str project "/pcp.edn")))
-;;           env-var "SUPER_SECRET_API"
-;;           env-var-value (rand-str 50)
-;;           _ (with-in-str 
-;;               (str project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
-;;               (utility/-main "secret" project))
-;;           _ (Thread/sleep boot-time)
-;;           resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]
-;;         (is (= env-var-value (:body resp-secret)))
-;;         (local)
-;;         (scgi))))
+(deftest secrets-passphrase-2-test
+  (testing "Test secret and passphrase when no project name available"
+    (let [project "tmp-passphrase2"
+          root (str project "/public")
+          _ (try (delete-recursively project) (catch Exception _ nil))
+          _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
+          _ (utility/new-project project)
+          _ (new-folder root)
+          scgi-port 23333
+          handler #(core/handler %)
+          scgi (core/serve handler scgi-port)
+          port 24444
+          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          _ (clojure.java.io/delete-file (io/file (str project "/pcp.edn")))
+          env-var "SUPER_SECRET_API"
+          env-var-value (rand-str 50)
+          _  (with-in-str 
+              (str (env :my-passphrase) "\n") 
+              (utility/-main "passphrase" project))
+          _ (Thread/sleep boot-time)    
+          _ (with-in-str 
+              (str project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
+              (utility/-main "secret" project))
+          resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]
+        (is (= env-var-value (:body resp-secret)))
+        (local)
+        (scgi))))
 
 (deftest server-2-test
   (testing "Test local server on default port"

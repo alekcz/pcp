@@ -2,7 +2,6 @@
 Description= pcp service
 
 [Service]
-EnvironmentFile=/usr/local/bin/pcp.conf
 ExecStart=/usr/bin/java -jar /usr/local/bin/pcp-server.jar
 Restart=always
 RestartSec=5

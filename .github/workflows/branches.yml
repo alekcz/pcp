@@ -1,8 +1,11 @@
-name: master
+name: branches
 
 on:
   push:
-    branches: ['!master'] 
+    branches:
+      - '*'
+      - '!master'
+
 jobs:
 
   jvm:
@@ -30,9 +33,8 @@ jobs:
           lein deps
 
       - name: Tests and coverage
-        env:
+        env: 
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           PCP_KEYDB: "./test-resources/pcp-db"
         run: |
           lein cloverage
-
-  

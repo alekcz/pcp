@@ -33,7 +33,7 @@ Usage: pcp [option] [value]
 
 Options:
   new [project]           Create a new pcp project in the [project] directory
-  service [stop/start]    Stop/start the PCP SCGI server daemon
+  service [stop/start]    Stop/start the PCP service
   passphrase [project]    Set passphrase for [project]
   secret [path]           Add and encrypt secrets at . or [path]
   -e, --evaluate [path]   Evaluate a clojure file using PCP
@@ -153,6 +153,7 @@ Options:
 (defn add-secret [options]
   (let [opts (merge {:root "."} (clean-opts options))
         keypath (str (:root opts) "/pcp.edn")]
+    (println keypath)
     (when-not (file-exists? keypath)
       (let [_ (do (println "--------------------------------------------------")
                   (println "To decrypt at runtime make sure your passphrase has been added on the server.") 
@@ -161,8 +162,7 @@ Options:
             project-name (do (print "Project name: ") (flush) (safe-trim (read-line)))
             _ (println)]
         (io/make-parents keypath)
-        (spit keypath (prn-str {:project project-name}))
-        (Thread/sleep 1000)))
+        (spit keypath (prn-str {:project project-name}))))
     (let [project (-> keypath slurp edn/read-string)
           _ (do 
               (println "--------------------------------------------------")
@@ -178,6 +178,8 @@ Options:
     (println "encrypting...")
     (io/make-parents path)
     (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
+    (Thread/sleep 1000)
+    (println "inputs:" keypath project env-var value password)
     (println "done."))))
 
 (defn add-passphrase [project]

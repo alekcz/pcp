@@ -153,7 +153,7 @@
           _ (with-in-str 
               (str project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" project))
-          _ (Thread/sleep boot-time)
+          _ (Thread/sleep 5000)
           resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]
         (is (= env-var-value (:body resp-secret)))
         (local)

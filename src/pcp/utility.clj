@@ -161,7 +161,8 @@ Options:
             project-name (do (print "Project name: ") (flush) (safe-trim (read-line)))
             _ (println)]
         (io/make-parents keypath)
-        (spit keypath (prn-str {:project project-name}))))
+        (spit keypath (prn-str {:project project-name}))
+        (Thread/sleep 1000)))
     (let [project (-> keypath slurp edn/read-string)
           _ (do 
               (println "--------------------------------------------------")

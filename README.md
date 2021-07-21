@@ -247,10 +247,6 @@ A convenience function for generating a response map. Responses are simply Cloju
 `(pcp/render-html options & content)`    
 Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup)
 
-#### pcp/render-html-unescaped
-`(pcp/render-html & args)`    
-Renders html from Clojure data strucutures using [hiccup](https://github.com/weavejester/hiccup). Does not escape html tags strings. Use with care.  
-
 #### pcp/secret
 `(pcp/secret "SECRET_NAME")`    
 Retrieves secret from project. The secret is read from disk. It may be worthwhile using `pcp/persist` to improve performance. 
@@ -263,6 +259,12 @@ Returns the current time in milliseconds (according to your server).
 #### pcp/slurp
 `(pcp/slurp "../file-name")`    
 Opens a reader on f and reads all its contents, returning a string. Cannot access files higher up that project root (i.e. server root -1). Does not currently accept any optional arguments.
+
+#### pcp/slurp-upload
+`(pcp/slurp-upload "/var/tmp/temp-file-name")`    
+`(pcp/slurp-upload (-> pcp/request :params :uploaded :tempfile))`    
+Opens a reader on f and reads all its contents, returning a string. Cannot access files higher up that project root (i.e. server root -1). Does not currently accept any optional arguments.
+
 
 #### pcp/spit
 `(pcp/spit "../file-name" "like drugs but better")`    

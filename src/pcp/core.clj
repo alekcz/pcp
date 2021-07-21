@@ -197,7 +197,7 @@
 ;;       (pohjavirta/stop s))))
 
 (defn serve [handler port]
-  (let [s (server/run-server handler {:port port})]
+  (let [s (server/run-server handler {:port port :max-body (* 100 1024 1024)})]
     (println "running...")
     (fn [] 
       (s))))

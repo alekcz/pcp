@@ -162,8 +162,7 @@ Options:
             project-name (do (print "Project name: ") (flush) (safe-trim (read-line)))
             _ (println)]
         (io/make-parents keypath)
-        (spit keypath (prn-str {:project project-name}))
-        (Thread/sleep 1000)))
+        (spit keypath (prn-str {:project project-name}))))
     (let [project (-> keypath slurp edn/read-string)
           _ (do 
               (println "--------------------------------------------------")
@@ -176,10 +175,11 @@ Options:
           value (do (print "Secret value: ") (flush) (safe-trim (read-line)))
           password (do (print "Passphrase: ") (flush) (safe-trim (read-line)))
           path (str (:root opts) "/" ".pcp/" (-> ^String env-var ^"[B" DigestUtils/sha512Hex) ".npy")]
-    (println keypath project env-var value password)
     (println "encrypting...")
     (io/make-parents path)
     (nippy/freeze-to-file path {:name env-var :value value} {:password [:cached password]})
+    (Thread/sleep 1000)
+    (println "inputs:" keypath project env-var value password)
     (println "done."))))
 
 (defn add-passphrase [project]

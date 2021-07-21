@@ -8,7 +8,6 @@
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
     [clj-http.lite.client :as http]
-    [byte-streams :as bs]
     ;; [clojure.tools.cli :refer [parse-opts]]
     [environ.core :refer [env]])
   (:import  [java.io File BufferedWriter]
@@ -19,7 +18,7 @@
 
 (def root (atom nil))
 (def scgi (atom "9000"))
-(def version "v0.0.2-beta.6")
+(def version "v0.0.2-beta.7")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -45,7 +44,7 @@ Options:
 (defn safe-trim [s]
   (-> s str str/trim))
 
-(defn forward [{:keys [request-method uri headers body] :as req} port]
+(defn forward [{:keys [request-method uri headers body]} port]
   (let [request  {:method  request-method
                   :url     (str "http://127.0.0.1:" port uri)
                   :headers (dissoc headers "content-length")
@@ -96,9 +95,8 @@ Options:
         final-path (-> path' (str/replace root "/") (str/replace "//" "/"))
         request {:headers {"document-root" root} :uri final-path :request-method :get :body ""}
         resp (forward request scgi-port)]
-    (if (some? (:body resp))
-      (slurp (:body resp))
-      (:body resp))))
+    (when (:body resp)
+      (slurp (:body resp)))))
 
 (defn clean-opts [opts]
   (apply 
@@ -113,7 +111,7 @@ Options:
                :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
               (clean-opts options))
         server (server/run-server (local-handler opts)
-                {:ip "127.0.0.1" :port (:port opts) :max-body (* 100 1024 1024)})]
+                {:port (:port opts) :max-body (* 100 1024 1024)})]
     (println "Targeting SCGI server on port" (:scgi-port opts))
     (println (str "Local server started on http://127.0.0.1:" (:port opts)))
     (println "Serving" (:root opts))
@@ -156,9 +154,12 @@ Options:
   (let [opts (merge {:root "."} (clean-opts options))
         keypath (str (:root opts) "/pcp.edn")]
     (when-not (file-exists? keypath)
-      (let [_ (println "To decrypt at runtime make sure your passphrase has been added on the server. 
-                      \nPlease ensure you use the same passphrase for all your secrets in this project") 
-            project-name (do (print "Project name: ") (flush) (safe-trim (read-line)))]
+      (let [_ (do (println "--------------------------------------------------")
+                  (println "To decrypt at runtime make sure your passphrase has been added on the server.") 
+                  (println "Please ensure you use the same passphrase for all your secrets in this project")
+                  (println "--------------------------------------------------")) 
+            project-name (do (print "Project name: ") (flush) (safe-trim (read-line)))
+            _ (println)]
         (io/make-parents keypath)
         (spit keypath (prn-str {:project project-name}))))
     (let [project (-> keypath slurp edn/read-string)

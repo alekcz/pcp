@@ -9,7 +9,7 @@
             [clj-http.lite.client :as client]
             [org.httpkit.client :as http]
             [environ.core :refer [env]])
-  (:import  [java.io File]))
+  (:import  [java.io File FileInputStream]))
 
 (def boot-time 300)
 
@@ -139,6 +139,36 @@
         (local)
         (scgi))))
 
+(deftest secrets-passphrase-2-test
+  (testing "Test local server"
+    (let [project "tmp-passphrase2"
+          root (str project "/public")
+          _ (try (delete-recursively project) (catch Exception _ nil))
+          _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
+          _ (utility/new-project project)
+          _ (new-folder root)
+          scgi-port 23333
+          handler #(core/handler %)
+          scgi (core/serve handler scgi-port)
+          port 24444
+          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          _ (clojure.java.io/delete-file (io/file (str project "/pcp.edn")))
+          env-var "SUPER_SECRET_API"
+          env-var-value (rand-str 50)
+          _ (with-in-str 
+              (str project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
+              (utility/-main "secret" project))
+          _ (Thread/sleep boot-time)
+          resp-index (client/get (str "http://localhost:" port "/"))
+          resp-text  (client/get (str "http://localhost:" port "/text.txt"))
+          resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]
+        (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
+        (is (= "12345678" (:body resp-text)))
+        (is (= env-var-value (:body resp-secret)))
+        (is (thrown? Exception (client/get (str "http://localhost:" port "/not-there"))))
+        (local)
+        (scgi))))
+
 (deftest server-2-test
   (testing "Test local server on default port"
     (let [project "tmp-second"
@@ -196,7 +226,7 @@
           _ (Thread/sleep boot-time)
           res (:body @(http/request {:url (str "http://localhost:" port "/echo.clj")
                                      :method :post
-                                     :multipart [{:name "sangoku" :content (clojure.java.io/file (str root "/random.txt" )) :filename "random.txt"}]}))
+                                     :multipart [{:name "sangoku" :content (FileInputStream. (clojure.java.io/file (str root "/random.txt" ))) :filename "random.txt"}]}))
           res2 @(http/get (str "http://localhost:" port "/does-not-exist"))
           res3 @(http/get (str "http://localhost:" port "/error.clj"))
           res4 @(http/get (str "http://localhost:" port "/temp.clj"))]

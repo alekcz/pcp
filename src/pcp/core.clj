@@ -198,6 +198,7 @@
 
 (defn serve [handler port]
   (let [s (server/run-server handler {:port port})]
+    (println "running...")
     (fn [] 
       (s))))
 

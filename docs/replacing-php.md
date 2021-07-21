@@ -36,7 +36,7 @@ Send our scripts to our PCP server on port 9000 and change the filter to be `~ \
 ...
 ```
 Here's an example for [v0.0.1 and below](../resources/pcp.nginx.0.0.1.conf).   
-And here's one for[v0.0.2 and above.](../resources/pcp.nginx.0.0.2.conf)
+And here's one for [v0.0.2 and above.](../resources/pcp.nginx.0.0.2.conf)
 
 One last check, to make sure that the pcp service is running:
 ``` shell

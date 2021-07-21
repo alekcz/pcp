@@ -101,11 +101,6 @@
   (spit (str root "/secret.clj") (slurp "test-resources/site/secret.clj"))
   (spit (str root "/text.txt") (slurp "test-resources/site/text.txt")))
 
-(defn private-field [obj fn-name-string]
-  (let [m (.. obj getClass (getDeclaredField fn-name-string))]
-    (. m (setAccessible true))
-    (. m (get obj))))
-
 (deftest secrets-passphrase-test
   (testing "Test secret and passphrase"
     (let [project "tmp-passphrase"
@@ -156,7 +151,7 @@
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
           _ (with-in-str 
-              (str project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
+              (str "./" project "\n" env-var "\n" env-var-value "\n" (env :my-passphrase) "\n") 
               (utility/-main "secret" project))
           _ (Thread/sleep boot-time)
           resp-secret (client/get (str "http://localhost:" port "/secret.clj"))]

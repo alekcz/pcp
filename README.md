@@ -125,11 +125,7 @@ This is the corresponding code.
 ```
 
 
-<<<<<<< HEAD
-When navigating to your site if you see `Connection refused (Connection refused)` it means the PCP service not running. It could still be booting or be down. 
-=======
-When navigating to your site, if you see `Connection refused (Connection refused)` it means the SCGI server not running. It could still be booting or be down. 
->>>>>>> f09d925fbd10a9c1ab86711e9786a3ab032ffa6b
+When navigating to your site, if you see `Connection refused (Connection refused)` it means the PCP service not running. It could still be booting or be down. 
 
 You can find instructions on [replacing php and deploying to production here](./docs/replacing-php.md)
 

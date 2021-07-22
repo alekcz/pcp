@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have we reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
+Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have we reminisced about the simplicty of deploying PHP. Today we enjoy the benefits of both. Welcome to PCP.
 
 ### Status
 Active development. Stabilizing.     
@@ -21,7 +21,7 @@ Latest version: `v0.0.1`
 
 ### Non-goals
 
-* Performance.  _PCP should be sufficient for prototypes and small websites  (< 400 req/s)_
+* Performance.  _PCP should be sufficient for prototypes and small websites  (< 1400 req/s)_
 
 ### Demo site
 

@@ -209,6 +209,9 @@ Options:
       (str path "/public/index.clj") 
       (slurp (str (template-path) "/index.clj")))
     (spit 
+      (str path "/public/hello.clj") 
+      (slurp (str (template-path) "/hello.clj")))
+    (spit 
       (str path "/README.md") 
       (slurp (str (template-path) "/README.md")))
     (spit 

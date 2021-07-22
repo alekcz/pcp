@@ -8,7 +8,7 @@
 
 ## Introduction
 
-Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have we reminisced about PHP. Today we enjoy the benefits of both. Welcome to PCP.
+Too long have we hustled to deploy Clojure websites. Too long have we spun up one server instance per site. Too long have we reminisced about the simplicty of deploying PHP. Today we enjoy the benefits of both. Welcome to PCP.
 
 ### Status
 Active development. Stabilizing.     
@@ -21,7 +21,7 @@ Latest version: `v0.0.1`
 
 ### Non-goals
 
-* Performance.  _PCP should be sufficient for prototypes and small websites  (< 400 req/s)_
+* Performance.  _PCP should be sufficient for prototypes and small websites  (< 1400 req/s)_
 
 ### Demo site
 
@@ -240,8 +240,12 @@ Removes a key from the cache
 The request map. The request map conforms to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC). 
 
 #### pcp/response
-`(pcp/response [status body mime-type])`        
-A convenience function for generating a response map. Responses are simply Clojure maps that conform to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC) and can be written by hand too.
+`(pcp/response status body mime-type)`        
+A convenience function for generating a response map. Response map conforms to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC).
+
+#### pcp/redirect
+`(pcp/redirect target)`        
+A convenience function for generating a redirect. Response map conforms to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC).
 
 #### pcp/render-html
 `(pcp/render-html options & content)`    
@@ -306,16 +310,16 @@ In addition to the core clojure namespaces in [sci](https://github.com/borkdude/
 
 ## Performance
 A modest PCP website can handle its own pretty well.     
-This test was run for 80 minutes with 400 VUs and 400 req/s. Of the 1.9M requests generated, only 26 failed. 
+This test was run for 90 minutes with 500 VUs and 1400 req/s. Of the 7.7M requests generated and 0 failed. 
 
-<img src="assets/performance/k6.png" width="800px">
+<img src="assets/performance/k6-0.0.2.png" width="800px">
 
-You can see the spike in CPU and bandwidth on the droplet, but the CPU never saturates. 
+You can see the spike in CPU and bandwidth on the $5 droplet, but the CPU never saturates. 
 
-<img src="assets/performance/do.png" width="800px">
+<img src="assets/performance/do-0.0.2.png" width="800px">
 
 These are by no means comprehensive benchmarks but give you a sense of what a PCP server can withstand for a simple use case.
-Going above 400 req/s generally results in bad things happening. You can test your own site using [k6](https://k6.io/) with the instructions in [loadtest.js](./loadtest.js)
+Going above 1400 req/s generally results in bad things happening. You can test your own site using [k6](https://k6.io/) with the instructions in [loadtest.js](./loadtest.js)
 
 # Roadmap & releases
 
@@ -325,7 +329,7 @@ Going above 400 req/s generally results in bad things happening. You can test yo
 - [x] Invoke scripts from Nginx
 - [x] Emulate Nginx environment locally
 - [x] Store secrets in projects
-- [x] Restrict `slurp` and `spit` to project root
+- [x] Restrict `pcp/slurp` and `pcp/spit` to project root
 - [x] Cache expensive operations
 - [x] Expose request data to scripts
 - [x] Require external namespaces as in Clojure
@@ -334,13 +338,16 @@ Going above 400 req/s generally results in bad things happening. You can test yo
 - [x] Load test a production deployment
 
 ## Release 0.0.2
-- [ ] Perfomance improvements
+- [x] Perfomance improvements.
+- [x] Only read source file from disk if it is not in cache (LRU) or has been modified
+- [x] Add `pcp/slurp-upload` for reading temporary files
+- [x] Add `pcp/redirect` for convenience redirect
 
 ## Release 0.1.0
 - [ ] Store passphrases with [konserve](https://github.com/replikativ/konserve)
 - [ ] Add sponsorship button
-- [ ] Deploy without logging in to VPS
-- [ ] Switch to [malli-cli](https://github.com/piotr-yuxuan/malli-cli)
+- [ ] Deploy without ssh-ing into VPS
+- [ ] More robust CLI processing
 - [ ] Automate deployment from repo
 
 ## Release 0.2.0

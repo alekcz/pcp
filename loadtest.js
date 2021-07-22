@@ -19,5 +19,5 @@ export let options = {
   ],
 };
 export default function() {
-    let response = http.get("http://localhost:3000");
+    let response = http.get("http://localhost:3000/hello.clj");
 };

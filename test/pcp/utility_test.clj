@@ -169,6 +169,9 @@
           _ (try (delete-recursively project) (catch Exception _ nil))
           _ (io/make-parents (str "./test-resources/pcp-db/" project ".db"))
           _ (new-folder root)
+          _ (clojure.java.io/delete-file (str root "/404.clj"))
+          _ (spit (str root "/error.clj") "(require '[asdad.sad :as fake])")
+          _ (spit (str root "/500.clj") "(pcp/response :break-me :break-it :lool)")
           _ (utility/stop-scgi)
           scgi (core/-main)
           _ (Thread/sleep boot-time)
@@ -183,6 +186,7 @@
       (is (= file-eval-expected file-eval))
       (is (= file-eval-expected file-eval2))
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
+      (is (thrown? Exception (client/get (str "http://localhost:3000/error.clj"))))
       (local)
       (Thread/sleep (* 5 boot-time))
       (let [local2 (utility/-main "--serve" "./")
@@ -214,6 +218,8 @@
           _ (spit (str root "/temp.clj") (str "(pcp/spit \"" tempfile "\" \"123456\")" 
                                               "(pcp/response 200 (pcp/slurp \"" tempfile "\") \"text/plain\")"))
           _ (spit (str root "/404.clj") "(pcp/response 200 \"404page\" \"text/plain\")")
+          _ (spit (str root "/redirect.clj") "(pcp/redirect \"/hello.clj\")")
+          _ (spit (str root "/hello.clj") "(pcp/response 200 \"pew pew\" \"text/plain\")")
           _ (spit (str root "/error.clj") "(require '[asdad.sad :as fake])")
           _ (spit (str root "/500.clj") "(pcp/response 200 \"500page\" \"text/plain\")")
           _ (Thread/sleep boot-time)
@@ -222,13 +228,15 @@
                                      :multipart [{:name "sangoku" :content (FileInputStream. (clojure.java.io/file (str root "/random.txt" ))) :filename "random.txt"}]}))
           res2 @(http/get (str "http://localhost:" port "/does-not-exist"))
           res3 @(http/get (str "http://localhost:" port "/error.clj"))
-          res4 @(http/get (str "http://localhost:" port "/temp.clj"))]
+          res4 @(http/get (str "http://localhost:" port "/temp.clj"))
+          res5 @(http/get (str "http://localhost:" port "/redirect.clj"))]
       (is (= randy res))
       (is (= 404 (:status res2)))
       (is (= "404page" (:body res2)))
       (is (= 500 (:status res3)))
       (is (= "500page" (:body res3)))
       (is (= "123456" (:body res4)))
+      (is (= "pew pew" (:body res5)))
       (local)
       (scgi))))
 

@@ -3,6 +3,7 @@
             [clojure.java.io :as io]
             [pcp.resp :as resp]
             [pcp.core :as core]
+            [cheshire.core :as json]
             [clojure.string :as str])
   (:import  [java.io File]))
 
@@ -58,7 +59,7 @@
           uri "/process-includes.clj"
           scgi-request {:headers {"document-root" root} :uri uri}
           _ (core/handler scgi-request)
-          ans (core/run-script (str root uri))]
+          ans (:body (core/run-script (str root uri)))]
     (is (= (:ans ans) 5678))
     (is (true? (:working ans))))))
 

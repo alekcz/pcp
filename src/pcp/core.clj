@@ -22,6 +22,7 @@
     [clojure.core.cache.wrapped :as c])
   (:import [java.net URLDecoder]
            [java.io File]
+           [java.lang Exception]
            [org.apache.commons.codec.digest DigestUtils]) 
   (:gen-class))
 
@@ -41,6 +42,11 @@
   (binding [util/*escape-strings?* false]
     (apply compiler/render-html contents)))
 
+(defn redirect [target]
+  (-> (resp/response "")    
+      (resp/status 302)
+      (resp/header "Location" target)))
+
 (defn format-response [status body mime-type]
   (-> (resp/response body)    
       (resp/status status)
@@ -57,12 +63,12 @@
   (keyword (str (h/uuid any))))
 
 (defn read-source [path]
-  {:modified (.lastModified (io/file path))
+  {:modified (.lastModified ^File (io/file path))
    :contents (slurp path)})
 
 (defn get-source [path]
   (let [sk (->keyword path)
-        last-modified (.lastModified (io/file path))
+        last-modified (.lastModified ^File (io/file path))
         cached-source (c/lookup source-cache sk)
         s (when (or (nil? cached-source) 
                     (> last-modified (:modified cached-source))) 
@@ -109,6 +115,11 @@
           target-path (-> target ^File io/as-file (.getCanonicalPath))]
       (str/starts-with? target-path parent-path))))
 
+(defn validate-response [resp uri]
+  (if-not (resp/response? resp) 
+    (throw (ex-info (str "Invalid response in: " uri) {:response resp}))
+    resp))      
+
 (defn temporary? [^File target]
   (when target
     (let [target-path (.getAbsolutePath target)
@@ -127,9 +138,9 @@
 (defn run-script [url-path &{:keys [root request status]}]
   (let [status (atom status)
         path' (URLDecoder/decode url-path "UTF-8")
-        path  (if (-> path' (io/file) (.exists))
+        path  (if (-> path' ^File (io/file) (.exists))
                   path' 
-                  (when (-> (str root "/404.clj") (io/file) (.exists))
+                  (when (-> (str root "/404.clj") ^File (io/file) (.exists))
                     (reset! status 404)
                     (str root "/404.clj")))]
     (if (nil? path)   
@@ -140,7 +151,7 @@
             parent (longer root (-> ^File file (.getParentFile) (.getCanonicalPath)))
             response (atom nil)
             keygen (fn [path k] (keyword (str (h/uuid [path k]))))]     
-        (if (string? source)
+        (when (string? source)
           (let [opts  (-> { :load-fn #(include root %)
                             :namespaces (merge includes { '$   {'persist! (fn [k v] (k (c/through-cache cache (keygen root k) (constantly v))))
                                                                 'retrieve (fn [k]   (c/lookup cache (keygen root k)))}
@@ -148,6 +159,7 @@
                                                                 'clear   (fn [k]   (c/evict cache (keygen root k)))
                                                                 'request request
                                                                 'response (fn [status body mime-type] (reset! response (format-response status body mime-type)))
+                                                                'redirect (fn [target] (reset! response (redirect target)))
                                                                 'html render-html
                                                                 'render-html render-html
                                                                 'html-unescaped render-html-unescaped
@@ -163,14 +175,14 @@
                 _ (parser/set-resource-path! root)                        
                 result (process-script source opts)
                 _ (selmer.parser/set-resource-path! nil)
-                final-result (if (nil? @response) result @response)]
-            (if @status (assoc final-result :status @status) final-result))
-          (format-response 404 "" nil))))))
+                final-result (if (nil? @response) result @response)
+                response (if @status (assoc final-result :status @status) final-result) ]
+            (validate-response response path)))))))
 
 (defn e500 [root req message]
   (let [uri "/500.clj"
         error-page  (str root uri)]
-    (if (-> error-page (io/file) (.exists))
+    (if (-> error-page ^File (io/file) (.exists))
         (try 
           (run-script error-page :root root :request (assoc req :error message :uri uri) :status 500) 
           (catch Exception e (format-response 500 (.getMessage e) nil)))

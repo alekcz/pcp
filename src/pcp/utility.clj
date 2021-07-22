@@ -67,7 +67,7 @@ Options:
         (resp/content-type mime))))
 
 (defn file-exists? [path]
-  (-> path ^File io/file .exists))
+  (-> path ^File (io/file) .exists))
   
 (defn serve-file [path]
   (file-response path (io/file path)))
@@ -90,8 +90,8 @@ Options:
           :else (forward full (:scgi-port opts))))))
 
 (defn run-file [path scgi-port]
-  (let [path' (-> path io/file (.getCanonicalPath))
-        root (-> path' io/file (.getParentFile) (.getCanonicalPath))
+  (let [path' (-> path ^File (io/file) (.getCanonicalPath))
+        root (-> path' ^File (io/file) ^File (.getParentFile) (.getCanonicalPath))
         final-path (-> path' (str/replace root "/") (str/replace "//" "/"))
         request {:headers {"document-root" root} :uri final-path :request-method :get :body ""}
         resp (forward request scgi-port)]

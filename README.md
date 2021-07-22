@@ -12,7 +12,7 @@ Too long have we hustled to deploy Clojure websites. Too long have we spun up on
 
 ### Status
 Active development. Stabilizing.     
-Latest version: `v0.0.1`
+Latest version: `v0.0.2`
 
 ### Goals
 

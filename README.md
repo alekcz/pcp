@@ -241,11 +241,11 @@ The request map. The request map conforms to the [ring spec](https://github.com/
 
 #### pcp/response
 `(pcp/response status body mime-type)`        
-A convenience function for generating a response map. Responses are simply Clojure maps that conform to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC) and can be written by hand too.
+A convenience function for generating a response map. Responses conform to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC).
 
 #### pcp/redirect
 `(pcp/redirect target)`        
-A convenience function for generating a redirect. Responses are simply Clojure maps that conform to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC) and can be written by hand too.
+A convenience function for generating a redirect. Responses conform to the [ring spec](https://github.com/ring-clojure/ring/blob/master/SPEC).
 
 #### pcp/render-html
 `(pcp/render-html options & content)`    

@@ -1,5 +1,5 @@
 (ns pcp.utility-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.test :refer [deftest is testing]]
             [pcp.core :as core]
             [pcp.resp :as resp]
             [pcp.utility :as utility]

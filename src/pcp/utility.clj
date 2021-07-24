@@ -183,19 +183,21 @@ Options:
     (println "done."))))
 
 (defn add-passphrase [project]
-  (let [_ (do 
-            (println "--------------------------------------------------")
-            (println "Set passphrase for project:" project)
-            (println "This passphrase will be used for decrypting secrets at runtime.") 
-            (println "--------------------------------------------------"))
-        passphrase' (do (print "Passphrase: ") (flush) (read-line))
-        passphrase (safe-trim passphrase')
-        path (str (keydb) "/" project ".db")]
-  (io/make-parents (keydb))
-  (println "adding passphrase for project:" project)
-  (with-open [^BufferedWriter w (io/writer path)]
-    (.write w ^String passphrase))
-  (println "done.")))  
+  (if (str/blank? project)
+    (println "Please specify the project name") 
+    (let [_ (do 
+              (println "--------------------------------------------------")
+              (println "Set passphrase for project:" project)
+              (println "This passphrase will be used for decrypting secrets at runtime.") 
+              (println "--------------------------------------------------"))
+          passphrase' (do (print "Passphrase: ") (flush) (read-line))
+          passphrase (safe-trim passphrase')
+          path (str (keydb) "/" project ".db")]
+    (io/make-parents (keydb))
+    (println "adding passphrase for project:" project)
+    (with-open [^BufferedWriter w (io/writer path)]
+      (.write w ^String passphrase))
+    (println "done."))))  
 
 (defn new-project [path]
   (let [re-filename #"(.*)\\[^\\]*"

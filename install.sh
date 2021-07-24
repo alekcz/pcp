@@ -51,6 +51,7 @@ mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
 
 rm -rf "$PWD/pcp-templates"
 mv -f "$download_dir/pcp-templates" "$PWD"
+printf "(require '[pcp :as pcp])\n(pcp/response 200 \"pew pew\" \"text/plain\")" >> "$PWD/pcp-templates/hello.clj"
 
 case "$(uname -s)" in
     Linux*)     

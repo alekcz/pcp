@@ -23,7 +23,6 @@
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
                   [org.martinklepsch/clj-http-lite "0.4.3"]
-                  ;; [metosin/pohjavirta "0.0.1-alpha7"]
                   
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]

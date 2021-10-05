@@ -6,7 +6,6 @@
     [clojure.java.io :as io]
     [clojure.edn :as edn]
     [clojure.string :as str]
-    ;; [pohjavirta.server :as pohjavirta]
     [org.httpkit.server :as server]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
@@ -30,6 +29,7 @@
 
 (def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
 (def source-cache (c/lru-cache-factory {} :threshold 1024))
+(def ^:dynamic server-root "/var/html")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -201,12 +201,6 @@
         wrap-keyword-params
         wrap-params 
         wrap-multipart-params ))
-
-;; (defn pohjavirta [handler port]
-;;   (let [s (pohjavirta/create handler {:port port})]
-;;     (pohjavirta/start s)
-;;     (fn [] 
-;;       (pohjavirta/stop s))))
 
 (defn serve [handler port]
   (let [s (server/run-server handler {:port port :max-body (* 100 1024 1024)})]

@@ -64,7 +64,8 @@
                             :uberjar-name "pcp.jar"}
               :test {:env {:my-passphrase "s3cr3t-p455ph4r3"
                            :pcp-template-path "resources/pcp-templates"}}
-              :dev {:dependencies [[eftest/eftest "0.5.9"]]
+              :dev {:dependencies [[eftest/eftest "0.5.9"]
+                                   [org.slf4j/slf4j-simple "1.7.32"]]
                     :plugins [[lein-shell "0.5.0"]]
                     :env {:my-passphrase "s3cr3t-p455ph4r3"}}}
   :aliases

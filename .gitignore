@@ -24,3 +24,5 @@ pom.xml.asc
 /data
 /musketeers.js
 /test.js
+.calva/
+.lsp

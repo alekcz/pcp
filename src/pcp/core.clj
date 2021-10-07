@@ -29,7 +29,9 @@
 
 (def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
 (def source-cache (c/lru-cache-factory {} :threshold 1024))
-(def ^:dynamic server-root "/var/html")
+(def install-root (atom "/var/pcp/"))
+(def server-root (atom "default/public"))
+(def strict (atom true))
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -188,11 +190,19 @@
           (catch Exception e (format-response 500 (.getMessage e) nil)))
         (format-response 500 message nil))))
 
+(defn sanitize-root [root path]
+  (if-not @strict
+    (str root path)
+    (if (str/starts-with? path @install-root) 
+      path
+      (str @install-root root path))))
+
 (defn actual-handler [request]
   (let [headers (-> request :headers walk/keywordize-keys)
-        root (:document-root headers)
+        root (or (:document-root headers) @server-root)
         doc (:uri request)
-        path (str root doc)
+        path (sanitize-root root doc)
+        _ (println path)
         r (try (run-script path :root root :request request) (catch Exception e (e500 root request (.getMessage e))))]
     r))
 
@@ -202,14 +212,30 @@
         wrap-params 
         wrap-multipart-params ))
 
+
+(defn strict? [flag]
+  (if (= (str flag) "0")
+    false
+    true))
+
+(defn init-environment []
+  (reset! install-root (or (env :install-root) @install-root))
+  (reset! server-root (or (env :server-root) @server-root))
+  (reset! strict (strict? (or (env :strict) @strict))))
+
 (defn serve [handler port]
+  (init-environment)
   (let [s (server/run-server handler {:port port :max-body (* 100 1024 1024)})]
-    (println "running...")
+    (println (str "running with strict mode " (if @strict "on" "off") "..."))
     (fn [] 
       (s))))
 
-(defn -main []
-  (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
-    (serve handler scgi-port)))
+(defn -main 
+  ([]
+    (-main "1"))
+  ([strict-mode]
+    (let [scgi-port (Integer/parseInt (or (env :pcp-server-port) "9000"))]
+      (reset! strict strict-mode)
+      (serve handler scgi-port))))
 
       

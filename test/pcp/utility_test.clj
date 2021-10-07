@@ -113,7 +113,7 @@
           handler #(core/handler %)
           scgi (core/serve handler scgi-port)
           port 44444
-          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          local (utility/start-local-server {:port port :root root :pcp-server-port scgi-port})
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
           specify (with-out-str (utility/-main "passphrase"))
@@ -148,7 +148,7 @@
           handler #(core/handler %)
           scgi (core/serve handler scgi-port)
           port 24444
-          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          local (utility/start-local-server {:port port :root root :pcp-server-port scgi-port})
           _ (clojure.java.io/delete-file (io/file (str project "/pcp.edn")))
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
@@ -211,7 +211,7 @@
           port 9998
           scgi-port 9999
           scgi (core/serve core/handler scgi-port)
-          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          local (utility/start-local-server {:port port :root root :pcp-server-port scgi-port})
           randy (str (rand-int 100000))
           tempfile (str "../tmp/pcp-test-temp-" randy ".txt")
           _ (Thread/sleep boot-time)

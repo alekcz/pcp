@@ -46,6 +46,7 @@
     (let [root "test-resources"
           uri "/simple.clj"
           scgi-request {:headers {"document-root" root} :uri uri}
+          _ (core/init-environment)
           resp (core/handler scgi-request)
           ans  (core/run-script (str root uri))]
     (is (= ans resp))

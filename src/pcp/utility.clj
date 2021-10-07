@@ -17,8 +17,8 @@
 (set! *warn-on-reflection* 1)
 
 (def root (atom nil))
-(def scgi (atom "9000"))
-(def version "v0.0.2")
+(def pcp-server-port (atom "9000"))
+(def version "v0.0.3")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -84,17 +84,17 @@ Options:
                    (assoc :uri new-uri))]     
         (cond 
           (and (str/ends-with? (:uri full) ".clj") exists)
-            (-> full (forward (:scgi-port opts)))
+            (-> full (forward (:pcp-server-port opts)))
           exists 
             (serve-file path)
-          :else (forward full (:scgi-port opts))))))
+          :else (forward full (:pcp-server-port opts))))))
 
-(defn run-file [path scgi-port]
+(defn run-file [path pcp-server-port]
   (let [path' (-> path ^File (io/file) (.getCanonicalPath))
         root (-> path' ^File (io/file) ^File (.getParentFile) (.getCanonicalPath))
         final-path (-> path' (str/replace root "/") (str/replace "//" "/"))
         request {:headers {"document-root" root} :uri final-path :request-method :get :body ""}
-        resp (forward request scgi-port)]
+        resp (forward request pcp-server-port)]
     (when (:body resp)
       (slurp (:body resp)))))
 
@@ -108,11 +108,11 @@ Options:
   (let [opts (merge 
               {:port (Integer/parseInt (or (System/getenv "PORT") "3000")) 
                :root "./" 
-               :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
+               :pcp-server-port (Integer/parseInt (or (System/getenv "PCP_SERVER_PORT") "9000"))}
               (clean-opts options))
         server (server/run-server (local-handler opts)
                 {:port (:port opts) :max-body (* 100 1024 1024)})]
-    (println "Targeting SCGI server on port" (:scgi-port opts))
+    (println "Targeting PCP server on port" (:pcp-server-port opts))
     (println (str "Local server started on http://127.0.0.1:" (:port opts)))
     (println "Serving" (:root opts))
     (fn [] (server))))
@@ -232,8 +232,8 @@ Options:
       "--serve" (start-local-server {:root value})
       "-v" (println "pcp" version)
       "--version" (println "pcp" version)
-      "-e" (println (run-file value (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))))
-      "--evaluate" (println (run-file value (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))))
+      "-e" (println (run-file value (Integer/parseInt (or (System/getenv "PCP_SERVER_PORT") @pcp-server-port))))
+      "--evaluate" (println (run-file value (Integer/parseInt (or (System/getenv "PCP_SERVER_PORT") @pcp-server-port))))
       "new" (new-project value)
       "passphrase" (add-passphrase value)
       "secret" (add-secret {:root value})

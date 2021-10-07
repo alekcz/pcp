@@ -1,4 +1,4 @@
-(defproject pcp "0.0.2"
+(defproject pcp "0.0.3"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
@@ -54,25 +54,28 @@
               :runner-opts {:test-warn-time 500
                            :fail-fast? false
                            :multithread? :vars}}
-  :profiles { :scgi { :aot :all
+  :profiles { :pcp-server {:aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"
-                      :uberjar-name "pcp-server.jar"}
+                      :uberjar-name "pcp-server.jar"
+                      :strict "0"}
               :utility   {  :main pcp.utility
                             :aot [pcp.utility pcp.resp]
                             :jar-name "useless-pcp.jar"
                             :uberjar-name "pcp.jar"}
               :test {:env {:my-passphrase "s3cr3t-p455ph4r3"
+                           :strict "0"
                            :pcp-template-path "resources/pcp-templates"}}
               :dev {:dependencies [[eftest/eftest "0.5.9"]
                                    [org.slf4j/slf4j-simple "1.7.32"]]
                     :plugins [[lein-shell "0.5.0"]]
-                    :env {:my-passphrase "s3cr3t-p455ph4r3"}}}
+                    :env {:my-passphrase "s3cr3t-p455ph4r3"
+                          :strict "0"}}}
   :aliases
   {"pcp" ["run" "-m" "pcp.utility"]
-   "scgi" ["run" "-m" "pcp.core"]
+   "pcp-server" ["run" "-m" "pcp.core"]
    "build-pcp" ["with-profile" "utility" "uberjar"] 
-   "build-server" ["with-profile" "scgi" "uberjar"] 
+   "build-server" ["with-profile" "pcp-server" "uberjar"] 
    "native"
    ["shell"
     "native-image" 
@@ -88,4 +91,4 @@
     "-jar" "./target/${:name}.jar"
     "-H:Name=./target/${:name}"]
 
-   "run-native" ["shell" "./target/${:name} scgi"]})
+   "run-native" ["shell" "./target/${:name} pcp-server"]})

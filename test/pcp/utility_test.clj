@@ -219,7 +219,7 @@
           _ (spit (str root "/echo.clj") "(pcp/response 200 (-> pcp/request :params :sangoku :tempfile pcp/slurp-upload str) \"text/plain\")")
           _ (spit (str root "/temp.clj") (str "(pcp/spit \"" tempfile "\" \"123456\")" 
                                               "(pcp/response 200 (pcp/slurp \"" tempfile "\") \"text/plain\")"))
-          _ (spit (str root "/404.clj") "(pcp/response 200 \"404page\" \"text/plain\")")
+          _ (spit (str root "/404.clj") "(pcp/response 404 \"404page\" \"text/plain\")")
           _ (spit (str root "/redirect.clj") "(pcp/redirect \"/hello.clj\")")
           _ (spit (str root "/hello.clj") "(pcp/response 200 \"pew pew\" \"text/plain\")")
           _ (spit (str root "/error.clj") "(require '[asdad.sad :as fake])")

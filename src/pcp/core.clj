@@ -54,8 +54,9 @@
       (resp/status status)
       (resp/content-type mime-type))) 
 
-(defn file-response [path ^File file]
-  (let [code (if (.exists file) 200 404)
+(defn file-response [path]
+  (let [file (io/file path)
+        code (if (.exists file) 200 404)
         mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
     (-> (resp/response file)    
         (resp/status code)
@@ -137,14 +138,21 @@
               ($/persist! ~k s)
               s)))))
 
+(defn generate-path [root path']
+  (cond 
+    (-> path' ^File (io/file) (.exists))
+      path' 
+    (-> path' (str "/index.clj") ^File (io/file) (.exists))
+      (str path' "/index.clj")
+    (-> (str root "/404.clj") ^File (io/file) (.exists))
+      (str root "/404.clj")
+    :else
+      nil))
+
 (defn run-script [url-path &{:keys [root request status]}]
   (let [status (atom status)
         path' (URLDecoder/decode url-path "UTF-8")
-        path  (if (-> path' ^File (io/file) (.exists))
-                  path' 
-                  (when (-> (str root "/404.clj") ^File (io/file) (.exists))
-                    (reset! status 404)
-                    (str root "/404.clj")))]
+        path (generate-path root path')]
     (if (nil? path)   
       (format-response 404 "" nil)
       (let [^File file (io/file path)
@@ -197,14 +205,17 @@
       path
       (str @install-root root path))))
 
+(defn file-request? [path]
+  (and (not (str/ends-with? path ".clj")) (re-find #"\.[0-9A-Za-z]{1,7}$" path)))
+
 (defn actual-handler [request]
   (let [headers (-> request :headers walk/keywordize-keys)
         root (or (:document-root headers) @server-root)
         doc (:uri request)
-        path (sanitize-root root doc)
-        _ (println path)
-        r (try (run-script path :root root :request request) (catch Exception e (e500 root request (.getMessage e))))]
-    r))
+        path (sanitize-root root doc)]
+    (if (file-request? path)
+      (file-response path)
+      (try (run-script path :root root :request request) (catch Exception e (e500 root request (.getMessage e)))))))
 
 (def handler 
    (-> #'actual-handler 

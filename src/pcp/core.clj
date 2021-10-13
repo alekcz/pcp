@@ -237,7 +237,7 @@
 (defn serve [handler port]
   (init-environment)
   (let [s (server/run-server handler {:port port :max-body (* 100 1024 1024)})]
-    (println (str "running on " port " with strict mode " (if @strict "enabled" "disabled") "..."))
+    (println (str "running on port " port " with strict mode " (if @strict "enabled" "disabled") "..."))
     (fn [] 
       (s))))
 

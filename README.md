@@ -37,8 +37,8 @@ You can view a demo site built in PCP here: [https://clojure-pulse.musketeers.io
 1. [Core PCP namespace](#core-pcp-namespace)
 1. [Other built into PCP](#other-built-in-namespaces)
 1. [Performance](#performance)
-1. [Roadmap](#performance)
 1. [Deploying PCP](#deploying-pcp)
+1. [Roadmap](#performance)
 
 ## Quick start
 Install pcp via the installer script:
@@ -324,6 +324,7 @@ Going above 1400 req/s generally results in bad things happening. You can test y
 ## Deploying PCP
 
 You can find instructions on deploying your PCP site with nginx [here](./docs/replacing-php.md).   
+  
 Or you could just use this nifty button to deploy to DigitalOcean (experimental).  
 
 [![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/alekcz/pcp-template/tree/master&refcode=a0cfd79e40a2)

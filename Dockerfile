@@ -5,14 +5,11 @@ WORKDIR /usr/pcp
 COPY resources/pcp-templates /var/pcp/demo
 COPY src/ /usr/pcp/src
 COPY project.clj /usr/pcp/project.clj
-RUN lein deps
 RUN lein build-server
 
 
 # use clean base image
 FROM openjdk:16-slim-buster
-
-EXPOSE 9000
 
 # In scrict mode (default) the path must start with INSTALL_ROOT which is /var/pcp by default
 # when strict mode is off the path is set by http header in the request
@@ -35,3 +32,6 @@ CMD ["java","-jar","/var/pcp/pcp-server.jar"]
 
 # running the image
 # docker run -p 9000:9000 -v ~/path/to/pcp-project:/var/pcp/default pcp:v1
+
+# pushing the tag
+# docker image push alekcz/pcp:v0.0.3-alpha.1

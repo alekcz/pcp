@@ -140,7 +140,7 @@
 
 (defn generate-path [root path']
   (cond 
-    (-> path' ^File (io/file) (.exists))
+    (and (-> path' ^File (io/file) (.exists)) (-> path' ^File (io/file) (.isDirectory) not))
       path' 
     (-> path' (str "/index.clj") ^File (io/file) (.exists))
       (str path' "/index.clj")
@@ -237,7 +237,7 @@
 (defn serve [handler port]
   (init-environment)
   (let [s (server/run-server handler {:port port :max-body (* 100 1024 1024)})]
-    (println (str "running with strict mode " (if @strict "on" "off") "..."))
+    (println (str "running on " port " with strict mode " (if @strict "enabled" "disabled") "..."))
     (fn [] 
       (s))))
 
@@ -245,7 +245,7 @@
   ([]
     (-main "1"))
   ([strict-mode]
-    (let [scgi-port (Integer/parseInt (or (env :pcp-server-port) "9000"))]
+    (let [scgi-port (Integer/parseInt (or (env :pcp-server-port) (env :port) "9000"))]
       (reset! strict strict-mode)
       (serve handler scgi-port))))
 

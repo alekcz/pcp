@@ -18,7 +18,7 @@
 
 (def root (atom nil))
 (def pcp-server-port (atom "9000"))
-(def version "v0.0.3-alpha")
+(def version "v0.0.3-alpha.1")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))

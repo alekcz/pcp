@@ -27,3 +27,4 @@ pom.xml.asc
 .calva/
 .lsp
 /default
+/127.0.0.1

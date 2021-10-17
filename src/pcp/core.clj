@@ -29,8 +29,10 @@
 
 (def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
 (def source-cache (c/lru-cache-factory {} :threshold 1024))
-(def install-root (atom "/var/pcp/"))
-(def server-root (atom "default/public"))
+(def install-root (atom "/var/pcp"))
+(def server-root (atom "default"))
+(def public-root (atom "/public"))
+(def domains (atom {}))
 (def strict (atom true))
 
 (defn keydb []
@@ -208,9 +210,29 @@
 (defn file-request? [path]
   (and (not (str/ends-with? path ".clj")) (re-find #"\.[0-9A-Za-z]{1,7}$" path)))
 
+(defn get-domain [request]
+  (let [domain (:server-name request)
+        has-domain? (get @domains domain)
+        install (if @strict @install-root ".")
+        server (str install "/" domain)]
+    (cond 
+      (true? has-domain?)
+        (str install "/" domain)
+      (false? has-domain?)
+        (str install "/" @server-root)
+      (and (nil? has-domain?) (-> server io/file (.exists)))
+        (do
+          (swap! domains assoc domain true)
+          (str install "/" domain))
+      :else
+        (do 
+          (swap! domains assoc domain false)
+          (str install "/"@server-root)))))
+
 (defn actual-handler [request]
   (let [headers (-> request :headers walk/keywordize-keys)
-        root (or (:document-root headers) @server-root)
+        root (or (:document-root headers) (str (get-domain request) @public-root))
+        _ (println "root" root)
         doc (:uri request)
         path (sanitize-root root doc)]
     (if (file-request? path)
@@ -232,6 +254,7 @@
 (defn init-environment []
   (reset! install-root (or (env :install-root) @install-root))
   (reset! server-root (or (env :server-root) @server-root))
+  (reset! public-root (or (env :public-root) @public-root))
   (reset! strict (strict? (or (env :strict) @strict))))
 
 (defn serve [handler port]

@@ -2,7 +2,7 @@
 Description= pcp service
 
 [Service]
-ExecStart=/usr/bin/java -jar /usr/local/bin/pcp-server.jar
+ExecStart=/usr/bin/java -jar /usr/local/bin/pcp-server.jar 1
 Restart=always
 RestartSec=5
 

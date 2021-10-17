@@ -18,7 +18,7 @@
 
 (def root (atom nil))
 (def pcp-server-port (atom "9000"))
-(def version "v0.0.3-alpha.1")
+(def version "v0.0.3-alpha.2")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -34,9 +34,9 @@ Usage: pcp [option] [value]
 Options:
   new [project]           Create a new pcp project in the [project] directory
   service [stop/start]    Stop/start the PCP service
+  dev [stop/start]        Stop/start the PCP service in development mode
   passphrase [project]    Set passphrase for [project]
   secret [path]           Add and encrypt secrets at . or [path]
-  -e, --evaluate [path]   Evaluate a clojure file using PCP
   -s, --serve [root]      Start a local server at . or [root]
   -v, --version           Print the version string and exit
   -h, --help              Print the command line help")
@@ -106,14 +106,14 @@ Options:
 
 (defn start-local-server [options] 
   (let [opts (merge 
-              {:port (Integer/parseInt (or (System/getenv "PORT") "3000")) 
+              {:pcp-port (Integer/parseInt (or (env :pcp-port) (env :port) "3000")) 
                :root "./" 
-               :pcp-server-port (Integer/parseInt (or (System/getenv "PCP_SERVER_PORT") "9000"))}
+               :pcp-server-port (Integer/parseInt (or (env :pcp-server-port) "9000"))}
               (clean-opts options))
         server (server/run-server (local-handler opts)
-                {:port (:port opts) :max-body (* 100 1024 1024)})]
+                {:port (:pcp-port opts) :max-body (* 100 1024 1024)})]
     (println "Targeting PCP server on port" (:pcp-server-port opts))
-    (println (str "Local server started on http://127.0.0.1:" (:port opts)))
+    (println (str "Local server started on http://127.0.0.1:" (:pcp-port opts)))
     (println "Serving" (:root opts))
     (fn [] (server))))
 
@@ -148,6 +148,36 @@ Options:
     (process-query-output   
       (shell/sh "systemctl" "list-units" "--type=service" "--state=running"))
     (process-query-output 
+      (shell/sh "launchctl" "list"))))
+
+(defn process-service-output-dev [output]
+  (let [err (:err output)]
+    (if (empty? err) "success!" (str "failed: " err))))
+
+(defn process-query-output-dev [output]
+  (let [ans (:out output)]
+    (if (or (str/includes? ans "pcp-dev.service") (str/includes? ans "com.alekcz.pcp-dev")) 
+      "running" "stopped")))
+
+(defn start-scgi-dev []
+  (if linux?
+    (process-service-output-dev  
+      (shell/sh "systemctl" "start" "pcp-dev.service"))
+    (process-service-output-dev  
+      (shell/sh "launchctl" "load" "-w" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp-dev.plist")))))
+
+(defn stop-scgi-dev []
+  (if linux?
+    (process-service-output-dev 
+      (shell/sh "systemctl" "stop" "pcp-dev.service"))
+    (process-service-output-dev 
+      (shell/sh "launchctl" "unload" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp-dev.plist")))))
+
+(defn query-scgi-dev []
+  (if linux?
+    (process-query-output-dev   
+      (shell/sh "systemctl" "list-units" "--type=service" "--state=running"))
+    (process-query-output-dev 
       (shell/sh "launchctl" "list"))))
 
 (defn add-secret [options]
@@ -232,8 +262,6 @@ Options:
       "--serve" (start-local-server {:root value})
       "-v" (println "pcp" version)
       "--version" (println "pcp" version)
-      "-e" (println (run-file value (Integer/parseInt (or (System/getenv "PCP_SERVER_PORT") @pcp-server-port))))
-      "--evaluate" (println (run-file value (Integer/parseInt (or (System/getenv "PCP_SERVER_PORT") @pcp-server-port))))
       "new" (new-project value)
       "passphrase" (add-passphrase value)
       "secret" (add-secret {:root value})

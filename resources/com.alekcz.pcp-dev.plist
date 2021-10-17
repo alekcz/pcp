@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>Label</key>
-		<string>com.alekcz.pcp</string>
+		<string>com.alekcz.pcp-dev</string>
 	<key>Program</key>
 		<string>/usr/bin/java</string>
 	<key>ProgramArguments</key>
@@ -11,10 +11,10 @@
 			<string>/usr/bin/java</string>
 			<string>-jar</string>
 			<string>/usr/local/bin/pcp-server.jar</string>
-      <string>1</string>
+      <string>0</string>
 		</array>
 	<key>RunAtLoad</key>
-		<true/>
+		<false/>
 	<key>KeepAlive</key>
 		<true/>
 </dict>

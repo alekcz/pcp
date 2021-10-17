@@ -113,7 +113,7 @@
           handler #(core/handler %)
           scgi (core/serve handler scgi-port)
           port 44444
-          local (utility/start-local-server {:port port :root root :pcp-server-port scgi-port})
+          local (utility/start-local-server {:pcp-port port :root root :pcp-server-port scgi-port})
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
           specify (with-out-str (utility/-main "passphrase"))
@@ -148,7 +148,7 @@
           handler #(core/handler %)
           scgi (core/serve handler scgi-port)
           port 24444
-          local (utility/start-local-server {:port port :root root :pcp-server-port scgi-port})
+          local (utility/start-local-server {:pcp-port port :root root :pcp-server-port scgi-port})
           _ (clojure.java.io/delete-file (io/file (str project "/pcp.edn")))
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
@@ -175,18 +175,13 @@
           _ (spit (str root "/error.clj") "(require '[asdad.sad :as fake])")
           _ (spit (str root "/500.clj") "(pcp/response :break-me :break-it :lool)")
           _ (utility/stop-scgi)
-          scgi (core/-main)
+          scgi (core/-main "0")
           _ (Thread/sleep boot-time)
           local (utility/-main "-s" root)
-          file-eval (json/decode (with-out-str (utility/-main "-e" "./test-resources/site/index.clj")) true)
-          file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" "./test-resources/site/index.clj")) true)
-          file-eval-expected (json/decode "{\"num\":1275,\"name\":\"Test\",\"end\":null}" true)
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]
       (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
       (is (= "12345678" (:body resp-text)))
-      (is (= file-eval-expected file-eval))
-      (is (= file-eval-expected file-eval2))
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (is (thrown? Exception (client/get (str "http://localhost:3000/error.clj"))))
       (local)
@@ -211,7 +206,7 @@
           port 9998
           scgi-port 9999
           scgi (core/serve core/handler scgi-port)
-          local (utility/start-local-server {:port port :root root :pcp-server-port scgi-port})
+          local (utility/start-local-server {:pcp-port port :root root :pcp-server-port scgi-port})
           randy (str (rand-int 100000))
           tempfile (str "../tmp/pcp-test-temp-" randy ".txt")
           _ (Thread/sleep boot-time)

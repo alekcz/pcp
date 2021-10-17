@@ -1,4 +1,4 @@
-(defproject pcp "0.0.3-alpha.1"
+(defproject pcp "0.0.3-alpha.2"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
@@ -57,8 +57,7 @@
   :profiles { :pcp-server {:aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"
-                      :uberjar-name "pcp-server.jar"
-                      :strict "0"}
+                      :uberjar-name "pcp-server.jar"}
               :utility   {  :main pcp.utility
                             :aot [pcp.utility pcp.resp]
                             :jar-name "useless-pcp.jar"
@@ -69,11 +68,11 @@
               :dev {:dependencies [[eftest/eftest "0.5.9"]
                                    [org.slf4j/slf4j-simple "1.7.32"]]
                     :plugins [[lein-shell "0.5.0"]]
-                    :env {:my-passphrase "s3cr3t-p455ph4r3"
-                          :strict "0"}}}
+                    :env {:my-passphrase "s3cr3t-p455ph4r3" :strict "0"}}}
   :aliases
   {"pcp" ["run" "-m" "pcp.utility"]
-   "pcp-server" ["run" "-m" "pcp.core"]
+   "pcp-server" ["run" "-m" "pcp.core" "1"]
+   "pcp-dev" ["run" "-m" "pcp.core" "0"]
    "build-pcp" ["with-profile" "utility" "uberjar"] 
    "build-server" ["with-profile" "pcp-server" "uberjar"] 
    "native"

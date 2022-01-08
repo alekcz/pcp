@@ -8,7 +8,6 @@
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
     [clj-http.lite.client :as http]
-    ;; [clojure.tools.cli :refer [parse-opts]]
     [environ.core :refer [env]])
   (:import  [java.io File BufferedWriter]
             [org.apache.commons.codec.digest DigestUtils]) 
@@ -251,26 +250,41 @@ Options:
       (slurp (str (template-path) "/api/info.clj")))
     (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath ^File (io/file path)))))
 
-(defn -main 
-  ([]
-    (-main "" ""))
-  ([path]       
-    (-main path ""))
-  ([option value]    
-    (case option
-      "-s" (start-local-server {:root value})
-      "--serve" (start-local-server {:root value})
-      "-v" (println "pcp" version)
-      "--version" (println "pcp" version)
-      "new" (new-project value)
-      "passphrase" (add-passphrase value)
-      "secret" (add-secret {:root value})
-      "service" (case value 
-                  "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
-                  "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
-                  "status"  (do (println (query-scgi)) (shutdown-agents))  ;crashing down.
-                  (do                                                   
-                    (println "unknown command:" value)
-                    (println help)))
-      "" (println help)
-      (println help))))                               
+(defn -main [& args]    
+  (let [option (first args)
+        parameter (second args)]
+    (cond
+      (some #{option} '("-s" "--serve" "serve"))
+      (start-local-server {:root parameter})
+      
+      (some #{option} '("-v" "--version" "version"))
+      (println "pcp" version)
+      
+      (= option "new")
+      (new-project parameter)
+      
+      (= option "passphrase")
+      (add-passphrase parameter)
+      
+      (= option "secret")
+      (add-secret {:root parameter})
+
+      (= option "service")
+      (case parameter 
+        "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
+        "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
+        "status"  (do (println (query-scgi)) (shutdown-agents))  ;crashing down.
+        (do                                                   
+          (println "unknown command: service" parameter)
+          (println help)))
+
+      (= option "dev")
+      (case parameter 
+        "start" (do (println (start-scgi-dev)) (shutdown-agents)) ;tests suites that touch this line will fail
+        "stop"  (do (println (stop-scgi-dev)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
+        "status"  (do (println (query-scgi-dev)) (shutdown-agents))  ;crashing down.
+        (do                                                   
+          (println "unknown command: service" parameter)
+          (println help)))
+
+      :else (println help))))

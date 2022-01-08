@@ -8,7 +8,7 @@
                   [org.clojure/clojure "1.10.3"]
                   [org.clojure/tools.cli "1.0.194"]
                   [org.clojure/core.async "1.3.618"]
-                  [borkdude/sci "0.2.5"]
+                  [borkdude/sci "0.2.6"]
                   [byte-streams "0.2.4"]
                   [http-kit "2.5.3"]
                   [ring "1.9.3"]

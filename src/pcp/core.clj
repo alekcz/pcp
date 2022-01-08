@@ -200,12 +200,12 @@
           (catch Exception e (format-response 500 (.getMessage e) nil)))
         (format-response 500 message nil))))
 
-(defn sanitize-root [root path]
-  (if-not @strict
-    (str root path)
-    (if (str/starts-with? path @install-root) 
-      path
-      (str @install-root root path))))
+;; (defn sanitize-root [root path]
+;;   (if-not @strict
+;;     (str root path)
+;;     (if (str/starts-with? path @install-root) 
+;;       path
+;;       (str root path))))
 
 (defn file-request? [path]
   (and (not (str/ends-with? path ".clj")) (re-find #"\.[0-9A-Za-z]{1,7}$" path)))
@@ -227,14 +227,14 @@
       :else
         (do 
           (swap! domains assoc domain false)
-          (str install "/"@server-root)))))
+          (str install "/" @server-root)))))
 
 (defn actual-handler [request]
   (let [headers (-> request :headers walk/keywordize-keys)
         root (or (:document-root headers) (str (get-domain request) @public-root))
-        _ (println "root" root)
         doc (:uri request)
-        path (sanitize-root root doc)]
+        path (str root doc)
+        _ (println "root" @strict root path)]
     (if (file-request? path)
       (file-response path)
       (try (run-script path :root root :request request) (catch Exception e (e500 root request (.getMessage e)))))))

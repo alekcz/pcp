@@ -40,6 +40,24 @@
     (let [unknown (with-out-str (utility/-main "service" "lala"))]
       (is (str/includes? unknown "unknown")))))     
 
+(deftest stop-dev-service-test
+  (testing "Stop service"
+    (let [_ (utility/stop-scgi-dev)
+          status (utility/query-scgi-dev)]
+      (is (> (count status) 0)))))
+
+(deftest start-dev-service-test
+  (testing "Start service"
+    (let [_ (utility/start-scgi-dev)
+          status (utility/query-scgi-dev)]
+      (is (> (count status) 0)))))
+
+(deftest unknown-dev-service-test
+  (testing "Start service"
+    (let [unknown (with-out-str (utility/-main "dev" "lala"))]
+      (is (str/includes? unknown "unknown")))))     
+
+
 (deftest help-test
   (testing "Start service"
     (let [help (str/trim (with-out-str (utility/-main "-h")))

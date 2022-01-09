@@ -1,5 +1,5 @@
 (ns pcp.utility-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [pcp.core :as core]
             [pcp.resp :as resp]
             [pcp.utility :as utility]
@@ -8,10 +8,22 @@
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
             [org.httpkit.client :as http]
-            [environ.core :refer [env]])
+            [environ.core :refer [env]]
+            [babashka.fs :as fs])
   (:import  [java.io File FileInputStream]))
 
 (def boot-time 300)
+
+(defn cleaner [f]
+  (fs/delete-tree "./tmp-passphrase")
+  (fs/delete-tree "./tmp-passphrase2")
+  (fs/delete-tree "./tmp")
+  (fs/delete-tree "./tmp-second")
+  (fs/delete-tree "./tmp-third")
+  (f))
+
+(use-fixtures :once cleaner)
+
 
 (deftest version-test
   (testing "Test version flags"

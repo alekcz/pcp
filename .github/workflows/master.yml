@@ -91,7 +91,8 @@ jobs:
           java -version
           gu install native-image
           bash build.sh
-          cp resources/pcp.service target/pcp.service 
+          cp resources/pcp.service target/pcp.service
+          cp resources/pcp-dev.service target/pcp-dev.service 
           cp -r resources/pcp-templates target/pcp-templates
           rm target/useless-pcp-server.jar
           rm target/useless-pcp.jar
@@ -150,6 +151,7 @@ jobs:
           gu install native-image
           bash build.sh
           cp resources/com.alekcz.pcp.plist target/com.alekcz.pcp.plist
+          cp resources/com.alekcz.pcp-dev.plist target/com.alekcz.pcp-dev.plist
           cp -r resources/pcp-templates target/pcp-templates
           rm target/useless-pcp-server.jar
           rm target/useless-pcp.jar

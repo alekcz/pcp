@@ -1,4 +1,4 @@
-(defproject pcp "0.0.2"
+(defproject pcp "0.0.3-alpha.2"
   :description "PCP: Clojure Processor - A Clojure replacement for PHP"
   :url "https://github.com/alekcz/pcp"
   :license {:name "The MIT License"
@@ -8,7 +8,7 @@
                   [org.clojure/clojure "1.10.3"]
                   [org.clojure/tools.cli "1.0.194"]
                   [org.clojure/core.async "1.3.618"]
-                  [borkdude/sci "0.2.5"]
+                  [borkdude/sci "0.2.6"]
                   [byte-streams "0.2.4"]
                   [http-kit "2.5.3"]
                   [ring "1.9.3"]
@@ -22,8 +22,8 @@
                   [hiccup "2.0.0-alpha2"]
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
-                  [org.martinklepsch/clj-http-lite "0.4.3"]
-                  ;; [metosin/pohjavirta "0.0.1-alpha7"]
+                  [org.clj-commons/clj-http-lite "0.4.392"]
+                  [babashka/fs "0.1.2"]
                   
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]
@@ -55,7 +55,7 @@
               :runner-opts {:test-warn-time 500
                            :fail-fast? false
                            :multithread? :vars}}
-  :profiles { :scgi { :aot :all
+  :profiles { :pcp-server {:aot :all
                       :main pcp.core
                       :jar-name "useless-pcp-server.jar"
                       :uberjar-name "pcp-server.jar"}
@@ -64,16 +64,18 @@
                             :jar-name "useless-pcp.jar"
                             :uberjar-name "pcp.jar"}
               :test {:env {:my-passphrase "s3cr3t-p455ph4r3"
+                           :strict "0"
                            :pcp-template-path "resources/pcp-templates"}}
               :dev {:dependencies [[eftest/eftest "0.5.9"]
                                    [org.slf4j/slf4j-simple "1.7.32"]]
                     :plugins [[lein-shell "0.5.0"]]
-                    :env {:my-passphrase "s3cr3t-p455ph4r3"}}}
+                    :env {:my-passphrase "s3cr3t-p455ph4r3" :strict "0"}}}
   :aliases
   {"pcp" ["run" "-m" "pcp.utility"]
-   "scgi" ["run" "-m" "pcp.core"]
+   "pcp-server" ["run" "-m" "pcp.core" "1"]
+   "pcp-dev" ["run" "-m" "pcp.core" "0"]
    "build-pcp" ["with-profile" "utility" "uberjar"] 
-   "build-server" ["with-profile" "scgi" "uberjar"] 
+   "build-server" ["with-profile" "pcp-server" "uberjar"] 
    "native"
    ["shell"
     "native-image" 
@@ -89,4 +91,4 @@
     "-jar" "./target/${:name}.jar"
     "-H:Name=./target/${:name}"]
 
-   "run-native" ["shell" "./target/${:name} scgi"]})
+   "run-native" ["shell" "./target/${:name} pcp-server"]})

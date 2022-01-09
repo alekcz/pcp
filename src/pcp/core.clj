@@ -6,7 +6,6 @@
     [clojure.java.io :as io]
     [clojure.edn :as edn]
     [clojure.string :as str]
-    ;; [pohjavirta.server :as pohjavirta]
     [org.httpkit.server :as server]
     [pcp.includes :refer [includes]]
     [hiccup.compiler :as compiler]
@@ -30,6 +29,11 @@
 
 (def cache (c/ttl-cache-factory {} :ttl (* 30 60 1000)))
 (def source-cache (c/lru-cache-factory {} :threshold 1024))
+(def install-root (atom "/var/pcp"))
+(def server-root (atom "default"))
+(def public-root (atom "/public"))
+(def domains (atom {}))
+(def strict (atom true))
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
@@ -52,8 +56,9 @@
       (resp/status status)
       (resp/content-type mime-type))) 
 
-(defn file-response [path ^File file]
-  (let [code (if (.exists file) 200 404)
+(defn file-response [path]
+  (let [file (io/file path)
+        code (if (.exists file) 200 404)
         mime (resp/get-mime-type (re-find #"\.[0-9A-Za-z]{1,7}$" path))]
     (-> (resp/response file)    
         (resp/status code)
@@ -135,14 +140,21 @@
               ($/persist! ~k s)
               s)))))
 
+(defn generate-path [root path']
+  (cond 
+    (and (-> path' ^File (io/file) (.exists)) (-> path' ^File (io/file) (.isDirectory) not))
+      path' 
+    (-> path' (str "/index.clj") ^File (io/file) (.exists))
+      (str path' "/index.clj")
+    (-> (str root "/404.clj") ^File (io/file) (.exists))
+      (str root "/404.clj")
+    :else
+      nil))
+
 (defn run-script [url-path &{:keys [root request status]}]
   (let [status (atom status)
         path' (URLDecoder/decode url-path "UTF-8")
-        path  (if (-> path' ^File (io/file) (.exists))
-                  path' 
-                  (when (-> (str root "/404.clj") ^File (io/file) (.exists))
-                    (reset! status 404)
-                    (str root "/404.clj")))]
+        path (generate-path root path')]
     (if (nil? path)   
       (format-response 404 "" nil)
       (let [^File file (io/file path)
@@ -188,13 +200,44 @@
           (catch Exception e (format-response 500 (.getMessage e) nil)))
         (format-response 500 message nil))))
 
+;; (defn sanitize-root [root path]
+;;   (if-not @strict
+;;     (str root path)
+;;     (if (str/starts-with? path @install-root) 
+;;       path
+;;       (str root path))))
+
+(defn file-request? [path]
+  (and (not (str/ends-with? path ".clj")) (re-find #"\.[0-9A-Za-z]{1,7}$" path)))
+
+(defn get-domain [request]
+  (let [domain (:server-name request)
+        has-domain? (get @domains domain)
+        install (if @strict @install-root ".")
+        server (str install "/" domain)]
+    (cond 
+      (true? has-domain?)
+        (str install "/" domain)
+      (false? has-domain?)
+        (str install "/" @server-root)
+      (and (nil? has-domain?) (-> server io/file (.exists)))
+        (do
+          (swap! domains assoc domain true)
+          (str install "/" domain))
+      :else
+        (do 
+          (swap! domains assoc domain false)
+          (str install "/" @server-root)))))
+
 (defn actual-handler [request]
   (let [headers (-> request :headers walk/keywordize-keys)
-        root (:document-root headers)
+        root (or (:document-root headers) (str (get-domain request) @public-root))
         doc (:uri request)
         path (str root doc)
-        r (try (run-script path :root root :request request) (catch Exception e (e500 root request (.getMessage e))))]
-    r))
+        _ (println "root" @strict root path)]
+    (if (file-request? path)
+      (file-response path)
+      (try (run-script path :root root :request request) (catch Exception e (e500 root request (.getMessage e)))))))
 
 (def handler 
    (-> #'actual-handler 
@@ -202,20 +245,31 @@
         wrap-params 
         wrap-multipart-params ))
 
-;; (defn pohjavirta [handler port]
-;;   (let [s (pohjavirta/create handler {:port port})]
-;;     (pohjavirta/start s)
-;;     (fn [] 
-;;       (pohjavirta/stop s))))
+
+(defn strict? [flag]
+  (if (= (str flag) "0")
+    false
+    true))
+
+(defn init-environment []
+  (reset! install-root (or (env :install-root) @install-root))
+  (reset! server-root (or (env :server-root) @server-root))
+  (reset! public-root (or (env :public-root) @public-root))
+  (reset! strict (strict? (or (env :strict) @strict))))
 
 (defn serve [handler port]
+  (init-environment)
   (let [s (server/run-server handler {:port port :max-body (* 100 1024 1024)})]
-    (println "running...")
+    (println (str "running on port " port " with strict mode " (if @strict "enabled" "disabled") "..."))
     (fn [] 
       (s))))
 
-(defn -main []
-  (let [scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))]
-    (serve handler scgi-port)))
+(defn -main 
+  ([]
+    (-main "1"))
+  ([strict-mode]
+    (let [scgi-port (Integer/parseInt (or (env :pcp-server-port) (env :port) "9000"))]
+      (reset! strict strict-mode)
+      (serve handler scgi-port))))
 
       

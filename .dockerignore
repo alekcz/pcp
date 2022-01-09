@@ -1,0 +1,9 @@
+.git
+.calva
+.lsp
+tmp
+tmp-*
+.lein-env
+.nrepl-port
+*.md
+!README*.md

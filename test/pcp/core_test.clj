@@ -3,7 +3,6 @@
             [clojure.java.io :as io]
             [pcp.resp :as resp]
             [pcp.core :as core]
-            [cheshire.core :as json]
             [clojure.string :as str])
   (:import  [java.io File]))
 
@@ -26,7 +25,7 @@
 (deftest file-response-test
   (testing "Test file response"
     (let [path "test-resources/file-response.csv"
-          response (core/file-response path (io/file path))]
+          response (core/file-response path)]
       (is (= 200 (:status response)))
       (is (= (io/file path) (:body response)))
       (is (= "text/csv" (-> response :headers (get "Content-Type"))))
@@ -35,7 +34,7 @@
 (deftest file-response-404-test
   (testing "Test file response when file does not exist"
     (let [path "test-resources/not-found"
-          response (core/file-response path (io/file path))]
+          response (core/file-response path)]
       (is (= 404 (:status response)))
       (is (false? (.exists ^File (:body response))))
       (is (= "" (-> response :headers (get "Content-Type"))))
@@ -46,6 +45,7 @@
     (let [root "test-resources"
           uri "/simple.clj"
           scgi-request {:headers {"document-root" root} :uri uri}
+          _ (core/init-environment)
           resp (core/handler scgi-request)
           ans  (core/run-script (str root uri))]
     (is (= ans resp))

@@ -51,18 +51,24 @@ mv -f "$download_dir/pcp-server.jar" "$PWD/pcp-server.jar"
 
 rm -rf "$PWD/pcp-templates"
 mv -f "$download_dir/pcp-templates" "$PWD"
+printf "(require '[pcp :as pcp])\n(pcp/response 200 \"pew pew\" \"text/plain\")" >> "$PWD/pcp-templates/hello.clj"
 
 case "$(uname -s)" in
     Linux*)     
         mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp.service"
+        mv -f "$download_dir/pcp.service" "/etc/systemd/system/pcp-dev.service"
         systemctl enable pcp.service
+        systemctl enable pcp-dev.service
         systemctl start pcp.service
         #systemctl stop pcp.service
         ;;
     Darwin*)    
         mv -f "$download_dir/com.alekcz.pcp.plist" ~/Library/LaunchAgents/com.alekcz.pcp.plist
+        mv -f "$download_dir/com.alekcz.pcp.plist" ~/Library/LaunchAgents/com.alekcz.pcp-dev.plist
         chown "$(id -un):$(id -g)"  ~/Library/LaunchAgents/com.alekcz.pcp.plist
+        chown "$(id -un):$(id -g)"  ~/Library/LaunchAgents/com.alekcz.pcp-dev.plist
         launchctl load -w ~/Library/LaunchAgents/com.alekcz.pcp.plist
+        launchctl load -w ~/Library/LaunchAgents/com.alekcz.pcp-dev.plist
         #launchctl unload  ~/Library/LaunchAgents/com.alekcz.pcp.plist
         ;;
 esac

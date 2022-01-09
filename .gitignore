@@ -26,3 +26,5 @@ pom.xml.asc
 /test.js
 .calva/
 .lsp
+/default
+/127.0.0.1

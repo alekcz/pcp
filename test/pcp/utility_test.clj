@@ -1,5 +1,5 @@
 (ns pcp.utility-test
-  (:require [clojure.test :refer [deftest is testing]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [pcp.core :as core]
             [pcp.resp :as resp]
             [pcp.utility :as utility]
@@ -8,10 +8,22 @@
             [cheshire.core :as json]
             [clj-http.lite.client :as client]
             [org.httpkit.client :as http]
-            [environ.core :refer [env]])
+            [environ.core :refer [env]]
+            [babashka.fs :as fs])
   (:import  [java.io File FileInputStream]))
 
 (def boot-time 300)
+
+(defn cleaner [f]
+  (fs/delete-tree "./tmp-passphrase")
+  (fs/delete-tree "./tmp-passphrase2")
+  (fs/delete-tree "./tmp")
+  (fs/delete-tree "./tmp-second")
+  (fs/delete-tree "./tmp-third")
+  (f))
+
+(use-fixtures :once cleaner)
+
 
 (deftest version-test
   (testing "Test version flags"
@@ -39,6 +51,24 @@
   (testing "Start service"
     (let [unknown (with-out-str (utility/-main "service" "lala"))]
       (is (str/includes? unknown "unknown")))))     
+
+(deftest stop-dev-service-test
+  (testing "Stop service"
+    (let [_ (utility/stop-scgi-dev)
+          status (utility/query-scgi-dev)]
+      (is (> (count status) 0)))))
+
+(deftest start-dev-service-test
+  (testing "Start service"
+    (let [_ (utility/start-scgi-dev)
+          status (utility/query-scgi-dev)]
+      (is (> (count status) 0)))))
+
+(deftest unknown-dev-service-test
+  (testing "Start service"
+    (let [unknown (with-out-str (utility/-main "dev" "lala"))]
+      (is (str/includes? unknown "unknown")))))     
+
 
 (deftest help-test
   (testing "Start service"
@@ -113,7 +143,7 @@
           handler #(core/handler %)
           scgi (core/serve handler scgi-port)
           port 44444
-          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          local (utility/start-local-server {:pcp-port port :root root :pcp-server-port scgi-port})
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
           specify (with-out-str (utility/-main "passphrase"))
@@ -148,7 +178,7 @@
           handler #(core/handler %)
           scgi (core/serve handler scgi-port)
           port 24444
-          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          local (utility/start-local-server {:pcp-port port :root root :pcp-server-port scgi-port})
           _ (clojure.java.io/delete-file (io/file (str project "/pcp.edn")))
           env-var "SUPER_SECRET_API"
           env-var-value (rand-str 50)
@@ -175,18 +205,13 @@
           _ (spit (str root "/error.clj") "(require '[asdad.sad :as fake])")
           _ (spit (str root "/500.clj") "(pcp/response :break-me :break-it :lool)")
           _ (utility/stop-scgi)
-          scgi (core/-main)
+          scgi (core/-main "0")
           _ (Thread/sleep boot-time)
           local (utility/-main "-s" root)
-          file-eval (json/decode (with-out-str (utility/-main "-e" "./test-resources/site/index.clj")) true)
-          file-eval2 (json/decode (with-out-str (utility/-main "--evaluate" "./test-resources/site/index.clj")) true)
-          file-eval-expected (json/decode "{\"num\":1275,\"name\":\"Test\",\"end\":null}" true)
           resp-index (client/get (str "http://localhost:3000/"))
           resp-text  (client/get (str "http://localhost:3000/text.txt"))]
       (is (= {:name "Test" :num 1275 :end nil} (-> resp-index :body (json/decode true))))
       (is (= "12345678" (:body resp-text)))
-      (is (= file-eval-expected file-eval))
-      (is (= file-eval-expected file-eval2))
       (is (thrown? Exception (client/get (str "http://localhost:3000/not-there"))))
       (is (thrown? Exception (client/get (str "http://localhost:3000/error.clj"))))
       (local)
@@ -211,7 +236,7 @@
           port 9998
           scgi-port 9999
           scgi (core/serve core/handler scgi-port)
-          local (utility/start-local-server {:port port :root root :scgi-port scgi-port})
+          local (utility/start-local-server {:pcp-port port :root root :pcp-server-port scgi-port})
           randy (str (rand-int 100000))
           tempfile (str "../tmp/pcp-test-temp-" randy ".txt")
           _ (Thread/sleep boot-time)
@@ -219,7 +244,7 @@
           _ (spit (str root "/echo.clj") "(pcp/response 200 (-> pcp/request :params :sangoku :tempfile pcp/slurp-upload str) \"text/plain\")")
           _ (spit (str root "/temp.clj") (str "(pcp/spit \"" tempfile "\" \"123456\")" 
                                               "(pcp/response 200 (pcp/slurp \"" tempfile "\") \"text/plain\")"))
-          _ (spit (str root "/404.clj") "(pcp/response 200 \"404page\" \"text/plain\")")
+          _ (spit (str root "/404.clj") "(pcp/response 404 \"404page\" \"text/plain\")")
           _ (spit (str root "/redirect.clj") "(pcp/redirect \"/hello.clj\")")
           _ (spit (str root "/hello.clj") "(pcp/response 200 \"pew pew\" \"text/plain\")")
           _ (spit (str root "/error.clj") "(require '[asdad.sad :as fake])")
@@ -248,9 +273,15 @@
 
 (deftest new-project
   (testing "Test that new project is created"
-    (let [_ (utility/new-project "tmp")]
-      (is (= (slurp "tmp/public/api/info.clj") (slurp "resources/pcp-templates/api/info.clj")))
-      (is (= (slurp "tmp/README.md") (slurp "resources/pcp-templates/README.md")))
-      (is (= (slurp "tmp/public/hello.clj") (slurp "resources/pcp-templates/hello.clj")))
-      (is (= (slurp "tmp/public/index.clj") (slurp "resources/pcp-templates/index.clj"))))))
+    (let [_ (with-out-str (utility/new-project "tmp"))
+          info (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/default/public/api/info.clj" {:throw-exceptions false}))
+          hello (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/default/public/hello.clj" {:throw-exceptions false}))
+          readme (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/README.md" {:throw-exceptions false}))
+          index (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/default/public/index.clj" {:throw-exceptions false}))
+          digitalocean (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/.do/deploy.template.yaml" {:throw-exceptions false}))]
+      (is (= (slurp "tmp/default/public/api/info.clj") info))
+      (is (= (slurp "tmp/README.md") readme))
+      (is (= (slurp "tmp/default/public/hello.clj") hello))
+      (is (= (slurp "tmp/default/public/index.clj") index))
+      (is (= (slurp "tmp/.do/deploy.template.yaml") digitalocean)))))
       

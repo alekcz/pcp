@@ -8,7 +8,7 @@
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
     [clj-http.lite.client :as http]
-    ;; [clojure.tools.cli :refer [parse-opts]]
+    [babashka.fs :as fs]
     [environ.core :refer [env]])
   (:import  [java.io File BufferedWriter]
             [org.apache.commons.codec.digest DigestUtils]) 
@@ -17,14 +17,14 @@
 (set! *warn-on-reflection* 1)
 
 (def root (atom nil))
-(def scgi (atom "9000"))
-(def version "v0.0.2")
+(def pcp-server-port (atom "9000"))
+(def version "v0.0.3-alpha.2")
 
 (defn keydb []
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
 (defn template-path []
-  (or (env :pcp-template-path) "/usr/local/bin/pcp-templates")) 
+  (or (env :pcp-template-path) "/usr/local/pcp")) 
 
 (def help 
 "PCP: Clojure Processor -- Like drugs but better
@@ -34,12 +34,12 @@ Usage: pcp [option] [value]
 Options:
   new [project]           Create a new pcp project in the [project] directory
   service [stop/start]    Stop/start the PCP service
+  dev [stop/start]        Stop/start the PCP service in development mode
   passphrase [project]    Set passphrase for [project]
   secret [path]           Add and encrypt secrets at . or [path]
-  -e, --evaluate [path]   Evaluate a clojure file using PCP
-  -s, --serve [root]      Start a local server at . or [root]
-  -v, --version           Print the version string and exit
-  -h, --help              Print the command line help")
+  serve [root]            Start a local server at . or [root]
+  version                 Print the version string and exit
+  help                    Print the command line help")
 
 (defn safe-trim [s]
   (-> s str str/trim))
@@ -84,17 +84,17 @@ Options:
                    (assoc :uri new-uri))]     
         (cond 
           (and (str/ends-with? (:uri full) ".clj") exists)
-            (-> full (forward (:scgi-port opts)))
+            (-> full (forward (:pcp-server-port opts)))
           exists 
             (serve-file path)
-          :else (forward full (:scgi-port opts))))))
+          :else (forward full (:pcp-server-port opts))))))
 
-(defn run-file [path scgi-port]
+(defn run-file [path pcp-server-port]
   (let [path' (-> path ^File (io/file) (.getCanonicalPath))
         root (-> path' ^File (io/file) ^File (.getParentFile) (.getCanonicalPath))
         final-path (-> path' (str/replace root "/") (str/replace "//" "/"))
         request {:headers {"document-root" root} :uri final-path :request-method :get :body ""}
-        resp (forward request scgi-port)]
+        resp (forward request pcp-server-port)]
     (when (:body resp)
       (slurp (:body resp)))))
 
@@ -106,14 +106,14 @@ Options:
 
 (defn start-local-server [options] 
   (let [opts (merge 
-              {:port (Integer/parseInt (or (System/getenv "PORT") "3000")) 
+              {:pcp-port (Integer/parseInt (or (env :pcp-port) (env :port) "3000")) 
                :root "./" 
-               :scgi-port (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))}
+               :pcp-server-port (Integer/parseInt (or (env :pcp-server-port) "9000"))}
               (clean-opts options))
         server (server/run-server (local-handler opts)
-                {:port (:port opts) :max-body (* 100 1024 1024)})]
-    (println "Targeting SCGI server on port" (:scgi-port opts))
-    (println (str "Local server started on http://127.0.0.1:" (:port opts)))
+                {:port (:pcp-port opts) :max-body (* 100 1024 1024)})]
+    (println "Targeting PCP server on port" (:pcp-server-port opts))
+    (println (str "Local server started on http://127.0.0.1:" (:pcp-port opts)))
     (println "Serving" (:root opts))
     (fn [] (server))))
 
@@ -148,6 +148,36 @@ Options:
     (process-query-output   
       (shell/sh "systemctl" "list-units" "--type=service" "--state=running"))
     (process-query-output 
+      (shell/sh "launchctl" "list"))))
+
+(defn process-service-output-dev [output]
+  (let [err (:err output)]
+    (if (empty? err) "success!" (str "failed: " err))))
+
+(defn process-query-output-dev [output]
+  (let [ans (:out output)]
+    (if (or (str/includes? ans "pcp-dev.service") (str/includes? ans "com.alekcz.pcp-dev")) 
+      "running" "stopped")))
+
+(defn start-scgi-dev []
+  (if linux?
+    (process-service-output-dev  
+      (shell/sh "systemctl" "start" "pcp-dev.service"))
+    (process-service-output-dev  
+      (shell/sh "launchctl" "load" "-w" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp-dev.plist")))))
+
+(defn stop-scgi-dev []
+  (if linux?
+    (process-service-output-dev 
+      (shell/sh "systemctl" "stop" "pcp-dev.service"))
+    (process-service-output-dev 
+      (shell/sh "launchctl" "unload" (str (System/getProperty "user.home") "/Library/LaunchAgents/com.alekcz.pcp-dev.plist")))))
+
+(defn query-scgi-dev []
+  (if linux?
+    (process-query-output-dev   
+      (shell/sh "systemctl" "list-units" "--type=service" "--state=running"))
+    (process-query-output-dev 
       (shell/sh "launchctl" "list"))))
 
 (defn add-secret [options]
@@ -201,48 +231,74 @@ Options:
 
 (defn new-project [path]
   (let [re-filename #"(.*)\\[^\\]*"
-        project-name (or (second (re-find re-filename path)) path)]
-    (io/make-parents (str path "/pcp.edn"))
-    (io/make-parents (str path "/public/index.clj"))
-    (io/make-parents (str path "/README.md"))
-    (io/make-parents (str path "/public/api/info.clj"))
-    (spit (str path "/pcp.edn") (pr-str {:project project-name}))
-    (spit 
-      (str path "/public/index.clj") 
-      (slurp (str (template-path) "/index.clj")))
-    (spit 
-      (str path "/public/hello.clj") 
-      (slurp (str (template-path) "/hello.clj")))
-    (spit 
-      (str path "/README.md") 
-      (slurp (str (template-path) "/README.md")))
-    (spit 
-      (str path "/public/api/info.clj") 
-      (slurp (str (template-path) "/api/info.clj")))
-    (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath ^File (io/file path)))))
+        project-name (or (second (re-find re-filename path)) path)
+        prefixed? (partial str/starts-with? path)
+        target (if (not-any? prefixed? ["./" "~" "/"]) (str "./" path) path)
+        finalpath (.getCanonicalPath ^File (io/file target))]
+    (if-not (fs/exists? target)
+      (let [res (http/get "https://github.com/alekcz/pcp-template/archive/refs/heads/master.zip" {:as :byte-array :throw-exceptions false})
+            tmpdir  (System/getProperty "java.io.tmpdir")
+            filename (str tmpdir "/pcp-tmp/pcp.zip")
+            cached (str template-path "/template.zip")]
+        (cond 
+          (and (= 200 (:status res)) (some? (:body res)))
+          (do
+            (io/make-parents filename)
+            (with-open [w (io/output-stream filename)]
+              (.write w ^"[B" (:body res)))
+            (with-open [w (io/output-stream filename)]
+              (.write w ^"[B" (:body res)))
+            (fs/unzip filename target)
+            (fs/copy-tree (str target "/pcp-template-master") target)
+            (fs/delete-tree (str target "/pcp-template-master"))
+            (spit (str target "/pcp.edn") (prn-str {:project project-name})))
+          
+          (fs/exists? cached)
+          (do
+            (fs/unzip cached target)
+            (fs/copy-tree (str target "/pcp-template-master") target)
+            (fs/delete-tree (str target "/pcp-template-master"))
+            (spit (str target "/pcp.edn") (prn-str {:project project-name})))
 
-(defn -main 
-  ([]
-    (-main "" ""))
-  ([path]       
-    (-main path ""))
-  ([option value]    
-    (case option
-      "-s" (start-local-server {:root value})
-      "--serve" (start-local-server {:root value})
-      "-v" (println "pcp" version)
-      "--version" (println "pcp" version)
-      "-e" (println (run-file value (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))))
-      "--evaluate" (println (run-file value (Integer/parseInt (or (System/getenv "SCGI_PORT") "9000"))))
-      "new" (new-project value)
-      "passphrase" (add-passphrase value)
-      "secret" (add-secret {:root value})
-      "service" (case value 
-                  "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
-                  "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
-                  "status"  (do (println (query-scgi)) (shutdown-agents))  ;crashing down.
-                  (do                                                   
-                    (println "unknown command:" value)
-                    (println help)))
-      "" (println help)
-      (println help))))                               
+          :else (println "Oops"))
+        (println (str "Created pcp project " path " in directory") finalpath))
+      (println "Error:" finalpath "already exists"))))
+
+(defn -main [& args]    
+  (let [option (first args)
+        parameter (second args)]
+    (cond
+      (some #{option} '("-s" "--serve" "serve"))
+      (start-local-server {:root parameter})
+      
+      (some #{option} '("-v" "--version" "version"))
+      (println "pcp" version)
+      
+      (= option "new")
+      (new-project parameter)
+      
+      (= option "passphrase")
+      (add-passphrase parameter)
+      
+      (= option "secret")
+      (add-secret {:root parameter})
+
+      (= option "service")
+      (case parameter 
+        "start" (do (println (start-scgi)) (shutdown-agents)) ;tests suites that touch this line will fail
+        "stop"  (do (println (stop-scgi)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
+        "status"  (do (println (query-scgi)) (shutdown-agents))  ;crashing down.
+        (do                                                   
+          (println "unknown command: service" parameter)
+          (println help)))
+
+      (= option "dev")
+      (case parameter 
+        "start" (do (println (start-scgi-dev)) (shutdown-agents)) ;tests suites that touch this line will fail
+        "stop"  (do (println (stop-scgi-dev)) (shutdown-agents))  ;shutdown-agents brings the house of cards 
+        "status"  (do (println (query-scgi-dev)) (shutdown-agents))  ;crashing down.
+        (do                                                   
+          (println "unknown command: service" parameter)
+          (println help)))
+
+      :else (println help))))

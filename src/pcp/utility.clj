@@ -238,7 +238,7 @@ Options:
     (if-not (fs/exists? target)
       (let [res (http/get "https://github.com/alekcz/pcp-template/archive/refs/heads/master.zip" {:as :byte-array :throw-exceptions false})
             tmpdir  (System/getProperty "java.io.tmpdir")
-            filename (str tmpdir "pcp-tmp/pcp.zip")
+            filename (str tmpdir "/pcp-tmp/pcp.zip")
             cached (str template-path "/template.zip")]
         (cond 
           (and (= 200 (:status res)) (some? (:body res)))

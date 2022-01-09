@@ -8,6 +8,7 @@
     [org.httpkit.server :as server]
     [taoensso.nippy :as nippy]
     [clj-http.lite.client :as http]
+    [babashka.fs :as fs]
     [environ.core :refer [env]])
   (:import  [java.io File BufferedWriter]
             [org.apache.commons.codec.digest DigestUtils]) 
@@ -23,7 +24,7 @@
   (or (env :pcp-keydb) "/usr/local/etc/pcp-db"))
 
 (defn template-path []
-  (or (env :pcp-template-path) "/usr/local/bin/pcp-templates")) 
+  (or (env :pcp-template-path) "/usr/local/pcp")) 
 
 (def help 
 "PCP: Clojure Processor -- Like drugs but better
@@ -36,9 +37,9 @@ Options:
   dev [stop/start]        Stop/start the PCP service in development mode
   passphrase [project]    Set passphrase for [project]
   secret [path]           Add and encrypt secrets at . or [path]
-  -s, --serve [root]      Start a local server at . or [root]
-  -v, --version           Print the version string and exit
-  -h, --help              Print the command line help")
+  serve [root]            Start a local server at . or [root]
+  version                 Print the version string and exit
+  help                    Print the command line help")
 
 (defn safe-trim [s]
   (-> s str str/trim))
@@ -230,25 +231,38 @@ Options:
 
 (defn new-project [path]
   (let [re-filename #"(.*)\\[^\\]*"
-        project-name (or (second (re-find re-filename path)) path)]
-    (io/make-parents (str path "/pcp.edn"))
-    (io/make-parents (str path "/public/index.clj"))
-    (io/make-parents (str path "/README.md"))
-    (io/make-parents (str path "/public/api/info.clj"))
-    (spit (str path "/pcp.edn") (pr-str {:project project-name}))
-    (spit 
-      (str path "/public/index.clj") 
-      (slurp (str (template-path) "/index.clj")))
-    (spit 
-      (str path "/public/hello.clj") 
-      (slurp (str (template-path) "/hello.clj")))
-    (spit 
-      (str path "/README.md") 
-      (slurp (str (template-path) "/README.md")))
-    (spit 
-      (str path "/public/api/info.clj") 
-      (slurp (str (template-path) "/api/info.clj")))
-    (println (str "Created pcp project `" project-name "` in directory") (.getAbsolutePath ^File (io/file path)))))
+        project-name (or (second (re-find re-filename path)) path)
+        prefixed? (partial str/starts-with? path)
+        target (if (not-any? prefixed? ["./" "~" "/"]) (str "./" path) path)
+        finalpath (.getCanonicalPath ^File (io/file target))]
+    (if-not (fs/exists? target)
+      (let [res (http/get "https://github.com/alekcz/pcp-template/archive/refs/heads/master.zip" {:as :byte-array :throw-exceptions false})
+            tmpdir  (System/getProperty "java.io.tmpdir")
+            filename (str tmpdir "pcp-tmp/pcp.zip")
+            cached (str template-path "/template.zip")]
+        (cond 
+          (and (= 200 (:status res)) (some? (:body res)))
+          (do
+            (io/make-parents filename)
+            (with-open [w (io/output-stream filename)]
+              (.write w ^"[B" (:body res)))
+            (with-open [w (io/output-stream filename)]
+              (.write w ^"[B" (:body res)))
+            (fs/unzip filename target)
+            (fs/copy-tree (str target "/pcp-template-master") target)
+            (fs/delete-tree (str target "/pcp-template-master"))
+            (spit (str target "/pcp.edn") (prn-str {:project project-name})))
+          
+          (fs/exists? cached)
+          (do
+            (fs/unzip cached target)
+            (fs/copy-tree (str target "/pcp-template-master") target)
+            (fs/delete-tree (str target "/pcp-template-master"))
+            (spit (str target "/pcp.edn") (prn-str {:project project-name})))
+
+          :else (println "Oops"))
+        (println (str "Created pcp project " path " in directory") finalpath))
+      (println "Error:" finalpath "already exists"))))
 
 (defn -main [& args]    
   (let [option (first args)

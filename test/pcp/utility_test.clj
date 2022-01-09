@@ -261,9 +261,15 @@
 
 (deftest new-project
   (testing "Test that new project is created"
-    (let [_ (utility/new-project "tmp")]
-      (is (= (slurp "tmp/public/api/info.clj") (slurp "resources/pcp-templates/api/info.clj")))
-      (is (= (slurp "tmp/README.md") (slurp "resources/pcp-templates/README.md")))
-      (is (= (slurp "tmp/public/hello.clj") (slurp "resources/pcp-templates/hello.clj")))
-      (is (= (slurp "tmp/public/index.clj") (slurp "resources/pcp-templates/index.clj"))))))
+    (let [_ (with-out-str (utility/new-project "tmp"))
+          info (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/default/public/api/info.clj" {:throw-exceptions false}))
+          hello (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/default/public/hello.clj" {:throw-exceptions false}))
+          readme (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/README.md" {:throw-exceptions false}))
+          index (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/default/public/index.clj" {:throw-exceptions false}))
+          digitalocean (:body (client/get "https://raw.githubusercontent.com/alekcz/pcp-template/master/.do/deploy.template.yaml" {:throw-exceptions false}))]
+      (is (= (slurp "tmp/default/public/api/info.clj") info))
+      (is (= (slurp "tmp/README.md") readme))
+      (is (= (slurp "tmp/default/public/hello.clj") hello))
+      (is (= (slurp "tmp/default/public/index.clj") index))
+      (is (= (slurp "tmp/.do/deploy.template.yaml") digitalocean)))))
       

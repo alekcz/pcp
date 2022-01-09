@@ -22,7 +22,8 @@
                   [hiccup "2.0.0-alpha2"]
                   [io.replikativ/hasch "0.3.7"]
                   [org.clojure/core.cache "1.0.207"]
-                  [org.martinklepsch/clj-http-lite "0.4.3"]
+                  [org.clj-commons/clj-http-lite "0.4.392"]
+                  [babashka/fs "0.1.2"]
                   
                   ;includes for hosted environemnt
                   [selmer "1.12.19"]

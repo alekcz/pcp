@@ -165,7 +165,8 @@ jobs:
           name: pcp-${{ steps.pcp-version.outputs.version }}-macos-amd64
 
   publish-docker:
-    needs: [linux]
+    needs: [jvm]
+    runs-on: ubuntu-18.04
     if: startsWith(github.ref, 'refs/tags/v')
     steps: 
       - name: Git checkout

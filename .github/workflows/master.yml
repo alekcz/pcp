@@ -165,9 +165,9 @@ jobs:
           name: pcp-${{ steps.pcp-version.outputs.version }}-macos-amd64
 
   publish-docker:
-    needs: [jvm]
-    runs-on: ubuntu-18.04
-    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [linux]
+    runs-on: ubuntu-latest
+    # if: startsWith(github.ref, 'refs/tags/v')
     steps: 
       - name: Git checkout
         uses: actions/checkout@v1
@@ -175,11 +175,13 @@ jobs:
           fetch-depth: 1
           submodules: 'true'
     
-      - name: Publish to Docker Hub
+      - name: Login to Docker Hub
         uses: docker/login-action@v1 
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      
+      - name: Publish to Docker Hub
         run: |
           bash docker-push.sh
           

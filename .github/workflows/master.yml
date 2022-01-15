@@ -166,7 +166,6 @@ jobs:
 
   publish-docker:
     needs: [linux]
-    runs-on: ubuntu-latest
     if: startsWith(github.ref, 'refs/tags/v')
     steps: 
       - name: Git checkout

@@ -183,5 +183,6 @@ jobs:
       
       - name: Publish to Docker Hub
         run: |
+          bash docker-build.sh
           bash docker-push.sh
           
